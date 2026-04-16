@@ -137,3 +137,11 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Project-specific ignores
+client/.env
+client/.env.*
+server/.env
+server/.env.*
+client/dist/
+server/dist/
