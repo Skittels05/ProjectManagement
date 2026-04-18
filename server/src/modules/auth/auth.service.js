@@ -92,6 +92,10 @@ async function login({ email, password }) {
     throw new AppError("Invalid email or password", 401);
   }
 
+  if (user.isBlocked) {
+    throw new AppError("Account is disabled", 403);
+  }
+
   const authPayload = buildAuthResponse(user);
   await persistRefreshToken(user.id, authPayload.refreshToken);
 
@@ -126,6 +130,10 @@ async function refresh(rawRefreshToken) {
     throw new AppError("Refresh token session not found", 401);
   }
 
+  if (tokenRecord.user.isBlocked) {
+    throw new AppError("Account is disabled", 403);
+  }
+
   await tokenRecord.destroy();
 
   const authPayload = buildAuthResponse(tokenRecord.user);
@@ -151,6 +159,10 @@ async function getCurrentUser(userId) {
 
   if (!user) {
     throw new AppError("User not found", 404);
+  }
+
+  if (user.isBlocked) {
+    throw new AppError("Account is disabled", 403);
   }
 
   return toUserDto(user);

@@ -33,6 +33,12 @@ function defineUser(sequelize) {
         allowNull: false,
         field: "is_admin",
       },
+      isBlocked: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+        field: "is_blocked",
+      },
     },
     {
       tableName: "users",
