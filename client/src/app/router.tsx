@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "./store";
 import { DashboardPage } from "../pages/DashboardPage";
 import { LoginPage } from "../pages/LoginPage";
+import { ProjectPage } from "../pages/ProjectPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { bootstrapAuth, logoutUser } from "../features/auth/model/authThunks";
 
@@ -40,6 +41,16 @@ function AppShell() {
         <nav className="topbar-actions">
           {isAuthenticated ? (
             <>
+              <Link
+                to="/"
+                className={
+                  location.pathname === "/" || location.pathname.startsWith("/projects")
+                    ? "active-link"
+                    : ""
+                }
+              >
+                Dashboard
+              </Link>
               <span className="user-chip">{user?.fullName ?? user?.email}</span>
               <button
                 className="secondary-button"
@@ -101,7 +112,10 @@ export const router = createBrowserRouter([
     children: [
       {
         element: <ProtectedRoute />,
-        children: [{ index: true, element: <DashboardPage /> }],
+        children: [
+          { index: true, element: <DashboardPage /> },
+          { path: "projects/:projectId", element: <ProjectPage /> },
+        ],
       },
       {
         element: <PublicOnlyRoute />,

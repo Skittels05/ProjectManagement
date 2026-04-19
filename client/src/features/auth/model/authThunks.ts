@@ -28,12 +28,18 @@ type ApiError = {
 
 function getErrorMessage(error: unknown) {
   const axiosError = error as AxiosError<ApiError>;
+  const fromBody =
+    axiosError.response?.data?.errors?.[0]?.message ?? axiosError.response?.data?.message;
 
-  return (
-    axiosError.response?.data?.errors?.[0]?.message ??
-    axiosError.response?.data?.message ??
-    "Request failed"
-  );
+  if (fromBody) {
+    return fromBody;
+  }
+
+  if (axiosError.message) {
+    return axiosError.message;
+  }
+
+  return "Request failed";
 }
 
 export const registerUser = createAsyncThunk<
