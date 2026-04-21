@@ -6,6 +6,7 @@ import { clearCurrentProject } from "../../store/slices/projectsSlice";
 import {
   addProjectMember,
   fetchProjectById,
+  fetchSprints,
   removeProjectMember,
   updateProjectMemberRole,
 } from "../../store/thunks/projectsThunks";
@@ -13,6 +14,7 @@ import type { ProjectMemberDto } from "../../store/types/projects.types";
 import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projectRole";
 import { isUuidV4 } from "../../shared/lib/uuid";
 import { ProjectInviteForm } from "./components/ProjectInviteForm/ProjectInviteForm";
+import { ProjectSprintsSection } from "./components/ProjectSprintsSection/ProjectSprintsSection";
 import { ProjectTeamSection } from "./components/ProjectTeamSection/ProjectTeamSection";
 import "./ProjectPage.css";
 
@@ -40,6 +42,7 @@ export function ProjectPage() {
       return;
     }
     void dispatch(fetchProjectById(validProjectId));
+    void dispatch(fetchSprints(validProjectId));
     return () => {
       dispatch(clearCurrentProject());
     };
@@ -182,6 +185,8 @@ export function ProjectPage() {
         <Link to="/" className="back-link">
           ← All projects
         </Link>
+
+        <ProjectSprintsSection projectId={validProjectId} canManageSprints={canManageTeam} />
       </div>
 
       <aside className="project-page-aside">

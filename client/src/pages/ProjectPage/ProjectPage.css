@@ -11,6 +11,10 @@
   gap: 0.75rem;
 }
 
+.project-page-main .sprints-section {
+  margin-top: 1.25rem;
+}
+
 .project-page-aside {
   display: flex;
   flex-direction: column;

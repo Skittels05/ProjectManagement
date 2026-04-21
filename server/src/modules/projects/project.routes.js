@@ -3,6 +3,7 @@ const { asyncHandler } = require("../../utils/async-handler");
 const { validationMiddleware } = require("../../middlewares/validation.middleware");
 const { authMiddleware } = require("../../middlewares/auth.middleware");
 const controller = require("./project.controller");
+const sprintController = require("./sprint.controller");
 const {
   createProjectValidation,
   addMemberValidation,
@@ -10,6 +11,12 @@ const {
   removeMemberValidation,
   getProjectByIdValidation,
 } = require("./project.validation");
+const {
+  listSprintsValidation,
+  createSprintValidation,
+  updateSprintValidation,
+  deleteSprintValidation,
+} = require("./sprint.validation");
 
 const projectsRouter = Router();
 
@@ -39,6 +46,30 @@ projectsRouter.delete(
   removeMemberValidation,
   validationMiddleware,
   asyncHandler(controller.removeMember),
+);
+projectsRouter.get(
+  "/:projectId/sprints",
+  listSprintsValidation,
+  validationMiddleware,
+  asyncHandler(sprintController.list),
+);
+projectsRouter.post(
+  "/:projectId/sprints",
+  createSprintValidation,
+  validationMiddleware,
+  asyncHandler(sprintController.create),
+);
+projectsRouter.patch(
+  "/:projectId/sprints/:sprintId",
+  updateSprintValidation,
+  validationMiddleware,
+  asyncHandler(sprintController.update),
+);
+projectsRouter.delete(
+  "/:projectId/sprints/:sprintId",
+  deleteSprintValidation,
+  validationMiddleware,
+  asyncHandler(sprintController.remove),
 );
 projectsRouter.get(
   "/:projectId",

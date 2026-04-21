@@ -1,0 +1,107 @@
+.sprints-section .sprint-table-wrap {
+  overflow-x: auto;
+}
+
+.sprints-section table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.sprints-section th,
+.sprints-section td {
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  vertical-align: top;
+}
+
+.sprints-section th {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+
+.sprints-section .sprint-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.sprints-section .sprint-actions button {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.sprints-section .sprint-actions button:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, 0.5);
+}
+
+.sprints-section .sprint-actions button.danger:hover:not(:disabled) {
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+}
+
+.sprints-section .sprint-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sprints-section .sprint-status {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.sprints-section .sprint-status-planned {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+}
+
+.sprints-section .sprint-status-active {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+.sprints-section .sprint-status-completed {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.sprints-section .sprints-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.sprints-section .sprints-toolbar .primary-button {
+  border: none;
+  border-radius: 12px;
+  padding: 0.55rem 1rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sprints-section .sprints-toolbar .primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sprints-section .sprint-goal-cell {
+  max-width: 220px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}

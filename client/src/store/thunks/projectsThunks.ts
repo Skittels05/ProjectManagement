@@ -1,7 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getApiErrorMessage } from "../../services/apiError";
 import * as projectsService from "../../services/projectsService";
+import * as sprintsService from "../../services/sprintsService";
 import type { ProjectDto, RemoveMemberResult } from "../types/projects.types";
+import type { CreateSprintBody, SprintDto, UpdateSprintBody } from "../types/sprints.types";
 
 export type { RemoveMemberResult } from "../types/projects.types";
 
@@ -71,6 +73,54 @@ export const removeProjectMember = createAsyncThunk<
 >("projects/removeMember", async ({ projectId, userId }, { rejectWithValue }) => {
   try {
     return await projectsService.removeProjectMember(projectId, userId);
+  } catch (error) {
+    return rejectWithValue(getApiErrorMessage(error));
+  }
+});
+
+export const fetchSprints = createAsyncThunk<SprintDto[], string, { rejectValue: string }>(
+  "projects/fetchSprints",
+  async (projectId, { rejectWithValue }) => {
+    try {
+      return await sprintsService.fetchSprints(projectId);
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error));
+    }
+  },
+);
+
+export const createSprint = createAsyncThunk<
+  SprintDto,
+  { projectId: string; body: CreateSprintBody },
+  { rejectValue: string }
+>("projects/createSprint", async ({ projectId, body }, { rejectWithValue }) => {
+  try {
+    return await sprintsService.createSprint(projectId, body);
+  } catch (error) {
+    return rejectWithValue(getApiErrorMessage(error));
+  }
+});
+
+export const updateSprint = createAsyncThunk<
+  SprintDto,
+  { projectId: string; sprintId: string; body: UpdateSprintBody },
+  { rejectValue: string }
+>("projects/updateSprint", async ({ projectId, sprintId, body }, { rejectWithValue }) => {
+  try {
+    return await sprintsService.updateSprint(projectId, sprintId, body);
+  } catch (error) {
+    return rejectWithValue(getApiErrorMessage(error));
+  }
+});
+
+export const deleteSprint = createAsyncThunk<
+  { sprintId: string },
+  { projectId: string; sprintId: string },
+  { rejectValue: string }
+>("projects/deleteSprint", async ({ projectId, sprintId }, { rejectWithValue }) => {
+  try {
+    await sprintsService.deleteSprint(projectId, sprintId);
+    return { sprintId };
   } catch (error) {
     return rejectWithValue(getApiErrorMessage(error));
   }
