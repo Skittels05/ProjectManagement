@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 
-/** sprints.status: planned | active | completed */
 function defineSprint(sequelize) {
   return sequelize.define(
     "Sprint",

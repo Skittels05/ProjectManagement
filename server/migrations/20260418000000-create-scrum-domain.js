@@ -1,7 +1,5 @@
 "use strict";
 
-/** Scrum domain: projects, members, sprints, tasks, comments, attachments, time logs, activity log. */
-
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.addColumn("users", "is_blocked", {

@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 
-/** tasks.status (Kanban): todo | in_progress | done. sprintId null => backlog */
 function defineTask(sequelize) {
   return sequelize.define(
     "Task",

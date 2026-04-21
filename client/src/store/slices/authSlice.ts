@@ -6,8 +6,8 @@ import {
   logoutUser,
   refreshSession,
   registerUser,
-  type AuthUser,
-} from "./authThunks";
+} from "../thunks/authThunks";
+import type { AuthUser } from "../types/auth.types";
 
 type AuthState = {
   user: AuthUser | null;

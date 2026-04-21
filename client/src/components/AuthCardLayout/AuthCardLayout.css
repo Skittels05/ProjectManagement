@@ -1,0 +1,16 @@
+.auth-card h2 {
+  margin: 0;
+}
+
+.auth-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.75);
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+  width: min(460px, 100%);
+  padding: 2rem;
+}
+
+.auth-card-footer {
+  margin-top: 1.25rem;
+}

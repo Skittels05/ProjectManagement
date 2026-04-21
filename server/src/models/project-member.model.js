@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 
-/** project_members.role: owner | manager | member */
 function defineProjectMember(sequelize) {
   return sequelize.define(
     "ProjectMember",

@@ -1,0 +1,63 @@
+.members-table-wrap {
+  overflow-x: auto;
+  margin: 0 -0.25rem;
+}
+
+.members-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.members-table th,
+.members-table td {
+  text-align: left;
+  padding: 0.65rem 0.5rem;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.members-table th {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.members-actions-col {
+  width: 6.5rem;
+}
+
+.members-actions-cell {
+  white-space: nowrap;
+}
+
+.member-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.member-name {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.member-email {
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.member-you {
+  font-size: 0.75rem;
+}
+
+.role-select {
+  min-width: 7.5rem;
+  max-width: 100%;
+}
+
+.role-readonly {
+  color: #cbd5e1;
+}

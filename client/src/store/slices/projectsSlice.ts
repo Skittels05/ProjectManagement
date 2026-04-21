@@ -1,6 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createProject, fetchProjectById, fetchProjects } from "./projectsThunks";
-import type { ProjectDto } from "./types";
+import {
+  addProjectMember,
+  createProject,
+  fetchProjectById,
+  fetchProjects,
+  removeProjectMember,
+  updateProjectMemberRole,
+} from "../thunks/projectsThunks";
+import type { ProjectDto } from "../types/projects.types";
 
 type ProjectsState = {
   list: ProjectDto[];
@@ -47,10 +54,13 @@ const projectsSlice = createSlice({
         state.listLoading = false;
         state.listError = action.payload ?? "Failed to load projects";
       })
-      .addCase(fetchProjectById.pending, (state) => {
+      .addCase(fetchProjectById.pending, (state, action) => {
         state.currentLoading = true;
         state.currentError = null;
-        state.current = null;
+        const loadingId = action.meta.arg;
+        if (state.current?.id !== loadingId) {
+          state.current = null;
+        }
       })
       .addCase(fetchProjectById.fulfilled, (state, action) => {
         state.currentLoading = false;
@@ -71,6 +81,21 @@ const projectsSlice = createSlice({
       .addCase(createProject.rejected, (state, action) => {
         state.createLoading = false;
         state.createError = action.payload ?? "Failed to create project";
+      })
+      .addCase(addProjectMember.fulfilled, (state, action) => {
+        if (state.current?.id === action.payload.id) {
+          state.current = action.payload;
+        }
+      })
+      .addCase(updateProjectMemberRole.fulfilled, (state, action) => {
+        if (state.current?.id === action.payload.id) {
+          state.current = action.payload;
+        }
+      })
+      .addCase(removeProjectMember.fulfilled, (state, action) => {
+        if ("project" in action.payload && state.current?.id === action.payload.project.id) {
+          state.current = action.payload.project;
+        }
       });
   },
 });

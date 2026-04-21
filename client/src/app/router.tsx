@@ -1,109 +1,11 @@
-import { useEffect } from "react";
-import {
-  createBrowserRouter,
-  Link,
-  Navigate,
-  Outlet,
-  useLocation,
-} from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "./store";
-import { DashboardPage } from "../pages/DashboardPage";
-import { LoginPage } from "../pages/LoginPage";
-import { ProjectPage } from "../pages/ProjectPage";
-import { RegisterPage } from "../pages/RegisterPage";
-import { bootstrapAuth, logoutUser } from "../features/auth/model/authThunks";
-
-function AppShell() {
-  const dispatch = useDispatch<AppDispatch>();
-  const location = useLocation();
-  const { initialized, isAuthenticated, user } = useSelector(
-    (state: RootState) => state.auth,
-  );
-
-  useEffect(() => {
-    if (!initialized) {
-      void dispatch(bootstrapAuth());
-    }
-  }, [dispatch, initialized]);
-
-  if (!initialized) {
-    return <div className="page page-center">Checking session...</div>;
-  }
-
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Scrum Tracker</p>
-          <h1>Project Management</h1>
-        </div>
-        <nav className="topbar-actions">
-          {isAuthenticated ? (
-            <>
-              <Link
-                to="/"
-                className={
-                  location.pathname === "/" || location.pathname.startsWith("/projects")
-                    ? "active-link"
-                    : ""
-                }
-              >
-                Dashboard
-              </Link>
-              <span className="user-chip">{user?.fullName ?? user?.email}</span>
-              <button
-                className="secondary-button"
-                onClick={() => void dispatch(logoutUser())}
-              >
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className={location.pathname === "/login" ? "active-link" : ""}>
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className={location.pathname === "/register" ? "active-link" : ""}
-              >
-                Register
-              </Link>
-            </>
-          )}
-        </nav>
-      </header>
-      <main className="content">
-        <Outlet />
-      </main>
-    </div>
-  );
-}
-
-function ProtectedRoute() {
-  const { initialized, isAuthenticated } = useSelector(
-    (state: RootState) => state.auth,
-  );
-
-  if (!initialized) {
-    return <div className="page page-center">Loading protected route...</div>;
-  }
-
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
-}
-
-function PublicOnlyRoute() {
-  const { initialized, isAuthenticated } = useSelector(
-    (state: RootState) => state.auth,
-  );
-
-  if (!initialized) {
-    return <div className="page page-center">Loading auth page...</div>;
-  }
-
-  return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
-}
+import { createBrowserRouter } from "react-router-dom";
+import { AppShell } from "../components/AppShell/AppShell";
+import { ProtectedRoute } from "../components/ProtectedRoute/ProtectedRoute";
+import { PublicOnlyRoute } from "../components/PublicOnlyRoute/PublicOnlyRoute";
+import { DashboardPage } from "../pages/DashboardPage/DashboardPage";
+import { LoginPage } from "../pages/LoginPage/LoginPage";
+import { ProjectPage } from "../pages/ProjectPage/ProjectPage";
+import { RegisterPage } from "../pages/RegisterPage/RegisterPage";
 
 export const router = createBrowserRouter([
   {

@@ -3,7 +3,12 @@ const { asyncHandler } = require("../../utils/async-handler");
 const { validationMiddleware } = require("../../middlewares/validation.middleware");
 const { authMiddleware } = require("../../middlewares/auth.middleware");
 const controller = require("./project.controller");
-const { createProjectValidation } = require("./project.validation");
+const {
+  createProjectValidation,
+  addMemberValidation,
+  updateMemberRoleValidation,
+  removeMemberValidation,
+} = require("./project.validation");
 
 const projectsRouter = Router();
 
@@ -15,6 +20,24 @@ projectsRouter.post(
   createProjectValidation,
   validationMiddleware,
   asyncHandler(controller.create),
+);
+projectsRouter.post(
+  "/:projectId/members",
+  addMemberValidation,
+  validationMiddleware,
+  asyncHandler(controller.addMember),
+);
+projectsRouter.patch(
+  "/:projectId/members/:userId",
+  updateMemberRoleValidation,
+  validationMiddleware,
+  asyncHandler(controller.updateMemberRole),
+);
+projectsRouter.delete(
+  "/:projectId/members/:userId",
+  removeMemberValidation,
+  validationMiddleware,
+  asyncHandler(controller.removeMember),
 );
 projectsRouter.get("/:projectId", asyncHandler(controller.getById));
 
