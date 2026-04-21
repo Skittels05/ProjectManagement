@@ -5,9 +5,9 @@ function defineProject(sequelize) {
     "Project",
     {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         primaryKey: true,
-        autoIncrement: true,
+        defaultValue: DataTypes.UUIDV4,
       },
       name: {
         type: DataTypes.STRING(255),
@@ -18,7 +18,7 @@ function defineProject(sequelize) {
         allowNull: true,
       },
       createdBy: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         field: "created_by",
       },

@@ -5,17 +5,17 @@ function defineTaskAttachment(sequelize) {
     "TaskAttachment",
     {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         primaryKey: true,
-        autoIncrement: true,
+        defaultValue: DataTypes.UUIDV4,
       },
       taskId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         field: "task_id",
       },
       uploadedBy: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         field: "uploaded_by",
       },

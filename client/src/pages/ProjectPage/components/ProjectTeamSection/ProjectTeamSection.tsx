@@ -10,10 +10,10 @@ function roleLabel(role: string) {
 
 type ProjectTeamSectionProps = {
   members: ProjectMemberDto[];
-  currentUserId: number | undefined;
+  currentUserId: string | undefined;
   memberError: string | null;
-  roleSavingFor: number | null;
-  removingFor: number | null;
+  roleSavingFor: string | null;
+  removingFor: string | null;
   canEditMemberRole: (member: ProjectMemberDto) => boolean;
   canRemoveOther: (member: ProjectMemberDto) => boolean;
   canLeaveProject: (member: ProjectMemberDto) => boolean;

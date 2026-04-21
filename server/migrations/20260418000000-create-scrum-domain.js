@@ -2,18 +2,12 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn("users", "is_blocked", {
-      type: Sequelize.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    });
-
     await queryInterface.createTable("projects", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       name: {
         type: Sequelize.STRING(255),
@@ -24,7 +18,7 @@ module.exports = {
         allowNull: true,
       },
       created_by: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
@@ -44,20 +38,20 @@ module.exports = {
 
     await queryInterface.createTable("project_members", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       project_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "projects", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
@@ -86,13 +80,13 @@ module.exports = {
 
     await queryInterface.createTable("sprints", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       project_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "projects", key: "id" },
         onUpdate: "CASCADE",
@@ -137,20 +131,20 @@ module.exports = {
 
     await queryInterface.createTable("tasks", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       project_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "projects", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
       sprint_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: true,
         references: { model: "sprints", key: "id" },
         onUpdate: "CASCADE",
@@ -184,14 +178,14 @@ module.exports = {
         defaultValue: 0,
       },
       assignee_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: true,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "SET NULL",
       },
       created_by: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: true,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
@@ -218,20 +212,20 @@ module.exports = {
 
     await queryInterface.createTable("task_comments", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       task_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "tasks", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
@@ -259,20 +253,20 @@ module.exports = {
 
     await queryInterface.createTable("task_attachments", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       task_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "tasks", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
       uploaded_by: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
@@ -307,20 +301,20 @@ module.exports = {
 
     await queryInterface.createTable("time_logs", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       task_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "tasks", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
@@ -360,20 +354,20 @@ module.exports = {
 
     await queryInterface.createTable("activity_logs", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       project_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: { model: "projects", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: true,
         references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
@@ -388,7 +382,7 @@ module.exports = {
         allowNull: false,
       },
       entity_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: true,
       },
       metadata: {
@@ -408,7 +402,7 @@ module.exports = {
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable("activity_logs");
     await queryInterface.dropTable("time_logs");
     await queryInterface.dropTable("task_attachments");
@@ -417,6 +411,5 @@ module.exports = {
     await queryInterface.dropTable("sprints");
     await queryInterface.dropTable("project_members");
     await queryInterface.dropTable("projects");
-    await queryInterface.removeColumn("users", "is_blocked");
   },
 };

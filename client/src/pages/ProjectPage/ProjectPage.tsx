@@ -10,6 +10,7 @@ import {
   updateProjectMemberRole,
 } from "../../store/thunks/projectsThunks";
 import type { ProjectMemberDto, ProjectRole } from "../../store/types/projects.types";
+import { isUuidV4 } from "../../shared/lib/uuid";
 import { ProjectInviteForm } from "./components/ProjectInviteForm/ProjectInviteForm";
 import { ProjectTeamSection } from "./components/ProjectTeamSection/ProjectTeamSection";
 import "./ProjectPage.css";
@@ -32,21 +33,22 @@ export function ProjectPage() {
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
-  const [roleSavingFor, setRoleSavingFor] = useState<number | null>(null);
-  const [removingFor, setRemovingFor] = useState<number | null>(null);
+  const [roleSavingFor, setRoleSavingFor] = useState<string | null>(null);
+  const [removingFor, setRemovingFor] = useState<string | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
 
-  const id = projectId ? Number(projectId) : NaN;
+  const routeProjectId = projectId ?? "";
+  const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
 
   useEffect(() => {
-    if (!Number.isInteger(id) || id < 1) {
+    if (!validProjectId) {
       return;
     }
-    void dispatch(fetchProjectById(id));
+    void dispatch(fetchProjectById(validProjectId));
     return () => {
       dispatch(clearCurrentProject());
     };
-  }, [dispatch, id]);
+  }, [dispatch, validProjectId]);
 
   const members = current?.members ?? [];
   const ownerCount = useMemo(() => members.filter((m) => m.role === "owner").length, [members]);
@@ -55,11 +57,11 @@ export function ProjectPage() {
 
   async function handleInvite(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!Number.isInteger(id) || id < 1) return;
+    if (!validProjectId) return;
     setInviteError(null);
     setInviteBusy(true);
     const result = await dispatch(
-      addProjectMember({ projectId: id, email: inviteEmail.trim(), role: inviteRole }),
+      addProjectMember({ projectId: validProjectId, email: inviteEmail.trim(), role: inviteRole }),
     );
     setInviteBusy(false);
     if (addProjectMember.fulfilled.match(result)) {
@@ -71,11 +73,11 @@ export function ProjectPage() {
   }
 
   async function handleRoleChange(member: ProjectMemberDto, next: ProjectRole) {
-    if (!Number.isInteger(id) || id < 1 || next === member.role) return;
+    if (!validProjectId || next === member.role) return;
     setMemberError(null);
     setRoleSavingFor(member.userId);
     const result = await dispatch(
-      updateProjectMemberRole({ projectId: id, userId: member.userId, role: next }),
+      updateProjectMemberRole({ projectId: validProjectId, userId: member.userId, role: next }),
     );
     setRoleSavingFor(null);
     if (updateProjectMemberRole.rejected.match(result)) {
@@ -84,7 +86,7 @@ export function ProjectPage() {
   }
 
   async function handleRemoveMember(member: ProjectMemberDto) {
-    if (!Number.isInteger(id) || id < 1) return;
+    if (!validProjectId) return;
     const isSelf = member.userId === user?.id;
     const message = isSelf
       ? "Leave this project? You will need a new invite to return."
@@ -92,7 +94,9 @@ export function ProjectPage() {
     if (!window.confirm(message)) return;
     setMemberError(null);
     setRemovingFor(member.userId);
-    const result = await dispatch(removeProjectMember({ projectId: id, userId: member.userId }));
+    const result = await dispatch(
+      removeProjectMember({ projectId: validProjectId, userId: member.userId }),
+    );
     setRemovingFor(null);
     if (removeProjectMember.rejected.match(result)) {
       setMemberError(result.payload ?? "Could not remove member");
@@ -121,7 +125,7 @@ export function ProjectPage() {
     return true;
   }
 
-  if (!Number.isInteger(id) || id < 1) {
+  if (!validProjectId) {
     return (
       <section className="page project-page">
         <p className="form-error">Invalid project link.</p>

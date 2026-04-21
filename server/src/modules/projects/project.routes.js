@@ -8,6 +8,7 @@ const {
   addMemberValidation,
   updateMemberRoleValidation,
   removeMemberValidation,
+  getProjectByIdValidation,
 } = require("./project.validation");
 
 const projectsRouter = Router();
@@ -39,6 +40,11 @@ projectsRouter.delete(
   validationMiddleware,
   asyncHandler(controller.removeMember),
 );
-projectsRouter.get("/:projectId", asyncHandler(controller.getById));
+projectsRouter.get(
+  "/:projectId",
+  getProjectByIdValidation,
+  validationMiddleware,
+  asyncHandler(controller.getById),
+);
 
 module.exports = { projectsRouter };

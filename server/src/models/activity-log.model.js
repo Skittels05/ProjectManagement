@@ -5,17 +5,17 @@ function defineActivityLog(sequelize) {
     "ActivityLog",
     {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         primaryKey: true,
-        autoIncrement: true,
+        defaultValue: DataTypes.UUIDV4,
       },
       projectId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         field: "project_id",
       },
       userId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: true,
         field: "user_id",
       },
@@ -29,7 +29,7 @@ function defineActivityLog(sequelize) {
         field: "entity_type",
       },
       entityId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: true,
         field: "entity_id",
       },

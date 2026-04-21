@@ -18,7 +18,7 @@ export const fetchProjects = createAsyncThunk<ProjectDto[], void, { rejectValue:
 
 export const fetchProjectById = createAsyncThunk<
   ProjectDto,
-  number,
+  string,
   { rejectValue: string }
 >("projects/fetchProjectById", async (id, { rejectWithValue }) => {
   try {
@@ -42,7 +42,7 @@ export const createProject = createAsyncThunk<
 
 export const addProjectMember = createAsyncThunk<
   ProjectDto,
-  { projectId: number; email: string; role: "member" | "manager" },
+  { projectId: string; email: string; role: "member" | "manager" },
   { rejectValue: string }
 >("projects/addMember", async ({ projectId, email, role }, { rejectWithValue }) => {
   try {
@@ -54,7 +54,7 @@ export const addProjectMember = createAsyncThunk<
 
 export const updateProjectMemberRole = createAsyncThunk<
   ProjectDto,
-  { projectId: number; userId: number; role: ProjectRole },
+  { projectId: string; userId: string; role: ProjectRole },
   { rejectValue: string }
 >("projects/updateMemberRole", async ({ projectId, userId, role }, { rejectWithValue }) => {
   try {
@@ -66,7 +66,7 @@ export const updateProjectMemberRole = createAsyncThunk<
 
 export const removeProjectMember = createAsyncThunk<
   RemoveMemberResult,
-  { projectId: number; userId: number },
+  { projectId: string; userId: string },
   { rejectValue: string }
 >("projects/removeMember", async ({ projectId, userId }, { rejectWithValue }) => {
   try {

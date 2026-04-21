@@ -4,10 +4,10 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable("users", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       email: {
         type: Sequelize.STRING,
@@ -27,17 +27,22 @@ module.exports = {
         allowNull: false,
         defaultValue: false,
       },
+      is_blocked: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     });
 
     await queryInterface.createTable("refresh_tokens", {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: "users",

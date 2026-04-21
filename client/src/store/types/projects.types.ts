@@ -1,17 +1,17 @@
 export type ProjectRole = "owner" | "manager" | "member";
 
 export type ProjectMemberDto = {
-  userId: number;
+  userId: string;
   email: string;
   fullName: string;
   role: ProjectRole;
 };
 
 export type ProjectDto = {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
-  createdBy: number;
+  createdBy: string;
   role: ProjectRole | string | null;
   createdAt: string;
   updatedAt: string;

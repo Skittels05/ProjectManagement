@@ -1,5 +1,7 @@
 const { body, param } = require("express-validator");
 
+const projectIdParam = param("projectId").isUUID(4).withMessage("Invalid project id");
+
 const createProjectValidation = [
   body("name")
     .trim()
@@ -16,6 +18,7 @@ const createProjectValidation = [
 ];
 
 const addMemberValidation = [
+  projectIdParam,
   body("email").trim().notEmpty().withMessage("Email is required").isEmail().withMessage("Invalid email"),
   body("role")
     .trim()
@@ -26,7 +29,8 @@ const addMemberValidation = [
 ];
 
 const updateMemberRoleValidation = [
-  param("userId").isInt({ min: 1 }).withMessage("Invalid user id"),
+  projectIdParam,
+  param("userId").isUUID(4).withMessage("Invalid user id"),
   body("role")
     .trim()
     .notEmpty()
@@ -35,11 +39,17 @@ const updateMemberRoleValidation = [
     .withMessage("Invalid role"),
 ];
 
-const removeMemberValidation = [param("userId").isInt({ min: 1 }).withMessage("Invalid user id")];
+const removeMemberValidation = [
+  projectIdParam,
+  param("userId").isUUID(4).withMessage("Invalid user id"),
+];
+
+const getProjectByIdValidation = [projectIdParam];
 
 module.exports = {
   createProjectValidation,
   addMemberValidation,
   updateMemberRoleValidation,
   removeMemberValidation,
+  getProjectByIdValidation,
 };

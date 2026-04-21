@@ -6,7 +6,7 @@ export async function fetchProjects(): Promise<ProjectDto[]> {
   return data.projects;
 }
 
-export async function fetchProjectById(id: number): Promise<ProjectDto> {
+export async function fetchProjectById(id: string): Promise<ProjectDto> {
   const { data } = await http.get<{ project: ProjectDto }>(`/projects/${id}`);
   return data.project;
 }
@@ -20,7 +20,7 @@ export async function createProject(payload: {
 }
 
 export async function addProjectMember(
-  projectId: number,
+  projectId: string,
   body: { email: string; role: "member" | "manager" },
 ): Promise<ProjectDto> {
   const { data } = await http.post<{ project: ProjectDto }>(`/projects/${projectId}/members`, body);
@@ -28,8 +28,8 @@ export async function addProjectMember(
 }
 
 export async function updateProjectMemberRole(
-  projectId: number,
-  userId: number,
+  projectId: string,
+  userId: string,
   role: ProjectRole,
 ): Promise<ProjectDto> {
   const { data } = await http.patch<{ project: ProjectDto }>(
@@ -40,8 +40,8 @@ export async function updateProjectMemberRole(
 }
 
 export async function removeProjectMember(
-  projectId: number,
-  userId: number,
+  projectId: string,
+  userId: string,
 ): Promise<RemoveMemberResult> {
   const { data } = await http.delete<{ left?: boolean; project?: ProjectDto }>(
     `/projects/${projectId}/members/${userId}`,

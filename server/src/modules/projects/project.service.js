@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { sequelize, Project, ProjectMember, User } = require("../../models");
 const { AppError } = require("../../utils/app-error");
+const { isUuidV4 } = require("../../utils/uuid");
 
 const ROLES = {
   OWNER: "owner",
@@ -72,12 +73,6 @@ function assertCanManageTeam(actorRole) {
   }
 }
 
-function assertOwner(actorRole) {
-  if (actorRole !== ROLES.OWNER) {
-    throw new AppError("Only the project owner can perform this action", 403);
-  }
-}
-
 async function createProject(userId, { name, description }) {
   const trimmedName = name.trim();
   const trimmedDescription =
@@ -136,14 +131,12 @@ async function listProjectsForUser(userId) {
 }
 
 async function getProjectForUser(projectId, userId) {
-  const id = Number(projectId);
-
-  if (!Number.isInteger(id) || id < 1) {
+  if (!isUuidV4(projectId)) {
     throw new AppError("Project not found", 404);
   }
 
   const membership = await ProjectMember.findOne({
-    where: { userId, projectId: id },
+    where: { userId, projectId },
     include: [
       {
         model: Project,
@@ -157,15 +150,15 @@ async function getProjectForUser(projectId, userId) {
     throw new AppError("Project not found", 404);
   }
 
-  const members = await loadMembersForProject(id);
+  const members = await loadMembersForProject(projectId);
   return toDto(membership.project, membership.role, members);
 }
 
 async function addProjectMember(actorUserId, projectId, { email, role }) {
-  const id = Number(projectId);
-  if (!Number.isInteger(id) || id < 1) {
+  if (!isUuidV4(projectId)) {
     throw new AppError("Project not found", 404);
   }
+  const id = projectId;
 
   const normalizedEmail = String(email).trim().toLowerCase();
   const normalizedRole = String(role).trim().toLowerCase();
@@ -210,12 +203,11 @@ async function addProjectMember(actorUserId, projectId, { email, role }) {
 }
 
 async function updateProjectMemberRole(actorUserId, projectId, targetUserId, { role }) {
-  const pid = Number(projectId);
-  const tid = Number(targetUserId);
-
-  if (!Number.isInteger(pid) || pid < 1 || !Number.isInteger(tid) || tid < 1) {
+  if (!isUuidV4(projectId) || !isUuidV4(targetUserId)) {
     throw new AppError("Project not found", 404);
   }
+  const pid = projectId;
+  const tid = targetUserId;
 
   const normalizedRole = String(role).trim().toLowerCase();
   if (!ALL_ROLES.has(normalizedRole)) {
@@ -253,12 +245,11 @@ async function updateProjectMemberRole(actorUserId, projectId, targetUserId, { r
 }
 
 async function removeProjectMember(actorUserId, projectId, targetUserId) {
-  const pid = Number(projectId);
-  const tid = Number(targetUserId);
-
-  if (!Number.isInteger(pid) || pid < 1 || !Number.isInteger(tid) || tid < 1) {
+  if (!isUuidV4(projectId) || !isUuidV4(targetUserId)) {
     throw new AppError("Project not found", 404);
   }
+  const pid = projectId;
+  const tid = targetUserId;
 
   const target = await ProjectMember.findOne({ where: { projectId: pid, userId: tid } });
   if (!target) {

@@ -1,5 +1,5 @@
 export type AuthUser = {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
   isAdmin: boolean;

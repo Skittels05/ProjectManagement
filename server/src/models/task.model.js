@@ -5,17 +5,17 @@ function defineTask(sequelize) {
     "Task",
     {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         primaryKey: true,
-        autoIncrement: true,
+        defaultValue: DataTypes.UUIDV4,
       },
       projectId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         field: "project_id",
       },
       sprintId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: true,
         field: "sprint_id",
       },
@@ -49,12 +49,12 @@ function defineTask(sequelize) {
         field: "board_position",
       },
       assigneeId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: true,
         field: "assignee_id",
       },
       createdBy: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: true,
         field: "created_by",
       },
