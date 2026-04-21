@@ -1,3 +1,7 @@
 .dashboard-page {
   gap: 2rem;
 }
+
+.dashboard-controls-panel {
+  gap: 1rem;
+}

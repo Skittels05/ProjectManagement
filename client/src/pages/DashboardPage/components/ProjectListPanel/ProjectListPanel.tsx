@@ -1,21 +1,25 @@
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import type { RootState } from "../../../../store";
+import type { ProjectDto } from "../../../../store/types/projects.types";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import "./ProjectListPanel.css";
 
-export function ProjectListPanel() {
-  const { list, listLoading, listError } = useSelector((state: RootState) => state.projects);
+type ProjectListPanelProps = {
+  projects: ProjectDto[];
+  emptyMessage: string;
+};
+
+export function ProjectListPanel({ projects, emptyMessage }: ProjectListPanelProps) {
+  const { listLoading, listError } = useSelector((state: RootState) => state.projects);
 
   return (
-    <ProjectPanel title="Your projects">
+    <ProjectPanel title="My projects">
       {listLoading ? <p className="muted">Loading projects…</p> : null}
       {listError ? <p className="form-error">{listError}</p> : null}
-      {!listLoading && list.length === 0 ? (
-        <p className="muted">No projects yet. Create one above.</p>
-      ) : null}
+      {!listLoading && projects.length === 0 ? <p className="muted">{emptyMessage}</p> : null}
       <ul className="project-list">
-        {list.map((project) => (
+        {projects.map((project) => (
           <li key={project.id}>
             <Link to={`/projects/${project.id}`} className="project-card">
               <span className="project-card-title">{project.name}</span>

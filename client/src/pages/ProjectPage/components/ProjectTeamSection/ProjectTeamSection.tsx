@@ -1,11 +1,45 @@
+import { useEffect, useState } from "react";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
-import type { ProjectMemberDto, ProjectRole } from "../../../../store/types/projects.types";
+import type { ProjectMemberDto } from "../../../../store/types/projects.types";
+import { isAssignableMemberRole } from "../../../../shared/lib/projectRole";
 import "./ProjectTeamSection.css";
 
-function roleLabel(role: string) {
-  if (role === "owner") return "Owner";
-  if (role === "manager") return "Manager";
-  return "Member";
+type MemberRoleFieldProps = {
+  member: ProjectMemberDto;
+  busy: boolean;
+  onCommit: (next: string) => void;
+};
+
+function MemberRoleField({ member, busy, onCommit }: MemberRoleFieldProps) {
+  const [draft, setDraft] = useState(member.role);
+
+  useEffect(() => {
+    setDraft(member.role);
+  }, [member.role]);
+
+  return (
+    <input
+      className="role-select"
+      list="team-role-suggestions"
+      value={draft}
+      disabled={busy}
+      maxLength={32}
+      aria-label={`Role for ${member.fullName}`}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => {
+        const next = draft.trim();
+        if (!next || next === member.role.trim()) {
+          setDraft(member.role);
+          return;
+        }
+        if (!isAssignableMemberRole(next)) {
+          setDraft(member.role);
+          return;
+        }
+        onCommit(next);
+      }}
+    />
+  );
 }
 
 type ProjectTeamSectionProps = {
@@ -14,10 +48,11 @@ type ProjectTeamSectionProps = {
   memberError: string | null;
   roleSavingFor: string | null;
   removingFor: string | null;
+  roleSuggestions: string[];
   canEditMemberRole: (member: ProjectMemberDto) => boolean;
   canRemoveOther: (member: ProjectMemberDto) => boolean;
   canLeaveProject: (member: ProjectMemberDto) => boolean;
-  onRoleChange: (member: ProjectMemberDto, role: ProjectRole) => void;
+  onRoleChange: (member: ProjectMemberDto, role: string) => void;
   onRemoveMember: (member: ProjectMemberDto) => void;
 };
 
@@ -27,6 +62,7 @@ export function ProjectTeamSection({
   memberError,
   roleSavingFor,
   removingFor,
+  roleSuggestions,
   canEditMemberRole,
   canRemoveOther,
   canLeaveProject,
@@ -35,6 +71,11 @@ export function ProjectTeamSection({
 }: ProjectTeamSectionProps) {
   return (
     <ProjectPanel title="Team">
+      <datalist id="team-role-suggestions">
+        {roleSuggestions.map((r) => (
+          <option key={r} value={r} />
+        ))}
+      </datalist>
       <p className="muted small-meta">
         {members.length} member{members.length === 1 ? "" : "s"}
       </p>
@@ -66,19 +107,13 @@ export function ProjectTeamSection({
                   </td>
                   <td>
                     {canEditMemberRole(member) ? (
-                      <select
-                        className="role-select"
-                        value={member.role}
-                        disabled={busy}
-                        aria-label={`Role for ${member.fullName}`}
-                        onChange={(ev) => onRoleChange(member, ev.target.value as ProjectRole)}
-                      >
-                        <option value="member">Member</option>
-                        <option value="manager">Manager</option>
-                        <option value="owner">Owner</option>
-                      </select>
+                      <MemberRoleField
+                        member={member}
+                        busy={busy}
+                        onCommit={(next) => onRoleChange(member, next)}
+                      />
                     ) : (
-                      <span className="role-readonly">{roleLabel(member.role)}</span>
+                      <span className="role-readonly">{member.role}</span>
                     )}
                   </td>
                   <td className="members-actions-cell">

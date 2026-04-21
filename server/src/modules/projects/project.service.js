@@ -6,12 +6,27 @@ const { isUuidV4 } = require("../../utils/uuid");
 const ROLES = {
   OWNER: "owner",
   MANAGER: "manager",
-  MEMBER: "member",
 };
 
 const MANAGE_MEMBER_ROLES = new Set([ROLES.OWNER, ROLES.MANAGER]);
-const INVITE_ROLES = new Set([ROLES.MEMBER, ROLES.MANAGER]);
-const ALL_ROLES = new Set([ROLES.OWNER, ROLES.MANAGER, ROLES.MEMBER]);
+
+function isOwnerRole(role) {
+  return typeof role === "string" && /^owner$/i.test(role.trim());
+}
+
+function trimProjectRole(role) {
+  const t = String(role).trim();
+  if (t.length < 1 || t.length > 32) {
+    throw new AppError("Role must be between 1 and 32 characters", 400);
+  }
+  return t;
+}
+
+function assertRoleCannotBeAssignedOwner(role) {
+  if (isOwnerRole(role)) {
+    throw new AppError("The owner role cannot be assigned to a member", 400);
+  }
+}
 
 function toDto(project, role, members) {
   const base = {
@@ -63,12 +78,13 @@ async function getMembership(projectId, userId) {
 
 async function countOwners(projectId) {
   return ProjectMember.count({
-    where: { projectId, role: ROLES.OWNER },
+    where: { projectId, role: { [Op.iLike]: ROLES.OWNER } },
   });
 }
 
 function assertCanManageTeam(actorRole) {
-  if (!MANAGE_MEMBER_ROLES.has(actorRole)) {
+  const r = String(actorRole ?? "").trim().toLowerCase();
+  if (!MANAGE_MEMBER_ROLES.has(r)) {
     throw new AppError("You do not have permission to manage project members", 403);
   }
 }
@@ -161,11 +177,8 @@ async function addProjectMember(actorUserId, projectId, { email, role }) {
   const id = projectId;
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const normalizedRole = String(role).trim().toLowerCase();
-
-  if (!INVITE_ROLES.has(normalizedRole)) {
-    throw new AppError("Invalid role for invitation", 400);
-  }
+  const roleToStore = trimProjectRole(role);
+  assertRoleCannotBeAssignedOwner(roleToStore);
 
   const actor = await getMembership(id, actorUserId);
   if (!actor) {
@@ -196,7 +209,7 @@ async function addProjectMember(actorUserId, projectId, { email, role }) {
   await ProjectMember.create({
     projectId: id,
     userId: invitedUser.id,
-    role: normalizedRole,
+    role: roleToStore,
   });
 
   return getProjectForUser(id, actorUserId);
@@ -209,10 +222,8 @@ async function updateProjectMemberRole(actorUserId, projectId, targetUserId, { r
   const pid = projectId;
   const tid = targetUserId;
 
-  const normalizedRole = String(role).trim().toLowerCase();
-  if (!ALL_ROLES.has(normalizedRole)) {
-    throw new AppError("Invalid role", 400);
-  }
+  const newRole = trimProjectRole(role);
+  assertRoleCannotBeAssignedOwner(newRole);
 
   const actor = await getMembership(pid, actorUserId);
   if (!actor) {
@@ -225,22 +236,19 @@ async function updateProjectMemberRole(actorUserId, projectId, targetUserId, { r
     throw new AppError("Member not found", 404);
   }
 
-  if (actor.role === ROLES.MANAGER && (target.role === ROLES.OWNER || normalizedRole === ROLES.OWNER)) {
-    throw new AppError("Only the project owner can change owner roles", 403);
+  const actorLower = String(actor.role ?? "").trim().toLowerCase();
+  if (actorLower === ROLES.MANAGER && isOwnerRole(target.role)) {
+    throw new AppError("Only the project owner can change an owner member", 403);
   }
 
-  if (normalizedRole === ROLES.OWNER && actor.role !== ROLES.OWNER) {
-    throw new AppError("Only the project owner can assign the owner role", 403);
-  }
-
-  if (target.role === ROLES.OWNER && normalizedRole !== ROLES.OWNER) {
+  if (isOwnerRole(target.role) && !isOwnerRole(newRole)) {
     const owners = await countOwners(pid);
     if (owners <= 1) {
       throw new AppError("The project must keep at least one owner", 400);
     }
   }
 
-  await target.update({ role: normalizedRole });
+  await target.update({ role: newRole });
   return getProjectForUser(pid, actorUserId);
 }
 
@@ -257,7 +265,7 @@ async function removeProjectMember(actorUserId, projectId, targetUserId) {
   }
 
   if (actorUserId === tid) {
-    if (target.role === ROLES.OWNER) {
+    if (isOwnerRole(target.role)) {
       const owners = await countOwners(pid);
       if (owners <= 1) {
         throw new AppError("Transfer ownership before leaving the project", 400);
@@ -273,11 +281,11 @@ async function removeProjectMember(actorUserId, projectId, targetUserId) {
   }
   assertCanManageTeam(actor.role);
 
-  if (target.role === ROLES.OWNER && actor.role !== ROLES.OWNER) {
+  if (isOwnerRole(target.role) && String(actor.role ?? "").trim().toLowerCase() !== ROLES.OWNER) {
     throw new AppError("Only the project owner can remove an owner", 403);
   }
 
-  if (target.role === ROLES.OWNER) {
+  if (isOwnerRole(target.role)) {
     const owners = await countOwners(pid);
     if (owners <= 1) {
       throw new AppError("The project must keep at least one owner", 400);

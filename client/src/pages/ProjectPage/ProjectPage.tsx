@@ -9,17 +9,12 @@ import {
   removeProjectMember,
   updateProjectMemberRole,
 } from "../../store/thunks/projectsThunks";
-import type { ProjectMemberDto, ProjectRole } from "../../store/types/projects.types";
+import type { ProjectMemberDto } from "../../store/types/projects.types";
+import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projectRole";
 import { isUuidV4 } from "../../shared/lib/uuid";
 import { ProjectInviteForm } from "./components/ProjectInviteForm/ProjectInviteForm";
 import { ProjectTeamSection } from "./components/ProjectTeamSection/ProjectTeamSection";
 import "./ProjectPage.css";
-
-function roleLabel(role: string) {
-  if (role === "owner") return "Owner";
-  if (role === "manager") return "Manager";
-  return "Member";
-}
 
 export function ProjectPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -29,7 +24,7 @@ export function ProjectPage() {
   const { current, currentLoading, currentError } = useSelector((state: RootState) => state.projects);
 
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"member" | "manager">("member");
+  const [inviteRole, setInviteRole] = useState("member");
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
@@ -51,17 +46,35 @@ export function ProjectPage() {
   }, [dispatch, validProjectId]);
 
   const members = current?.members ?? [];
-  const ownerCount = useMemo(() => members.filter((m) => m.role === "owner").length, [members]);
+  const ownerCount = useMemo(() => members.filter((m) => isOwnerRoleName(m.role)).length, [members]);
+  const roleSuggestions = useMemo(() => {
+    const s = new Set<string>();
+    for (const m of members) {
+      const r = m.role.trim();
+      if (r && !isOwnerRoleName(m.role)) {
+        s.add(m.role.trim());
+      }
+    }
+    return [...s].sort((a, b) => a.localeCompare(b));
+  }, [members]);
   const myRole = current?.role ?? null;
-  const canManageTeam = myRole === "owner" || myRole === "manager";
+  const myRoleLower = String(myRole ?? "").trim().toLowerCase();
+  const canManageTeam = myRoleLower === "owner" || myRoleLower === "manager";
 
   async function handleInvite(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!validProjectId) return;
     setInviteError(null);
+    const roleTrim = inviteRole.trim();
+    if (!isAssignableMemberRole(roleTrim)) {
+      setInviteError(
+        "Choose an existing role or enter a new one (1–32 characters). The owner role cannot be assigned.",
+      );
+      return;
+    }
     setInviteBusy(true);
     const result = await dispatch(
-      addProjectMember({ projectId: validProjectId, email: inviteEmail.trim(), role: inviteRole }),
+      addProjectMember({ projectId: validProjectId, email: inviteEmail.trim(), role: roleTrim }),
     );
     setInviteBusy(false);
     if (addProjectMember.fulfilled.match(result)) {
@@ -72,12 +85,17 @@ export function ProjectPage() {
     }
   }
 
-  async function handleRoleChange(member: ProjectMemberDto, next: ProjectRole) {
-    if (!validProjectId || next === member.role) return;
+  async function handleRoleChange(member: ProjectMemberDto, next: string) {
+    const nextTrim = next.trim();
+    if (!validProjectId || nextTrim === member.role.trim()) return;
+    if (!isAssignableMemberRole(nextTrim)) {
+      setMemberError("The owner role cannot be assigned. Use 1–32 characters for other roles.");
+      return;
+    }
     setMemberError(null);
     setRoleSavingFor(member.userId);
     const result = await dispatch(
-      updateProjectMemberRole({ projectId: validProjectId, userId: member.userId, role: next }),
+      updateProjectMemberRole({ projectId: validProjectId, userId: member.userId, role: nextTrim }),
     );
     setRoleSavingFor(null);
     if (updateProjectMemberRole.rejected.match(result)) {
@@ -109,19 +127,19 @@ export function ProjectPage() {
 
   function canEditMemberRole(member: ProjectMemberDto) {
     if (!canManageTeam) return false;
-    if (myRole === "owner") return true;
-    return member.role !== "owner";
+    if (myRoleLower === "owner") return true;
+    return !isOwnerRoleName(member.role);
   }
 
   function canRemoveOther(member: ProjectMemberDto) {
     if (!canManageTeam || member.userId === user?.id) return false;
-    if (myRole !== "owner" && member.role === "owner") return false;
+    if (myRoleLower !== "owner" && isOwnerRoleName(member.role)) return false;
     return true;
   }
 
   function canLeaveProject(member: ProjectMemberDto) {
     if (member.userId !== user?.id) return false;
-    if (member.role === "owner" && ownerCount <= 1) return false;
+    if (isOwnerRoleName(member.role) && ownerCount <= 1) return false;
     return true;
   }
 
@@ -157,7 +175,7 @@ export function ProjectPage() {
         <p className="eyebrow">Project</p>
         <h2>{current.name}</h2>
         <p className="muted">
-          Your role: <strong>{roleLabel(String(myRole ?? ""))}</strong>
+          Your role: <strong>{myRole ?? "—"}</strong>
         </p>
         {current.description ? <p className="project-description">{current.description}</p> : null}
         <p className="muted small-meta">Updated {new Date(current.updatedAt).toLocaleString()}</p>
@@ -173,6 +191,7 @@ export function ProjectPage() {
           memberError={memberError}
           roleSavingFor={roleSavingFor}
           removingFor={removingFor}
+          roleSuggestions={roleSuggestions}
           canEditMemberRole={canEditMemberRole}
           canRemoveOther={canRemoveOther}
           canLeaveProject={canLeaveProject}
@@ -186,6 +205,7 @@ export function ProjectPage() {
             inviteRole={inviteRole}
             inviteBusy={inviteBusy}
             inviteError={inviteError}
+            roleSuggestions={roleSuggestions}
             onInviteEmailChange={setInviteEmail}
             onInviteRoleChange={setInviteRole}
             onSubmit={handleInvite}

@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getApiErrorMessage } from "../../services/apiError";
 import * as projectsService from "../../services/projectsService";
-import type { ProjectDto, ProjectRole, RemoveMemberResult } from "../types/projects.types";
+import type { ProjectDto, RemoveMemberResult } from "../types/projects.types";
 
 export type { RemoveMemberResult } from "../types/projects.types";
 
@@ -42,7 +42,7 @@ export const createProject = createAsyncThunk<
 
 export const addProjectMember = createAsyncThunk<
   ProjectDto,
-  { projectId: string; email: string; role: "member" | "manager" },
+  { projectId: string; email: string; role: string },
   { rejectValue: string }
 >("projects/addMember", async ({ projectId, email, role }, { rejectWithValue }) => {
   try {
@@ -54,7 +54,7 @@ export const addProjectMember = createAsyncThunk<
 
 export const updateProjectMemberRole = createAsyncThunk<
   ProjectDto,
-  { projectId: string; userId: string; role: ProjectRole },
+  { projectId: string; userId: string; role: string },
   { rejectValue: string }
 >("projects/updateMemberRole", async ({ projectId, userId, role }, { rejectWithValue }) => {
   try {

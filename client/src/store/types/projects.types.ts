@@ -1,10 +1,8 @@
-export type ProjectRole = "owner" | "manager" | "member";
-
 export type ProjectMemberDto = {
   userId: string;
   email: string;
   fullName: string;
-  role: ProjectRole;
+  role: string;
 };
 
 export type ProjectDto = {
@@ -12,7 +10,7 @@ export type ProjectDto = {
   name: string;
   description: string | null;
   createdBy: string;
-  role: ProjectRole | string | null;
+  role: string | null;
   createdAt: string;
   updatedAt: string;
   members?: ProjectMemberDto[];

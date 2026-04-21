@@ -1,5 +1,5 @@
 import { http } from "../shared/api/http";
-import type { ProjectDto, ProjectRole, RemoveMemberResult } from "../store/types/projects.types";
+import type { ProjectDto, RemoveMemberResult } from "../store/types/projects.types";
 
 export async function fetchProjects(): Promise<ProjectDto[]> {
   const { data } = await http.get<{ projects: ProjectDto[] }>("/projects");
@@ -21,7 +21,7 @@ export async function createProject(payload: {
 
 export async function addProjectMember(
   projectId: string,
-  body: { email: string; role: "member" | "manager" },
+  body: { email: string; role: string },
 ): Promise<ProjectDto> {
   const { data } = await http.post<{ project: ProjectDto }>(`/projects/${projectId}/members`, body);
   return data.project;
@@ -30,7 +30,7 @@ export async function addProjectMember(
 export async function updateProjectMemberRole(
   projectId: string,
   userId: string,
-  role: ProjectRole,
+  role: string,
 ): Promise<ProjectDto> {
   const { data } = await http.patch<{ project: ProjectDto }>(
     `/projects/${projectId}/members/${userId}`,
