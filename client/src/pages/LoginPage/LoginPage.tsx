@@ -1,23 +1,24 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../store";
-import { loginUser } from "../../store/thunks/authThunks";
+import { useLoginMutation } from "../../store/api/authApi";
+import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { AuthCardLayout } from "../../components/AuthCardLayout/AuthCardLayout";
 
 export function LoginPage() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const [login, { isLoading }] = useLoginMutation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const resultAction = await dispatch(loginUser({ email, password }));
-
-    if (loginUser.fulfilled.match(resultAction)) {
+    setError(null);
+    try {
+      await login({ email, password }).unwrap();
       navigate("/");
+    } catch (e) {
+      setError(getRtkQueryErrorMessage(e));
     }
   }
 
@@ -55,8 +56,8 @@ export function LoginPage() {
           />
         </label>
         {error ? <p className="form-error">{error}</p> : null}
-        <button type="submit" disabled={loading}>
-          {loading ? "Signing in..." : "Sign in"}
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign in"}
         </button>
       </form>
     </AuthCardLayout>

@@ -1,8 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../../../store";
-import { createSprint, updateSprint } from "../../../../store/thunks/projectsThunks";
+import { useCreateSprintMutation, useUpdateSprintMutation } from "../../../../store/api/sprintsApi";
 import type { SprintDto, SprintStatus } from "../../../../store/types/sprints.types";
+import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import "./SprintModal.css";
 
 function toYmdLocal(d: Date): string {
@@ -32,7 +31,9 @@ type SprintModalProps = {
 };
 
 export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: SprintModalProps) {
-  const dispatch = useDispatch<AppDispatch>();
+  const [createSprint] = useCreateSprintMutation();
+  const [updateSprint] = useUpdateSprintMutation();
+
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
   const [startsAt, setStartsAt] = useState("");
@@ -83,9 +84,9 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
     const goalTrim = goal.trim();
     const goalPayload = goalTrim === "" ? null : goalTrim;
 
-    if (mode === "create") {
-      const result = await dispatch(
-        createSprint({
+    try {
+      if (mode === "create") {
+        await createSprint({
           projectId,
           body: {
             name: name.trim(),
@@ -94,24 +95,16 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
             endsAt,
             status,
           },
-        }),
-      );
-      setSaving(false);
-      if (createSprint.fulfilled.match(result)) {
+        }).unwrap();
         onClose();
         return;
       }
-      setError(result.payload ?? "Could not create sprint");
-      return;
-    }
 
-    if (!sprint) {
-      setSaving(false);
-      return;
-    }
+      if (!sprint) {
+        return;
+      }
 
-    const result = await dispatch(
-      updateSprint({
+      await updateSprint({
         projectId,
         sprintId: sprint.id,
         body: {
@@ -121,14 +114,13 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
           endsAt,
           status,
         },
-      }),
-    );
-    setSaving(false);
-    if (updateSprint.fulfilled.match(result)) {
+      }).unwrap();
       onClose();
-      return;
+    } catch (err) {
+      setError(getRtkQueryErrorMessage(err));
+    } finally {
+      setSaving(false);
     }
-    setError(result.payload ?? "Could not update sprint");
   }
 
   const title = mode === "create" ? "New sprint" : "Edit sprint";

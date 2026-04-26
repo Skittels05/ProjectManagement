@@ -1,7 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../../../store";
-import { createProject } from "../../../../store/thunks/projectsThunks";
+import { useCreateProjectMutation } from "../../../../store/api/projectsApi";
+import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import "./CreateProjectModal.css";
 
 type CreateProjectModalProps = {
@@ -10,15 +9,16 @@ type CreateProjectModalProps = {
 };
 
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const { createLoading, createError } = useSelector((state: RootState) => state.projects);
+  const [createProject, { isLoading: createLoading }] = useCreateProjectMutation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setName("");
       setDescription("");
+      setCreateError(null);
     }
   }, [isOpen]);
 
@@ -37,10 +37,12 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const result = await dispatch(createProject({ name, description: description || undefined }));
-
-    if (createProject.fulfilled.match(result)) {
+    setCreateError(null);
+    try {
+      await createProject({ name, description: description || undefined }).unwrap();
       onClose();
+    } catch (e) {
+      setCreateError(getRtkQueryErrorMessage(e));
     }
   }
 

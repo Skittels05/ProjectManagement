@@ -22,6 +22,8 @@ function assertCanManageSprints(role) {
 }
 
 function toSprintDto(sprint) {
+  const createdAt = sprint.createdAt ?? sprint.created_at ?? null;
+  const updatedAt = sprint.updatedAt ?? sprint.updated_at ?? null;
   return {
     id: sprint.id,
     projectId: sprint.projectId,
@@ -30,8 +32,8 @@ function toSprintDto(sprint) {
     startsAt: sprint.startsAt,
     endsAt: sprint.endsAt,
     status: sprint.status,
-    createdAt: sprint.createdAt,
-    updatedAt: sprint.updatedAt,
+    createdAt,
+    updatedAt,
   };
 }
 
@@ -85,8 +87,8 @@ async function listSprints(projectId, userId) {
   const rows = await Sprint.findAll({
     where: { projectId },
     order: [
-      ["startsAt", "DESC"],
-      ["createdAt", "DESC"],
+      ["starts_at", "DESC"],
+      ["created_at", "DESC"],
     ],
   });
   return rows.map(toSprintDto);

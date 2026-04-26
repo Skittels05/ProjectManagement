@@ -1,29 +1,30 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { type FormEvent, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { AppDispatch, RootState } from "../../store";
-import { clearCurrentProject } from "../../store/slices/projectsSlice";
+import type { RootState } from "../../store";
 import {
-  addProjectMember,
-  fetchProjectById,
-  fetchSprints,
-  removeProjectMember,
-  updateProjectMemberRole,
-} from "../../store/thunks/projectsThunks";
+  useAddProjectMemberMutation,
+  useGetProjectQuery,
+  useRemoveProjectMemberMutation,
+  useUpdateProjectMemberRoleMutation,
+} from "../../store/api/projectsApi";
 import type { ProjectMemberDto } from "../../store/types/projects.types";
 import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projectRole";
 import { isUuidV4 } from "../../shared/lib/uuid";
+import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { ProjectInviteForm } from "./components/ProjectInviteForm/ProjectInviteForm";
 import { ProjectSprintsSection } from "./components/ProjectSprintsSection/ProjectSprintsSection";
 import { ProjectTeamSection } from "./components/ProjectTeamSection/ProjectTeamSection";
 import "./ProjectPage.css";
 
 export function ProjectPage() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { current, currentLoading, currentError } = useSelector((state: RootState) => state.projects);
+
+  const [addMember] = useAddProjectMemberMutation();
+  const [updateMemberRole] = useUpdateProjectMemberRoleMutation();
+  const [removeMember] = useRemoveProjectMemberMutation();
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
@@ -37,16 +38,13 @@ export function ProjectPage() {
   const routeProjectId = projectId ?? "";
   const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
 
-  useEffect(() => {
-    if (!validProjectId) {
-      return;
-    }
-    void dispatch(fetchProjectById(validProjectId));
-    void dispatch(fetchSprints(validProjectId));
-    return () => {
-      dispatch(clearCurrentProject());
-    };
-  }, [dispatch, validProjectId]);
+  const {
+    data: current,
+    isLoading: currentLoading,
+    error: currentQueryError,
+  } = useGetProjectQuery(validProjectId ?? "", { skip: !validProjectId });
+
+  const currentError = currentQueryError ? getRtkQueryErrorMessage(currentQueryError) : null;
 
   const members = current?.members ?? [];
   const ownerCount = useMemo(() => members.filter((m) => isOwnerRoleName(m.role)).length, [members]);
@@ -76,15 +74,18 @@ export function ProjectPage() {
       return;
     }
     setInviteBusy(true);
-    const result = await dispatch(
-      addProjectMember({ projectId: validProjectId, email: inviteEmail.trim(), role: roleTrim }),
-    );
-    setInviteBusy(false);
-    if (addProjectMember.fulfilled.match(result)) {
+    try {
+      await addMember({
+        projectId: validProjectId,
+        email: inviteEmail.trim(),
+        role: roleTrim,
+      }).unwrap();
       setInviteEmail("");
       setInviteRole("member");
-    } else {
-      setInviteError(result.payload ?? "Could not add member");
+    } catch (err) {
+      setInviteError(getRtkQueryErrorMessage(err));
+    } finally {
+      setInviteBusy(false);
     }
   }
 
@@ -97,12 +98,16 @@ export function ProjectPage() {
     }
     setMemberError(null);
     setRoleSavingFor(member.userId);
-    const result = await dispatch(
-      updateProjectMemberRole({ projectId: validProjectId, userId: member.userId, role: nextTrim }),
-    );
-    setRoleSavingFor(null);
-    if (updateProjectMemberRole.rejected.match(result)) {
-      setMemberError(result.payload ?? "Could not update role");
+    try {
+      await updateMemberRole({
+        projectId: validProjectId,
+        userId: member.userId,
+        role: nextTrim,
+      }).unwrap();
+    } catch (err) {
+      setMemberError(getRtkQueryErrorMessage(err));
+    } finally {
+      setRoleSavingFor(null);
     }
   }
 
@@ -115,16 +120,18 @@ export function ProjectPage() {
     if (!window.confirm(message)) return;
     setMemberError(null);
     setRemovingFor(member.userId);
-    const result = await dispatch(
-      removeProjectMember({ projectId: validProjectId, userId: member.userId }),
-    );
-    setRemovingFor(null);
-    if (removeProjectMember.rejected.match(result)) {
-      setMemberError(result.payload ?? "Could not remove member");
-      return;
-    }
-    if (removeProjectMember.fulfilled.match(result) && "left" in result.payload && result.payload.left) {
-      navigate("/", { replace: true });
+    try {
+      const payload = await removeMember({
+        projectId: validProjectId,
+        userId: member.userId,
+      }).unwrap();
+      if ("left" in payload && payload.left) {
+        navigate("/", { replace: true });
+      }
+    } catch (err) {
+      setMemberError(getRtkQueryErrorMessage(err));
+    } finally {
+      setRemovingFor(null);
     }
   }
 

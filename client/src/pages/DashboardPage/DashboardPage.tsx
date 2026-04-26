@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../store";
-import { fetchProjects } from "../../store/thunks/projectsThunks";
+import { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
+import { useGetProjectsQuery } from "../../store/api/projectsApi";
 import type { ProjectDto } from "../../store/types/projects.types";
 import { isOwnerRoleName } from "../../shared/lib/projectRole";
 import { CreateProjectModal } from "./components/CreateProjectModal/CreateProjectModal";
@@ -50,18 +50,13 @@ function applySort(projects: ProjectDto[], sortBy: ProjectSortOption): ProjectDt
 }
 
 export function DashboardPage() {
-  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { list } = useSelector((state: RootState) => state.projects);
+  const { data: list = [], isLoading: listLoading, error: listError } = useGetProjectsQuery();
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<ProjectSortOption>("updated_desc");
   const [filterBy, setFilterBy] = useState<ProjectFilterOption>("all");
   const [createModalOpen, setCreateModalOpen] = useState(false);
-
-  useEffect(() => {
-    void dispatch(fetchProjects());
-  }, [dispatch]);
 
   const visibleProjects = useMemo(() => {
     let next = applyFilter(list, filterBy);
@@ -91,7 +86,12 @@ export function DashboardPage() {
         />
       </div>
 
-      <ProjectListPanel projects={visibleProjects} emptyMessage={emptyMessage} />
+      <ProjectListPanel
+        projects={visibleProjects}
+        isLoading={listLoading}
+        error={listError}
+        emptyMessage={emptyMessage}
+      />
 
       <CreateProjectModal isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} />
     </section>

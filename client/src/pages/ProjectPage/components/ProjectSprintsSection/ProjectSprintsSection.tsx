@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../../../store";
-import { deleteSprint } from "../../../../store/thunks/projectsThunks";
+import { useDeleteSprintMutation, useGetSprintsQuery } from "../../../../store/api/sprintsApi";
 import type { SprintDto } from "../../../../store/types/sprints.types";
+import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import { SprintModal } from "../SprintModal/SprintModal";
 import "./ProjectSprintsSection.css";
@@ -28,8 +27,11 @@ type ProjectSprintsSectionProps = {
 };
 
 export function ProjectSprintsSection({ projectId, canManageSprints }: ProjectSprintsSectionProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const { sprints, sprintsLoading, sprintsError } = useSelector((state: RootState) => state.projects);
+  const { data: sprints = [], isLoading: sprintsLoading, error: sprintsQueryError } =
+    useGetSprintsQuery(projectId);
+  const [deleteSprint] = useDeleteSprintMutation();
+
+  const sprintsError = sprintsQueryError ? getRtkQueryErrorMessage(sprintsQueryError) : null;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -58,10 +60,12 @@ export function ProjectSprintsSection({ projectId, canManageSprints }: ProjectSp
       return;
     }
     setDeletingId(sprint.id);
-    const result = await dispatch(deleteSprint({ projectId, sprintId: sprint.id }));
-    setDeletingId(null);
-    if (deleteSprint.rejected.match(result)) {
-      window.alert(result.payload ?? "Could not delete sprint");
+    try {
+      await deleteSprint({ projectId, sprintId: sprint.id }).unwrap();
+    } catch (err) {
+      window.alert(getRtkQueryErrorMessage(err));
+    } finally {
+      setDeletingId(null);
     }
   }
 

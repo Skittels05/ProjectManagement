@@ -1,23 +1,26 @@
-import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import type { RootState } from "../../../../store";
+import type { SerializedError } from "@reduxjs/toolkit";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import type { ProjectDto } from "../../../../store/types/projects.types";
+import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import "./ProjectListPanel.css";
 
 type ProjectListPanelProps = {
   projects: ProjectDto[];
+  isLoading: boolean;
+  error: FetchBaseQueryError | SerializedError | undefined;
   emptyMessage: string;
 };
 
-export function ProjectListPanel({ projects, emptyMessage }: ProjectListPanelProps) {
-  const { listLoading, listError } = useSelector((state: RootState) => state.projects);
+export function ProjectListPanel({ projects, isLoading, error, emptyMessage }: ProjectListPanelProps) {
+  const errorMessage = error ? getRtkQueryErrorMessage(error) : null;
 
   return (
     <ProjectPanel title="My projects">
-      {listLoading ? <p className="muted">Loading projects…</p> : null}
-      {listError ? <p className="form-error">{listError}</p> : null}
-      {!listLoading && projects.length === 0 ? <p className="muted">{emptyMessage}</p> : null}
+      {isLoading ? <p className="muted">Loading projects…</p> : null}
+      {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
+      {!isLoading && projects.length === 0 ? <p className="muted">{emptyMessage}</p> : null}
       <ul className="project-list">
         {projects.map((project) => (
           <li key={project.id}>

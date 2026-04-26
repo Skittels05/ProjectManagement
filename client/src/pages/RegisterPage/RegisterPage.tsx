@@ -1,24 +1,25 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../store";
-import { registerUser } from "../../store/thunks/authThunks";
+import { useRegisterMutation } from "../../store/api/authApi";
+import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { AuthCardLayout } from "../../components/AuthCardLayout/AuthCardLayout";
 
 export function RegisterPage() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const [register, { isLoading }] = useRegisterMutation();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const resultAction = await dispatch(registerUser({ fullName, email, password }));
-
-    if (registerUser.fulfilled.match(resultAction)) {
+    setError(null);
+    try {
+      await register({ fullName, email, password }).unwrap();
       navigate("/");
+    } catch (e) {
+      setError(getRtkQueryErrorMessage(e));
     }
   }
 
@@ -67,8 +68,8 @@ export function RegisterPage() {
           />
         </label>
         {error ? <p className="form-error">{error}</p> : null}
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating account..." : "Register"}
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Creating account..." : "Register"}
         </button>
       </form>
     </AuthCardLayout>
