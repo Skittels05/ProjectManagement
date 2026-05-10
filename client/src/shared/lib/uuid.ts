@@ -4,3 +4,8 @@ const UUID_V4 =
 export function isUuidV4(value: string | undefined): boolean {
   return typeof value === "string" && UUID_V4.test(value);
 }
+
+export function sameUserId(a: string | undefined, b: string | undefined): boolean {
+  if (a == null || b == null) return false;
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}

@@ -4,6 +4,7 @@ const { validationMiddleware } = require("../../middlewares/validation.middlewar
 const { authMiddleware } = require("../../middlewares/auth.middleware");
 const controller = require("./project.controller");
 const sprintController = require("./sprint.controller");
+const taskController = require("./task.controller");
 const {
   createProjectValidation,
   addMemberValidation,
@@ -17,6 +18,12 @@ const {
   updateSprintValidation,
   deleteSprintValidation,
 } = require("./sprint.validation");
+const {
+  listTasksValidation,
+  createTaskValidation,
+  updateTaskValidation,
+  deleteTaskValidation,
+} = require("./task.validation");
 
 const projectsRouter = Router();
 
@@ -70,6 +77,30 @@ projectsRouter.delete(
   deleteSprintValidation,
   validationMiddleware,
   asyncHandler(sprintController.remove),
+);
+projectsRouter.get(
+  "/:projectId/tasks",
+  listTasksValidation,
+  validationMiddleware,
+  asyncHandler(taskController.list),
+);
+projectsRouter.post(
+  "/:projectId/tasks",
+  createTaskValidation,
+  validationMiddleware,
+  asyncHandler(taskController.create),
+);
+projectsRouter.patch(
+  "/:projectId/tasks/:taskId",
+  updateTaskValidation,
+  validationMiddleware,
+  asyncHandler(taskController.update),
+);
+projectsRouter.delete(
+  "/:projectId/tasks/:taskId",
+  deleteTaskValidation,
+  validationMiddleware,
+  asyncHandler(taskController.remove),
 );
 projectsRouter.get(
   "/:projectId",

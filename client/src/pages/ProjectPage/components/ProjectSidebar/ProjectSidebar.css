@@ -1,0 +1,126 @@
+.project-sidebar-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-sizing: border-box;
+}
+
+.project-sidebar-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.project-sidebar-heading-text {
+  min-width: 0;
+}
+
+.project-sidebar-drawer-close {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.15);
+  color: #e2e8f0;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.project-sidebar-drawer-close:hover {
+  background: rgba(148, 163, 184, 0.28);
+}
+
+@media (max-width: 900px) {
+  .project-sidebar-drawer-close {
+    display: inline-flex;
+  }
+
+  .project-sidebar-nav {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.project-sidebar-title {
+  margin: 0;
+}
+
+.project-sidebar-sub {
+  margin: -0.25rem 0 0;
+  line-height: 1.45;
+}
+
+.project-sidebar-new-sprint {
+  width: 100%;
+}
+
+.project-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidebar-scope-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.sidebar-scope-btn:hover {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.sidebar-scope-btn-active {
+  border-color: rgba(96, 165, 250, 0.45);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.sidebar-scope-name {
+  font-weight: 600;
+}
+
+.sidebar-scope-hint {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.project-sidebar-sprint-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  margin-top: auto;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.project-sidebar-sprint-actions .danger-button {
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(220, 38, 38, 0.15);
+  color: #fecaca;
+}
+
+.project-sidebar-sprint-actions .danger-button:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.28);
+}

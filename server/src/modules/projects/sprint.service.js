@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { ProjectMember, Sprint } = require("../../models");
+const { ProjectMember, Sprint, Project } = require("../../models");
 const { AppError } = require("../../utils/app-error");
 const { isUuidV4 } = require("../../utils/uuid");
 
@@ -14,11 +14,16 @@ async function assertMember(projectId, userId) {
   return row;
 }
 
-function assertCanManageSprints(role) {
+function sameUuid(a, b) {
+  return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+}
+
+async function assertCanManageSprints(projectId, userId, role) {
   const r = String(role ?? "").trim().toLowerCase();
-  if (!MANAGE_MEMBER_ROLES.has(r)) {
-    throw new AppError("You do not have permission to manage sprints", 403);
-  }
+  if (MANAGE_MEMBER_ROLES.has(r)) return;
+  const project = await Project.findByPk(projectId, { attributes: ["createdBy"] });
+  if (project && sameUuid(userId, project.createdBy)) return;
+  throw new AppError("You do not have permission to manage sprints", 403);
 }
 
 function toSprintDto(sprint) {
@@ -99,7 +104,7 @@ async function createSprint(userId, projectId, body) {
     throw new AppError("Project not found", 404);
   }
   const member = await assertMember(projectId, userId);
-  assertCanManageSprints(member.role);
+  await assertCanManageSprints(projectId, userId, member.role);
 
   const name = String(body.name ?? "").trim();
   if (!name) {
@@ -140,7 +145,7 @@ async function updateSprint(userId, projectId, sprintId, body) {
     throw new AppError("Sprint not found", 404);
   }
   const member = await assertMember(projectId, userId);
-  assertCanManageSprints(member.role);
+  await assertCanManageSprints(projectId, userId, member.role);
 
   const sprint = await Sprint.findOne({ where: { id: sprintId, projectId } });
   if (!sprint) {
@@ -202,7 +207,7 @@ async function deleteSprint(userId, projectId, sprintId) {
     throw new AppError("Sprint not found", 404);
   }
   const member = await assertMember(projectId, userId);
-  assertCanManageSprints(member.role);
+  await assertCanManageSprints(projectId, userId, member.role);
 
   const sprint = await Sprint.findOne({ where: { id: sprintId, projectId } });
   if (!sprint) {

@@ -1,33 +1,180 @@
-.project-page-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
-  gap: 2rem;
-  align-items: start;
+.project-page--workspace {
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: 0;
+  padding-right: max(1rem, env(safe-area-inset-right));
+  gap: 0;
+  overflow-x: clip;
 }
 
-.project-page-main {
+.project-page-workspace-shell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: calc(100vh - 11rem);
+}
+
+.project-page-work-area {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.project-page-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.project-page-toolbar-inner {
+  max-width: min(1400px, 100%);
+  margin: 0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
 }
 
-.project-page-main .sprints-section {
-  margin-top: 1.25rem;
+.project-page-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.project-page-aside {
+.project-workspace-toggle {
+  display: none;
+}
+
+.project-toolbar-kanban {
+  opacity: 0.65;
+}
+
+.project-page-toolbar-meta {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+@media (min-width: 901px) {
+  .project-page-workspace-shell > .project-sidebar-rail {
+    flex: 0 0 clamp(220px, 24vw, 300px);
+    align-self: stretch;
+    min-height: calc(100vh - 11rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 1rem 0.85rem 2rem max(1rem, env(safe-area-inset-left));
+    border-right: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(15, 23, 42, 0.72);
+  }
+
+  .project-main {
+    padding: 1.25rem 1.25rem 2rem 1.5rem;
+    max-width: min(1400px, 100%);
+  }
+}
+
+.project-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
+.project-main-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.project-main-header h2 {
+  margin: 0;
+}
+
 .project-page .project-description {
-  margin: 0.5rem 0 0;
+  margin: 0;
   line-height: 1.55;
 }
 
-@media (max-width: 720px) {
-  .project-page-layout {
-    grid-template-columns: 1fr;
+.project-workspace-drawer-backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .project-workspace-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .project-page-workspace-shell {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: auto;
+  }
+
+  .project-page-toolbar-inner {
+    margin: 0 auto;
+    max-width: min(1400px, 100%);
+  }
+
+  .project-main {
+    padding: 1rem 0 2rem;
+    max-width: none;
+  }
+
+  .project-page-workspace-shell > .project-sidebar-rail {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 49;
+    width: min(20rem, min(88vw, 100% - 2.5rem));
+    max-width: 320px;
+    flex: none;
+    margin: 0;
+    min-height: 0;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    border-right: 1px solid rgba(148, 163, 184, 0.28);
+    border-bottom: none;
+    border-radius: 0;
+    background: rgba(15, 23, 42, 0.98);
+    padding: max(0.75rem, env(safe-area-inset-top)) 0.85rem max(1rem, env(safe-area-inset-bottom))
+      max(0.85rem, env(safe-area-inset-left));
+    box-shadow: none;
+    max-height: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-page--workspace-drawer-open .project-page-workspace-shell > .project-sidebar-rail {
+    transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .project-workspace-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 48;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+  }
+}
+
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .project-page-workspace-shell > .project-sidebar-rail {
+    transition: none;
   }
 }

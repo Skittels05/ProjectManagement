@@ -3,6 +3,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { baseApi } from "./api/baseApi";
 import "./api/projectsApi";
 import "./api/sprintsApi";
+import "./api/tasksApi";
 import "./api/authApi";
 import authReducer from "./slices/authSlice";
 

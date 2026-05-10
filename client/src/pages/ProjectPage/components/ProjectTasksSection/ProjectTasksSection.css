@@ -1,0 +1,91 @@
+.project-tasks-section {
+  margin-top: 0;
+}
+
+.tasks-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.tasks-scope-note {
+  flex: 1;
+  min-width: min(100%, 18rem);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.task-table-wrap {
+  overflow-x: auto;
+}
+
+.task-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.task-table-wrap th,
+.task-table-wrap td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle, #e5e5e5);
+  vertical-align: top;
+}
+
+.task-table-wrap th {
+  font-weight: 600;
+  color: var(--muted, #666);
+}
+
+.task-status {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.task-status-todo {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.task-status-in_progress {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.task-status-done {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.task-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.task-actions button {
+  font-size: 0.85rem;
+}
+
+.task-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+.task-modal-grid .full-row {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .task-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}

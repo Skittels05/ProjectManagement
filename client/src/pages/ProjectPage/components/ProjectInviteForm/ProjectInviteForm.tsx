@@ -10,6 +10,7 @@ type ProjectInviteFormProps = {
   onInviteEmailChange: (value: string) => void;
   onInviteRoleChange: (value: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  embedded?: boolean;
 };
 
 export function ProjectInviteForm({
@@ -21,13 +22,20 @@ export function ProjectInviteForm({
   onInviteEmailChange,
   onInviteRoleChange,
   onSubmit,
+  embedded = false,
 }: ProjectInviteFormProps) {
-  return (
-    <ProjectPanel title="Invite member">
-      <p className="muted small-meta">
-        Pick a role that already exists in this project (except owner) or type a new role (1–32 characters). The
-        owner role cannot be assigned here.
-      </p>
+  const formInner = (
+    <>
+      {!embedded ? (
+        <p className="muted small-meta">
+          Pick a role that already exists in this project (except owner) or type a new role (1–32 characters). The
+          owner role cannot be assigned here.
+        </p>
+      ) : (
+        <p className="muted small-meta" style={{ marginTop: 0 }}>
+          Invite by email. Use an existing role name or a new one (1–32 characters). Owner cannot be assigned here.
+        </p>
+      )}
       <form className="project-form auth-form invite-form" onSubmit={(e) => void onSubmit(e)}>
         <datalist id="invite-role-suggestions">
           {roleSuggestions.map((r) => (
@@ -62,6 +70,12 @@ export function ProjectInviteForm({
           {inviteBusy ? "Sending…" : "Add to project"}
         </button>
       </form>
-    </ProjectPanel>
+    </>
   );
+
+  if (embedded) {
+    return formInner;
+  }
+
+  return <ProjectPanel title="Invite member">{formInner}</ProjectPanel>;
 }

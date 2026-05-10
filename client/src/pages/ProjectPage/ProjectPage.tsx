@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { RootState } from "../../store";
@@ -8,13 +8,18 @@ import {
   useRemoveProjectMemberMutation,
   useUpdateProjectMemberRoleMutation,
 } from "../../store/api/projectsApi";
+import { useDeleteSprintMutation, useGetSprintsQuery } from "../../store/api/sprintsApi";
 import type { ProjectMemberDto } from "../../store/types/projects.types";
+import type { SprintDto } from "../../store/types/sprints.types";
+import type { TaskDto } from "../../store/types/tasks.types";
 import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projectRole";
-import { isUuidV4 } from "../../shared/lib/uuid";
+import { isUuidV4, sameUserId } from "../../shared/lib/uuid";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
-import { ProjectInviteForm } from "./components/ProjectInviteForm/ProjectInviteForm";
-import { ProjectSprintsSection } from "./components/ProjectSprintsSection/ProjectSprintsSection";
-import { ProjectTeamSection } from "./components/ProjectTeamSection/ProjectTeamSection";
+import { ProjectMembersModal } from "./components/ProjectMembersModal/ProjectMembersModal";
+import { ProjectSidebar, type IterationScope } from "./components/ProjectSidebar/ProjectSidebar";
+import { SprintModal } from "./components/SprintModal/SprintModal";
+import { TaskModal } from "./components/TaskModal/TaskModal";
+import { ProjectTasksSection } from "./components/ProjectTasksSection/ProjectTasksSection";
 import "./ProjectPage.css";
 
 export function ProjectPage() {
@@ -25,6 +30,7 @@ export function ProjectPage() {
   const [addMember] = useAddProjectMemberMutation();
   const [updateMemberRole] = useUpdateProjectMemberRoleMutation();
   const [removeMember] = useRemoveProjectMemberMutation();
+  const [deleteSprint] = useDeleteSprintMutation();
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
@@ -35,6 +41,18 @@ export function ProjectPage() {
   const [removingFor, setRemovingFor] = useState<string | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
 
+  const [iterationScope, setIterationScope] = useState<IterationScope>("backlog");
+  const [workspaceDrawerOpen, setWorkspaceDrawerOpen] = useState(false);
+  const [membersModalOpen, setMembersModalOpen] = useState(false);
+  const [sprintModalOpen, setSprintModalOpen] = useState(false);
+  const [sprintModalMode, setSprintModalMode] = useState<"create" | "edit">("create");
+  const [editingSprint, setEditingSprint] = useState<SprintDto | null>(null);
+  const [deletingSprintId, setDeletingSprintId] = useState<string | null>(null);
+
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [taskModalMode, setTaskModalMode] = useState<"create" | "edit">("create");
+  const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
+
   const routeProjectId = projectId ?? "";
   const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
 
@@ -43,6 +61,8 @@ export function ProjectPage() {
     isLoading: currentLoading,
     error: currentQueryError,
   } = useGetProjectQuery(validProjectId ?? "", { skip: !validProjectId });
+
+  const { data: sprints = [] } = useGetSprintsQuery(validProjectId ?? "", { skip: !validProjectId });
 
   const currentError = currentQueryError ? getRtkQueryErrorMessage(currentQueryError) : null;
 
@@ -58,9 +78,72 @@ export function ProjectPage() {
     }
     return [...s].sort((a, b) => a.localeCompare(b));
   }, [members]);
-  const myRole = current?.role ?? null;
+  const myMember = useMemo(
+    () => members.find((m) => sameUserId(m.userId, user?.id)),
+    [members, user?.id],
+  );
+  const myRole = myMember?.role ?? current?.role ?? null;
+  const isProjectCreator = sameUserId(current?.createdBy, user?.id);
   const myRoleLower = String(myRole ?? "").trim().toLowerCase();
-  const canManageTeam = myRoleLower === "owner" || myRoleLower === "manager";
+  const canManageTeam =
+    isProjectCreator || myRoleLower === "owner" || myRoleLower === "manager";
+
+  useEffect(() => {
+    if (!workspaceDrawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [workspaceDrawerOpen]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setWorkspaceDrawerOpen(false);
+    };
+    if (!workspaceDrawerOpen) return;
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [workspaceDrawerOpen]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 901px)");
+    const onChange = () => {
+      if (mq.matches) setWorkspaceDrawerOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const selectIterationScope = useCallback((next: IterationScope) => {
+    setIterationScope(next);
+    setWorkspaceDrawerOpen(false);
+  }, []);
+
+  const iterationLabel = useMemo(() => {
+    if (iterationScope === "backlog") {
+      return "Backlog";
+    }
+    const sp = sprints.find((s) => s.id === iterationScope);
+    return sp?.name ?? "Sprint";
+  }, [iterationScope, sprints]);
+
+  function openTaskCreate() {
+    setTaskModalMode("create");
+    setEditingTask(null);
+    setTaskModalOpen(true);
+  }
+
+  function openTaskEdit(task: TaskDto) {
+    setTaskModalMode("edit");
+    setEditingTask(task);
+    setTaskModalOpen(true);
+  }
+
+  function closeTaskModal() {
+    setTaskModalOpen(false);
+    setEditingTask(null);
+  }
 
   async function handleInvite(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -113,7 +196,7 @@ export function ProjectPage() {
 
   async function handleRemoveMember(member: ProjectMemberDto) {
     if (!validProjectId) return;
-    const isSelf = member.userId === user?.id;
+    const isSelf = sameUserId(member.userId, user?.id);
     const message = isSelf
       ? "Leave this project? You will need a new invite to return."
       : `Remove ${member.fullName} from the project?`;
@@ -135,20 +218,61 @@ export function ProjectPage() {
     }
   }
 
+  async function handleDeleteSprint(sprint: SprintDto) {
+    if (!validProjectId) return;
+    if (
+      !window.confirm(
+        `Delete sprint “${sprint.name}”? Tasks will move back to the backlog (unassigned).`,
+      )
+    ) {
+      return;
+    }
+    setDeletingSprintId(sprint.id);
+    try {
+      await deleteSprint({ projectId: validProjectId, sprintId: sprint.id }).unwrap();
+      if (iterationScope === sprint.id) {
+        setIterationScope("backlog");
+      }
+    } catch (err) {
+      window.alert(getRtkQueryErrorMessage(err));
+    } finally {
+      setDeletingSprintId(null);
+    }
+  }
+
+  function openNewSprintModal() {
+    setSprintModalMode("create");
+    setEditingSprint(null);
+    setSprintModalOpen(true);
+  }
+
+  function openEditSprintModal(sprint: SprintDto) {
+    setSprintModalMode("edit");
+    setEditingSprint(sprint);
+    setSprintModalOpen(true);
+  }
+
+  function closeSprintModal() {
+    setSprintModalOpen(false);
+    setEditingSprint(null);
+  }
+
+  const isOwnerLike = myRoleLower === "owner" || isProjectCreator;
+
   function canEditMemberRole(member: ProjectMemberDto) {
     if (!canManageTeam) return false;
-    if (myRoleLower === "owner") return true;
+    if (isOwnerLike) return true;
     return !isOwnerRoleName(member.role);
   }
 
   function canRemoveOther(member: ProjectMemberDto) {
-    if (!canManageTeam || member.userId === user?.id) return false;
-    if (myRoleLower !== "owner" && isOwnerRoleName(member.role)) return false;
+    if (!canManageTeam || sameUserId(member.userId, user?.id)) return false;
+    if (!isOwnerLike && isOwnerRoleName(member.role)) return false;
     return true;
   }
 
   function canLeaveProject(member: ProjectMemberDto) {
-    if (member.userId !== user?.id) return false;
+    if (!sameUserId(member.userId, user?.id)) return false;
     if (isOwnerRoleName(member.role) && ownerCount <= 1) return false;
     return true;
   }
@@ -179,51 +303,138 @@ export function ProjectPage() {
     );
   }
 
+  const membersModalProps = {
+    members,
+    currentUserId: user?.id,
+    memberError,
+    roleSavingFor,
+    removingFor,
+    roleSuggestions,
+    canEditMemberRole,
+    canRemoveOther,
+    canLeaveProject,
+    onRoleChange: handleRoleChange,
+    onRemoveMember: handleRemoveMember,
+  };
+
+  const defaultTaskSprintId = iterationScope === "backlog" ? null : iterationScope;
+
   return (
-    <section className="page project-page project-page-layout">
-      <div className="project-page-main">
-        <p className="eyebrow">Project</p>
-        <h2>{current.name}</h2>
-        <p className="muted">
-          Your role: <strong>{myRole ?? "—"}</strong>
-        </p>
-        {current.description ? <p className="project-description">{current.description}</p> : null}
-        <p className="muted small-meta">Updated {new Date(current.updatedAt).toLocaleString()}</p>
-        <Link to="/" className="back-link">
-          ← All projects
-        </Link>
+    <section
+      className={`page project-page project-page--workspace${workspaceDrawerOpen ? " project-page--workspace-drawer-open" : ""}`}
+    >
+      {workspaceDrawerOpen ? (
+        <div
+          className="project-workspace-drawer-backdrop"
+          role="presentation"
+          aria-hidden
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setWorkspaceDrawerOpen(false);
+          }}
+        />
+      ) : null}
 
-        <ProjectSprintsSection projectId={validProjectId} canManageSprints={canManageTeam} />
-      </div>
-
-      <aside className="project-page-aside">
-        <ProjectTeamSection
-          members={members}
-          currentUserId={user?.id}
-          memberError={memberError}
-          roleSavingFor={roleSavingFor}
-          removingFor={removingFor}
-          roleSuggestions={roleSuggestions}
-          canEditMemberRole={canEditMemberRole}
-          canRemoveOther={canRemoveOther}
-          canLeaveProject={canLeaveProject}
-          onRoleChange={(m, r) => void handleRoleChange(m, r)}
-          onRemoveMember={(m) => void handleRemoveMember(m)}
+      <div className="project-page-workspace-shell">
+        <ProjectSidebar
+          sprints={sprints}
+          selectedScope={iterationScope}
+          onSelectScope={selectIterationScope}
+          canManageSprints={canManageTeam}
+          onNewSprint={openNewSprintModal}
+          onEditSprint={openEditSprintModal}
+          onDeleteSprint={(s) => void handleDeleteSprint(s)}
+          deletingSprintId={deletingSprintId}
+          onDrawerClose={() => setWorkspaceDrawerOpen(false)}
         />
 
-        {canManageTeam ? (
-          <ProjectInviteForm
-            inviteEmail={inviteEmail}
-            inviteRole={inviteRole}
-            inviteBusy={inviteBusy}
-            inviteError={inviteError}
-            roleSuggestions={roleSuggestions}
-            onInviteEmailChange={setInviteEmail}
-            onInviteRoleChange={setInviteRole}
-            onSubmit={handleInvite}
-          />
-        ) : null}
-      </aside>
+        <div className="project-page-work-area">
+          <header className="project-page-toolbar">
+            <div className="project-page-toolbar-inner">
+              <div className="project-page-toolbar-actions">
+                <button
+                  type="button"
+                  className="secondary-button project-workspace-toggle"
+                  onClick={() => setWorkspaceDrawerOpen(true)}
+                  aria-expanded={workspaceDrawerOpen}
+                  aria-controls="project-workspace-panel"
+                >
+                  Workspace
+                </button>
+                <button type="button" className="secondary-button" onClick={() => setMembersModalOpen(true)}>
+                  Team & participants
+                </button>
+                <button type="button" className="primary-button" onClick={openTaskCreate}>
+                  Add task
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button project-toolbar-kanban"
+                  disabled
+                  title="Coming soon"
+                >
+                  Kanban
+                </button>
+              </div>
+              <p className="muted project-page-toolbar-meta">
+                {members.length} member{members.length === 1 ? "" : "s"} · your role:{" "}
+                <strong>{myRole ?? "—"}</strong>
+              </p>
+            </div>
+          </header>
+
+          <div className="project-main">
+            <header className="project-main-header">
+              <p className="eyebrow">Project</p>
+              <h2>{current.name}</h2>
+              {current.description ? <p className="project-description">{current.description}</p> : null}
+              <p className="muted small-meta">Updated {new Date(current.updatedAt).toLocaleString()}</p>
+              <Link to="/" className="back-link">
+                ← All projects
+              </Link>
+            </header>
+
+            <ProjectTasksSection
+              projectId={validProjectId}
+              iterationScope={iterationScope}
+              iterationLabel={iterationLabel}
+              onEditTask={openTaskEdit}
+            />
+          </div>
+        </div>
+      </div>
+
+      <ProjectMembersModal
+        isOpen={membersModalOpen}
+        onClose={() => setMembersModalOpen(false)}
+        canManageTeam={canManageTeam}
+        inviteEmail={inviteEmail}
+        inviteRole={inviteRole}
+        inviteBusy={inviteBusy}
+        inviteError={inviteError}
+        onInviteEmailChange={setInviteEmail}
+        onInviteRoleChange={setInviteRole}
+        onInviteSubmit={handleInvite}
+        {...membersModalProps}
+      />
+
+      <TaskModal
+        isOpen={taskModalOpen}
+        mode={taskModalMode}
+        projectId={validProjectId}
+        members={members}
+        sprints={sprints}
+        task={editingTask}
+        defaultSprintId={defaultTaskSprintId}
+        onClose={closeTaskModal}
+      />
+
+      <SprintModal
+        isOpen={sprintModalOpen}
+        mode={sprintModalMode}
+        projectId={validProjectId}
+        sprint={editingSprint}
+        onClose={closeSprintModal}
+      />
     </section>
   );
 }

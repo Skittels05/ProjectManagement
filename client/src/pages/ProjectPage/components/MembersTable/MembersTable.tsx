@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import { isAssignableMemberRole } from "../../../../shared/lib/projectRole";
-import "./ProjectTeamSection.css";
+import { sameUserId } from "../../../../shared/lib/uuid";
+import "../ProjectTeamSection/ProjectTeamSection.css";
 
 type MemberRoleFieldProps = {
   member: ProjectMemberDto;
@@ -42,7 +42,7 @@ function MemberRoleField({ member, busy, onCommit }: MemberRoleFieldProps) {
   );
 }
 
-type ProjectTeamSectionProps = {
+export type MembersTableProps = {
   members: ProjectMemberDto[];
   currentUserId: string | undefined;
   memberError: string | null;
@@ -56,7 +56,7 @@ type ProjectTeamSectionProps = {
   onRemoveMember: (member: ProjectMemberDto) => void;
 };
 
-export function ProjectTeamSection({
+export function MembersTable({
   members,
   currentUserId,
   memberError,
@@ -68,9 +68,9 @@ export function ProjectTeamSection({
   canLeaveProject,
   onRoleChange,
   onRemoveMember,
-}: ProjectTeamSectionProps) {
+}: MembersTableProps) {
   return (
-    <ProjectPanel title="Team">
+    <>
       <datalist id="team-role-suggestions">
         {roleSuggestions.map((r) => (
           <option key={r} value={r} />
@@ -94,7 +94,7 @@ export function ProjectTeamSection({
           </thead>
           <tbody>
             {members.map((member) => {
-              const isSelf = member.userId === currentUserId;
+              const isSelf = sameUserId(member.userId, currentUserId);
               const busy = roleSavingFor === member.userId || removingFor === member.userId;
               return (
                 <tr key={member.userId}>
@@ -144,6 +144,6 @@ export function ProjectTeamSection({
           </tbody>
         </table>
       </div>
-    </ProjectPanel>
+    </>
   );
 }

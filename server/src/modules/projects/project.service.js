@@ -82,11 +82,23 @@ async function countOwners(projectId) {
   });
 }
 
-function assertCanManageTeam(actorRole) {
+function sameUuid(a, b) {
+  return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+}
+
+async function isActorOwnerOrCreator(actorUserId, projectId, actorRole) {
+  const lower = String(actorRole ?? "").trim().toLowerCase();
+  if (lower === ROLES.OWNER) return true;
+  const project = await Project.findByPk(projectId, { attributes: ["createdBy"] });
+  return project != null && sameUuid(actorUserId, project.createdBy);
+}
+
+async function assertCanManageTeam(actorUserId, projectId, actorRole) {
   const r = String(actorRole ?? "").trim().toLowerCase();
-  if (!MANAGE_MEMBER_ROLES.has(r)) {
-    throw new AppError("You do not have permission to manage project members", 403);
-  }
+  if (MANAGE_MEMBER_ROLES.has(r)) return;
+  const project = await Project.findByPk(projectId, { attributes: ["createdBy"] });
+  if (project && sameUuid(actorUserId, project.createdBy)) return;
+  throw new AppError("You do not have permission to manage project members", 403);
 }
 
 async function createProject(userId, { name, description }) {
@@ -184,7 +196,7 @@ async function addProjectMember(actorUserId, projectId, { email, role }) {
   if (!actor) {
     throw new AppError("Project not found", 404);
   }
-  assertCanManageTeam(actor.role);
+  await assertCanManageTeam(actorUserId, id, actor.role);
 
   const invitedUser = await User.findOne({
     where: { email: { [Op.iLike]: normalizedEmail } },
@@ -229,7 +241,7 @@ async function updateProjectMemberRole(actorUserId, projectId, targetUserId, { r
   if (!actor) {
     throw new AppError("Project not found", 404);
   }
-  assertCanManageTeam(actor.role);
+  await assertCanManageTeam(actorUserId, pid, actor.role);
 
   const target = await ProjectMember.findOne({ where: { projectId: pid, userId: tid } });
   if (!target) {
@@ -237,7 +249,8 @@ async function updateProjectMemberRole(actorUserId, projectId, targetUserId, { r
   }
 
   const actorLower = String(actor.role ?? "").trim().toLowerCase();
-  if (actorLower === ROLES.MANAGER && isOwnerRole(target.role)) {
+  const actorIsOwnerOrCreator = await isActorOwnerOrCreator(actorUserId, pid, actor.role);
+  if (!actorIsOwnerOrCreator && actorLower === ROLES.MANAGER && isOwnerRole(target.role)) {
     throw new AppError("Only the project owner can change an owner member", 403);
   }
 
@@ -279,9 +292,10 @@ async function removeProjectMember(actorUserId, projectId, targetUserId) {
   if (!actor) {
     throw new AppError("Project not found", 404);
   }
-  assertCanManageTeam(actor.role);
+  await assertCanManageTeam(actorUserId, pid, actor.role);
 
-  if (isOwnerRole(target.role) && String(actor.role ?? "").trim().toLowerCase() !== ROLES.OWNER) {
+  const actorIsOwnerOrCreator = await isActorOwnerOrCreator(actorUserId, pid, actor.role);
+  if (isOwnerRole(target.role) && !actorIsOwnerOrCreator) {
     throw new AppError("Only the project owner can remove an owner", 403);
   }
 
