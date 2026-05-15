@@ -55,8 +55,10 @@
   display: none;
 }
 
-.project-toolbar-kanban {
-  opacity: 0.65;
+.project-toolbar-view-active {
+  border-color: rgba(96, 165, 250, 0.55);
+  background: rgba(59, 130, 246, 0.15);
+  color: #bfdbfe;
 }
 
 .project-page-toolbar-meta {

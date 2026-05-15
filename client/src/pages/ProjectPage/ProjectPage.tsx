@@ -19,8 +19,12 @@ import { ProjectMembersModal } from "./components/ProjectMembersModal/ProjectMem
 import { ProjectSidebar, type IterationScope } from "./components/ProjectSidebar/ProjectSidebar";
 import { SprintModal } from "./components/SprintModal/SprintModal";
 import { TaskModal } from "./components/TaskModal/TaskModal";
+import { AddTaskButton } from "./components/AddTaskButton/AddTaskButton";
+import { ProjectKanbanBoard } from "./components/ProjectKanbanBoard/ProjectKanbanBoard";
 import { ProjectTasksSection } from "./components/ProjectTasksSection/ProjectTasksSection";
 import "./ProjectPage.css";
+
+export type TasksViewMode = "list" | "kanban";
 
 export function ProjectPage() {
   const navigate = useNavigate();
@@ -52,6 +56,7 @@ export function ProjectPage() {
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskModalMode, setTaskModalMode] = useState<"create" | "edit">("create");
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
+  const [tasksView, setTasksView] = useState<TasksViewMode>("list");
 
   const routeProjectId = projectId ?? "";
   const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
@@ -363,16 +368,14 @@ export function ProjectPage() {
                 <button type="button" className="secondary-button" onClick={() => setMembersModalOpen(true)}>
                   Team & participants
                 </button>
-                <button type="button" className="primary-button" onClick={openTaskCreate}>
-                  Add task
-                </button>
+                <AddTaskButton onClick={openTaskCreate} />
                 <button
                   type="button"
-                  className="secondary-button project-toolbar-kanban"
-                  disabled
-                  title="Coming soon"
+                  className={`secondary-button project-toolbar-kanban${tasksView === "kanban" ? " project-toolbar-view-active" : ""}`}
+                  onClick={() => setTasksView((v) => (v === "kanban" ? "list" : "kanban"))}
+                  aria-pressed={tasksView === "kanban"}
                 >
-                  Kanban
+                  {tasksView === "kanban" ? "List view" : "Kanban"}
                 </button>
               </div>
               <p className="muted project-page-toolbar-meta">
@@ -393,12 +396,23 @@ export function ProjectPage() {
               </Link>
             </header>
 
-            <ProjectTasksSection
-              projectId={validProjectId}
-              iterationScope={iterationScope}
-              iterationLabel={iterationLabel}
-              onEditTask={openTaskEdit}
-            />
+            {tasksView === "kanban" ? (
+              <ProjectKanbanBoard
+                projectId={validProjectId}
+                iterationScope={iterationScope}
+                iterationLabel={iterationLabel}
+                onEditTask={openTaskEdit}
+                onAddTask={openTaskCreate}
+              />
+            ) : (
+              <ProjectTasksSection
+                projectId={validProjectId}
+                iterationScope={iterationScope}
+                iterationLabel={iterationLabel}
+                onEditTask={openTaskEdit}
+                onAddTask={openTaskCreate}
+              />
+            )}
           </div>
         </div>
       </div>

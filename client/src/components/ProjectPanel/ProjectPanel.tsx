@@ -4,12 +4,16 @@ import "./ProjectPanel.css";
 type ProjectPanelProps = {
   title: string;
   children: ReactNode;
+  headerAction?: ReactNode;
 };
 
-export function ProjectPanel({ title, children }: ProjectPanelProps) {
+export function ProjectPanel({ title, children, headerAction }: ProjectPanelProps) {
   return (
     <div className="project-panel">
-      <h3 className="panel-title">{title}</h3>
+      <div className="panel-header">
+        <h3 className="panel-title">{title}</h3>
+        {headerAction ?? null}
+      </div>
       {children}
     </div>
   );

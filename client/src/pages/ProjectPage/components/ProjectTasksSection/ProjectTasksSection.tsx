@@ -6,6 +6,7 @@ import {
 import type { TaskDto } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
+import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
 import "./ProjectTasksSection.css";
 
 function statusLabel(status: string): string {
@@ -25,6 +26,7 @@ export type ProjectTasksSectionProps = {
   iterationScope: "backlog" | string;
   iterationLabel: string;
   onEditTask: (task: TaskDto) => void;
+  onAddTask: () => void;
 };
 
 export function ProjectTasksSection({
@@ -32,6 +34,7 @@ export function ProjectTasksSection({
   iterationScope,
   iterationLabel,
   onEditTask,
+  onAddTask,
 }: ProjectTasksSectionProps) {
   const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
 
@@ -64,10 +67,10 @@ export function ProjectTasksSection({
 
   return (
     <div className="project-tasks-section">
-      <ProjectPanel title={panelTitle}>
+      <ProjectPanel title={panelTitle} headerAction={<AddTaskButton onClick={onAddTask} />}>
         <p className="muted tasks-scope-note">
-          Current scope: <strong>{iterationLabel}</strong>. Use the header to add a task. Edit or delete tasks in the
-          list.
+          Current scope: <strong>{iterationLabel}</strong>. Press <strong>+</strong> to add a task. Edit or delete in
+          the list.
           {iterationScope === "backlog"
             ? " New items stay in the backlog until you assign a sprint in the editor."
             : null}
