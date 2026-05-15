@@ -17,7 +17,7 @@ import {
   useGetTasksQuery,
   useUpdateTaskMutation,
 } from "../../../../store/api/tasksApi";
-import type { ProjectMemberDto } from "../../../../store/types/projects.types";
+import type { ProjectDto, ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { TaskDto, TaskStatus } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import {
@@ -32,12 +32,21 @@ import {
   groupFilteredKanbanTasks,
   type TaskListQuery,
 } from "../../../../shared/lib/taskListQuery";
+import {
+  formatWipCount,
+  isWipLimitExceeded,
+  wipLimitForStatus,
+} from "../../../../shared/lib/wipLimits";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
 import "./ProjectKanbanBoard.css";
 
 export type ProjectKanbanBoardProps = {
   projectId: string;
+  project: Pick<
+    ProjectDto,
+    "wipLimitTodo" | "wipLimitInProgress" | "wipLimitDone"
+  >;
   iterationScope: "backlog" | string;
   iterationLabel: string;
   members: ProjectMemberDto[];
@@ -187,6 +196,7 @@ function KanbanCardMeta({ task }: { task: TaskDto }) {
   const bits: string[] = [];
   if (task.storyPoints != null) bits.push(`${task.storyPoints} SP`);
   if (task.assignee) bits.push(task.assignee.fullName);
+  if (task.subtaskCount > 0) bits.push(`${task.subtaskCount} subtask${task.subtaskCount === 1 ? "" : "s"}`);
   if (bits.length === 0) return null;
   return <p className="muted small-meta kanban-card-meta">{bits.join(" · ")}</p>;
 }
@@ -196,21 +206,25 @@ type KanbanColumnProps = {
   title: string;
   taskIds: string[];
   tasksById: Record<string, TaskDto>;
+  wipLimit: number | null;
   onEditTask: (task: TaskDto) => void;
 };
 
-function KanbanColumn({ status, title, taskIds, tasksById, onEditTask }: KanbanColumnProps) {
+function KanbanColumn({ status, title, taskIds, tasksById, wipLimit, onEditTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: columnDroppableId(status) });
+  const atLimit = isWipLimitExceeded(taskIds.length, wipLimit);
 
   return (
     <section
       ref={setNodeRef}
-      className={`kanban-column${isOver ? " kanban-column--over" : ""}`}
+      className={`kanban-column${isOver ? " kanban-column--over" : ""}${atLimit ? " kanban-column--at-limit" : ""}`}
       aria-label={title}
     >
       <header className="kanban-column-header">
         <h3>{title}</h3>
-        <span className="kanban-column-count">{taskIds.length}</span>
+        <span className={`kanban-column-count${atLimit ? " kanban-column-count--limit" : ""}`}>
+          {formatWipCount(taskIds.length, wipLimit)}
+        </span>
       </header>
       <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
         {taskIds.length === 0 ? (
@@ -231,6 +245,7 @@ function KanbanColumn({ status, title, taskIds, tasksById, onEditTask }: KanbanC
 
 export function ProjectKanbanBoard({
   projectId,
+  project,
   iterationScope,
   iterationLabel,
   members,
@@ -369,6 +384,16 @@ export function ProjectKanbanBoard({
       return;
     }
 
+    const wipLimit = wipLimitForStatus(project, status);
+    if (statusChanged && isWipLimitExceeded(targetListIds.length, wipLimit)) {
+      columnIdsRef.current = layoutColumnIds;
+      setColumnIds(layoutColumnIds);
+      const colTitle = KANBAN_COLUMNS.find((c) => c.id === status)?.title ?? status;
+      window.alert(`WIP limit reached for "${colTitle}" (${wipLimit} cards max).`);
+      setActiveId(null);
+      return;
+    }
+
     setSaving(true);
     try {
       await updateTask({
@@ -430,6 +455,7 @@ export function ProjectKanbanBoard({
                   title={col.title}
                   taskIds={columnIds[col.id]}
                   tasksById={tasksById}
+                  wipLimit={wipLimitForStatus(project, col.id)}
                   onEditTask={onEditTask}
                 />
               ))}

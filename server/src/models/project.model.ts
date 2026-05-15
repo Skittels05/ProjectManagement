@@ -22,6 +22,21 @@ export function defineProject(sequelize: Sequelize) {
         allowNull: false,
         field: "created_by",
       },
+      wipLimitTodo: {
+        type: DataTypes.SMALLINT,
+        allowNull: true,
+        field: "wip_limit_todo",
+      },
+      wipLimitInProgress: {
+        type: DataTypes.SMALLINT,
+        allowNull: true,
+        field: "wip_limit_in_progress",
+      },
+      wipLimitDone: {
+        type: DataTypes.SMALLINT,
+        allowNull: true,
+        field: "wip_limit_done",
+      },
     },
     {
       tableName: "projects",

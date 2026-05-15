@@ -6,6 +6,7 @@ import type { CreateTaskBody, TaskDto, TaskStatus, UpdateTaskBody } from "../../
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { TaskAttachmentsPanel } from "./TaskAttachmentsPanel";
 import { TaskCommentsPanel } from "./TaskCommentsPanel";
+import { TaskSubtasksPanel } from "./TaskSubtasksPanel";
 import "../ProjectTasksSection/ProjectTasksSection.css";
 import "./TaskModalEngagement.css";
 
@@ -16,7 +17,10 @@ type TaskModalProps = {
   members: ProjectMemberDto[];
   sprints: SprintDto[];
   task: TaskDto | null;
+  allTasks?: TaskDto[];
   defaultSprintId?: string | null;
+  defaultParentTaskId?: string | null;
+  onEditSubtask?: (task: TaskDto) => void;
   onClose: () => void;
 };
 
@@ -29,7 +33,10 @@ export function TaskModal({
   members,
   sprints,
   task,
+  allTasks = [],
   defaultSprintId = null,
+  defaultParentTaskId = null,
+  onEditSubtask,
   onClose,
 }: TaskModalProps) {
   const [createTask] = useCreateTaskMutation();
@@ -66,9 +73,11 @@ export function TaskModal({
     setStatus("todo");
     setStoryPoints("");
     setPriority("0");
-    setSprintChoice(defaultSprintId ?? "");
+    const parent =
+      defaultParentTaskId != null ? allTasks.find((t) => t.id === defaultParentTaskId) : null;
+    setSprintChoice(parent?.sprintId ?? defaultSprintId ?? "");
     setAssigneeChoice("");
-  }, [isOpen, mode, task, defaultSprintId]);
+  }, [isOpen, mode, task, defaultSprintId, defaultParentTaskId, allTasks]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -104,6 +113,7 @@ export function TaskModal({
           sprintId: sprintChoice === "" ? null : sprintChoice,
           assigneeId: assigneeChoice === "" ? null : assigneeChoice,
           storyPoints: sp,
+          parentTaskId: defaultParentTaskId,
         };
         if (descTrim !== "") {
           body.description = descTrim;
@@ -135,7 +145,21 @@ export function TaskModal({
     }
   }
 
-  const heading = mode === "create" ? "New task" : "Edit task";
+  const heading =
+    mode === "create"
+      ? defaultParentTaskId
+        ? "New subtask"
+        : "New task"
+      : "Edit task";
+  const parentTask =
+    defaultParentTaskId != null ? allTasks.find((t) => t.id === defaultParentTaskId) : null;
+  const subtasks =
+    mode === "edit" && task && !task.parentTaskId
+      ? allTasks.filter((t) => t.parentTaskId === task.id)
+      : [];
+  const isSubtask = Boolean(
+    (mode === "edit" && task?.parentTaskId) || (mode === "create" && defaultParentTaskId),
+  );
 
   return (
     <div
@@ -155,7 +179,9 @@ export function TaskModal({
           </button>
         </div>
         <p className="modal-subtitle muted">
-          Assign to backlog or a sprint, set status and optional story points.
+          {isSubtask && parentTask
+            ? `Subtask of “${parentTask.title}”. Sprint follows the parent.`
+            : "Assign to backlog or a sprint, set status and optional story points."}
         </p>
         <form className="project-form auth-form" onSubmit={(ev) => void handleSubmit(ev)}>
           <div className="task-modal-grid">
@@ -203,17 +229,19 @@ export function TaskModal({
                 ))}
               </select>
             </label>
-            <label>
-              Sprint
-              <select value={sprintChoice} onChange={(ev) => setSprintChoice(ev.target.value)}>
-                <option value="">Backlog (no sprint)</option>
-                {sprints.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {!isSubtask ? (
+              <label>
+                Sprint
+                <select value={sprintChoice} onChange={(ev) => setSprintChoice(ev.target.value)}>
+                  <option value="">Backlog (no sprint)</option>
+                  {sprints.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <label className="full-row">
               Assignee
               <select value={assigneeChoice} onChange={(ev) => setAssigneeChoice(ev.target.value)}>
@@ -236,6 +264,15 @@ export function TaskModal({
             </button>
           </div>
         </form>
+
+        {mode === "edit" && task && !task.parentTaskId && onEditSubtask ? (
+          <TaskSubtasksPanel
+            projectId={projectId}
+            parentTask={task}
+            subtasks={subtasks}
+            onEditSubtask={onEditSubtask}
+          />
+        ) : null}
 
         {mode === "edit" && task ? (
           <div className="task-modal-engagement">

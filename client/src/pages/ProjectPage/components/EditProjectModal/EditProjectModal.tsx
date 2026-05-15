@@ -18,6 +18,9 @@ export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditPr
 
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description ?? "");
+  const [wipTodo, setWipTodo] = useState("");
+  const [wipInProgress, setWipInProgress] = useState("");
+  const [wipDone, setWipDone] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -27,9 +30,27 @@ export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditPr
     if (!isOpen) return;
     setName(project.name);
     setDescription(project.description ?? "");
+    setWipTodo(project.wipLimitTodo != null ? String(project.wipLimitTodo) : "");
+    setWipInProgress(project.wipLimitInProgress != null ? String(project.wipLimitInProgress) : "");
+    setWipDone(project.wipLimitDone != null ? String(project.wipLimitDone) : "");
     setSaveError(null);
     setDeleteError(null);
-  }, [isOpen, project.id, project.name, project.description]);
+  }, [
+    isOpen,
+    project.id,
+    project.name,
+    project.description,
+    project.wipLimitTodo,
+    project.wipLimitInProgress,
+    project.wipLimitDone,
+  ]);
+
+  function parseWipInput(value: string): number | null {
+    const trimmed = value.trim();
+    if (trimmed === "") return null;
+    const n = Number.parseInt(trimmed, 10);
+    return Number.isNaN(n) ? null : n;
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,6 +73,9 @@ export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditPr
         projectId: project.id,
         name: name.trim(),
         description: description.trim() === "" ? null : description.trim(),
+        wipLimitTodo: parseWipInput(wipTodo),
+        wipLimitInProgress: parseWipInput(wipInProgress),
+        wipLimitDone: parseWipInput(wipDone),
       }).unwrap();
       onClose();
     } catch (e) {
@@ -123,6 +147,48 @@ export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditPr
               disabled={busy}
             />
           </label>
+          <fieldset className="edit-project-wip">
+            <legend>Kanban WIP limits</legend>
+            <p className="muted small-meta">Leave empty for no limit. Applies to top-level cards per column.</p>
+            <div className="edit-project-wip-grid">
+              <label>
+                To do
+                <input
+                  type="number"
+                  min={1}
+                  max={999}
+                  value={wipTodo}
+                  onChange={(e) => setWipTodo(e.target.value)}
+                  placeholder="No limit"
+                  disabled={busy}
+                />
+              </label>
+              <label>
+                In progress
+                <input
+                  type="number"
+                  min={1}
+                  max={999}
+                  value={wipInProgress}
+                  onChange={(e) => setWipInProgress(e.target.value)}
+                  placeholder="No limit"
+                  disabled={busy}
+                />
+              </label>
+              <label>
+                Done
+                <input
+                  type="number"
+                  min={1}
+                  max={999}
+                  value={wipDone}
+                  onChange={(e) => setWipDone(e.target.value)}
+                  placeholder="No limit"
+                  disabled={busy}
+                />
+              </label>
+            </div>
+          </fieldset>
           {saveError ? <p className="form-error">{saveError}</p> : null}
           <div className="modal-actions">
             <button type="button" className="secondary-button" onClick={onClose} disabled={busy}>

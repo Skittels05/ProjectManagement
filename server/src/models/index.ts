@@ -111,6 +111,16 @@ Task.belongsTo(User, {
   as: "author",
 });
 
+Task.belongsTo(Task, {
+  foreignKey: "parentTaskId",
+  as: "parentTask",
+});
+
+Task.hasMany(Task, {
+  foreignKey: "parentTaskId",
+  as: "subtasks",
+});
+
 Task.hasMany(TaskComment, {
   foreignKey: "taskId",
   as: "comments",

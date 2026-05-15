@@ -64,6 +64,7 @@ export function ProjectPage() {
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskModalMode, setTaskModalMode] = useState<"create" | "edit">("create");
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
+  const [defaultParentTaskId, setDefaultParentTaskId] = useState<string | null>(null);
   const [tasksView, setTasksView] = useState<TasksViewMode>("list");
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [taskListQuery, setTaskListQuery] = useState<TaskListQuery>(DEFAULT_TASK_LIST_QUERY);
@@ -162,21 +163,24 @@ export function ProjectPage() {
     return sp?.name ?? "Sprint";
   }, [iterationScope, sprints]);
 
-  function openTaskCreate() {
+  function openTaskCreate(parentId: string | null = null) {
     setTaskModalMode("create");
     setEditingTask(null);
+    setDefaultParentTaskId(parentId);
     setTaskModalOpen(true);
   }
 
   function openTaskEdit(task: TaskDto) {
     setTaskModalMode("edit");
     setEditingTask(task);
+    setDefaultParentTaskId(null);
     setTaskModalOpen(true);
   }
 
   function closeTaskModal() {
     setTaskModalOpen(false);
     setEditingTask(null);
+    setDefaultParentTaskId(null);
   }
 
   async function handleInvite(e: FormEvent<HTMLFormElement>) {
@@ -457,12 +461,13 @@ export function ProjectPage() {
             {tasksView === "kanban" ? (
               <ProjectKanbanBoard
                 projectId={validProjectId}
+                project={current}
                 iterationScope={iterationScope}
                 iterationLabel={iterationLabel}
                 members={members}
                 taskListQuery={taskListQuery}
                 onEditTask={openTaskEdit}
-                onAddTask={openTaskCreate}
+                onAddTask={() => openTaskCreate()}
               />
             ) : (
               <ProjectTasksSection
@@ -472,7 +477,7 @@ export function ProjectPage() {
                 members={members}
                 taskListQuery={taskListQuery}
                 onEditTask={openTaskEdit}
-                onAddTask={openTaskCreate}
+                onAddTask={() => openTaskCreate()}
               />
             )}
           </div>
@@ -500,7 +505,10 @@ export function ProjectPage() {
         members={members}
         sprints={sprints}
         task={editingTask}
+        allTasks={scopeTasks}
         defaultSprintId={defaultTaskSprintId}
+        defaultParentTaskId={defaultParentTaskId}
+        onEditSubtask={openTaskEdit}
         onClose={closeTaskModal}
       />
 

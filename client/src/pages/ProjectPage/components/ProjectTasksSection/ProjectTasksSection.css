@@ -18,6 +18,20 @@
   line-height: 1.45;
 }
 
+.task-title-indent {
+  padding-left: 1.25rem;
+  border-left: 2px solid rgba(148, 163, 184, 0.35);
+}
+
+.task-subtask-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.task-row-subtask td {
+  background: rgba(15, 23, 42, 0.25);
+}
+
 .task-table-wrap {
   overflow-x: auto;
 }

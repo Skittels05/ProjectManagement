@@ -10,6 +10,9 @@ export type ProjectDto = {
   name: string;
   description: string | null;
   createdBy: string;
+  wipLimitTodo: number | null;
+  wipLimitInProgress: number | null;
+  wipLimitDone: number | null;
   role: string | null;
   createdAt: string;
   updatedAt: string;

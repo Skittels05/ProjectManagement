@@ -10,6 +10,9 @@ export type TaskDto = {
   id: string;
   projectId: string;
   sprintId: string | null;
+  parentTaskId: string | null;
+  parentTitle: string | null;
+  subtaskCount: number;
   title: string;
   description: string | null;
   status: TaskStatus;
@@ -31,6 +34,7 @@ export type CreateTaskBody = {
   priority?: number;
   sprintId?: string | null;
   assigneeId?: string | null;
+  parentTaskId?: string | null;
 };
 
 export type UpdateTaskBody = Partial<{
@@ -42,4 +46,5 @@ export type UpdateTaskBody = Partial<{
   boardPosition: number;
   sprintId: string | null;
   assigneeId: string | null;
+  parentTaskId: string | null;
 }>;

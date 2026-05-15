@@ -147,13 +147,51 @@ export function hasActiveTaskFilters(query: TaskListQuery): boolean {
   );
 }
 
+/** Only top-level tasks appear on the Kanban board (subtasks live under their parent). */
+export function topLevelTasks(tasks: TaskDto[]): TaskDto[] {
+  return tasks.filter((t) => t.parentTaskId == null);
+}
+
 /** Kanban columns represent status — do not hide tasks by status filter while on the board. */
 export function filterTasksForKanbanBoard(
   tasks: TaskDto[],
   query: TaskListQuery,
   members: ProjectMemberDto[],
 ): TaskDto[] {
-  return filterTasks(tasks, { ...query, statusFilter: "all" }, members);
+  return topLevelTasks(filterTasks(tasks, { ...query, statusFilter: "all" }, members));
+}
+
+export type TaskTreeRow = { task: TaskDto; depth: 0 | 1 };
+
+/** Parents first, then their subtasks indented in the list view. */
+export function flattenTaskHierarchy(tasks: TaskDto[]): TaskTreeRow[] {
+  const byParent = new Map<string | null, TaskDto[]>();
+  for (const task of tasks) {
+    const key = task.parentTaskId;
+    const list = byParent.get(key) ?? [];
+    list.push(task);
+    byParent.set(key, list);
+  }
+
+  const rows: TaskTreeRow[] = [];
+  const roots = byParent.get(null) ?? [];
+
+  for (const root of roots) {
+    rows.push({ task: root, depth: 0 });
+    const children = byParent.get(root.id) ?? [];
+    for (const child of children) {
+      rows.push({ task: child, depth: 1 });
+    }
+  }
+
+  const listed = new Set(rows.map((r) => r.task.id));
+  for (const task of tasks) {
+    if (!listed.has(task.id)) {
+      rows.push({ task, depth: task.parentTaskId ? 1 : 0 });
+    }
+  }
+
+  return rows;
 }
 
 export function groupFilteredKanbanTasks(

@@ -120,6 +120,56 @@
   max-width: min(720px, 96vw);
 }
 
+.task-subtasks-panel {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.task-subtasks-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.task-subtasks-list {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.task-subtasks-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+.task-subtask-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #93c5fd;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.task-subtask-link:hover {
+  text-decoration: underline;
+}
+
+.task-subtask-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.task-subtask-add input {
+  flex: 1;
+  min-width: 10rem;
+}
+
 .task-modal-engagement-hint {
   margin: 1rem 0 0;
   padding-top: 1rem;

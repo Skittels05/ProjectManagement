@@ -82,6 +82,7 @@ export const createTaskValidation = [
     .withMessage("Priority must be 0–1000"),
   optionalUuidOrEmpty("sprintId"),
   optionalUuidOrEmpty("assigneeId"),
+  optionalUuidOrEmpty("parentTaskId"),
 ];
 
 export const updateTaskValidation = [
@@ -134,6 +135,7 @@ export const updateTaskValidation = [
     .withMessage("boardPosition must be a non-negative integer"),
   optionalUuidOrEmpty("sprintId"),
   optionalUuidOrEmpty("assigneeId"),
+  optionalUuidOrEmpty("parentTaskId"),
 ];
 
 export const deleteTaskValidation = [projectIdParam, taskIdParam];

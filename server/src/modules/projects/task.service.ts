@@ -44,13 +44,23 @@ function toUserMini(u: { id: string; email: string; fullName: string } | null | 
   };
 }
 
-function toTaskDto(task: Record<string, unknown> & { assignee?: { id: string; email: string; fullName: string } }) {
+type TaskRow = Record<string, unknown> & {
+  assignee?: { id: string; email: string; fullName: string };
+  parentTask?: { id: string; title: string };
+  subtaskCount?: number;
+};
+
+function toTaskDto(task: TaskRow) {
   const createdAt = task.createdAt ?? task.created_at ?? null;
   const updatedAt = task.updatedAt ?? task.updated_at ?? null;
+  const parent = task.parentTask as { title?: string } | undefined;
   return {
     id: task.id,
     projectId: task.projectId,
     sprintId: task.sprintId,
+    parentTaskId: task.parentTaskId ?? null,
+    parentTitle: parent?.title ?? null,
+    subtaskCount: typeof task.subtaskCount === "number" ? task.subtaskCount : 0,
     title: task.title,
     description: task.description,
     status: task.status,
@@ -63,6 +73,57 @@ function toTaskDto(task: Record<string, unknown> & { assignee?: { id: string; em
     updatedAt,
     assignee: toUserMini(task.assignee),
   };
+}
+
+async function assertValidParentTask(
+  parentTaskId: string | null,
+  projectId: string,
+  currentTaskId?: string,
+): Promise<{ sprintId: string | null } | null> {
+  if (parentTaskId == null) {
+    return null;
+  }
+  if (!isUuidV4(parentTaskId)) {
+    throw new AppError("Invalid parent task id", 400);
+  }
+  if (currentTaskId && parentTaskId === currentTaskId) {
+    throw new AppError("A task cannot be its own parent", 400);
+  }
+
+  const parent = await Task.findOne({ where: { id: parentTaskId, projectId } });
+  if (!parent) {
+    throw new AppError("Parent task not found", 404);
+  }
+  if (parent.get("parentTaskId")) {
+    throw new AppError("Subtasks cannot have nested children (one level only)", 400);
+  }
+  if (currentTaskId) {
+    const isSubtask = await Task.findOne({ where: { id: parentTaskId, parentTaskId: currentTaskId } });
+    if (isSubtask) {
+      throw new AppError("Cannot set a subtask as the parent", 400);
+    }
+    const hasChildren = await Task.findOne({ where: { parentTaskId: currentTaskId } });
+    if (hasChildren && parentTaskId) {
+      throw new AppError("Move or remove subtasks before setting a parent for this task", 400);
+    }
+  }
+
+  return { sprintId: parent.get("sprintId") as string | null };
+}
+
+async function subtaskCountByParent(projectId: string, parentIds: string[]): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (parentIds.length === 0) return map;
+
+  const rows = await Task.findAll({
+    attributes: ["parentTaskId"],
+    where: { projectId, parentTaskId: parentIds },
+  });
+  for (const row of rows) {
+    const pid = String(row.get("parentTaskId"));
+    map.set(pid, (map.get(pid) ?? 0) + 1);
+  }
+  return map;
 }
 
 function normalizeStatus(value: unknown, fallback: string): string {
@@ -131,6 +192,12 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
         attributes: ["id", "email", "fullName"],
         required: false,
       },
+      {
+        model: Task,
+        as: "parentTask",
+        attributes: ["id", "title"],
+        required: false,
+      },
     ],
     order: [
       ["board_position", "ASC"],
@@ -139,7 +206,16 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
     ],
   });
 
-  return rows.map((t) => toTaskDto(t.get({ plain: true }) as Parameters<typeof toTaskDto>[0]));
+  const parentIds = rows
+    .filter((t) => t.get("parentTaskId") == null)
+    .map((t) => t.get("id") as string);
+  const counts = await subtaskCountByParent(projectId, parentIds);
+
+  return rows.map((t) => {
+    const plain = t.get({ plain: true }) as TaskRow;
+    const id = String(plain.id);
+    return toTaskDto({ ...plain, subtaskCount: counts.get(id) ?? 0 });
+  });
 }
 
 export async function createTask(userId: string, projectId: string, body: Record<string, unknown>) {
@@ -161,8 +237,17 @@ export async function createTask(userId: string, projectId: string, body: Record
       ? String(body.description).trim().slice(0, 50000)
       : null;
 
-  const sprintIdRaw =
+  const parentTaskIdRaw =
+    body.parentTaskId != null && String(body.parentTaskId).trim() !== ""
+      ? String(body.parentTaskId).trim()
+      : null;
+  const parentInfo = await assertValidParentTask(parentTaskIdRaw, projectId);
+
+  let sprintIdRaw =
     body.sprintId != null && String(body.sprintId).trim() !== "" ? String(body.sprintId).trim() : null;
+  if (sprintIdRaw == null && parentInfo?.sprintId != null) {
+    sprintIdRaw = parentInfo.sprintId;
+  }
   const sprintId = sprintIdRaw;
   if (sprintId != null && !isUuidV4(sprintId)) {
     throw new AppError("Invalid sprint id", 400);
@@ -188,6 +273,7 @@ export async function createTask(userId: string, projectId: string, body: Record
   const task = await Task.create({
     projectId,
     sprintId,
+    parentTaskId: parentTaskIdRaw,
     title,
     description,
     status,
@@ -204,6 +290,12 @@ export async function createTask(userId: string, projectId: string, body: Record
         model: User,
         as: "assignee",
         attributes: ["id", "email", "fullName"],
+        required: false,
+      },
+      {
+        model: Task,
+        as: "parentTask",
+        attributes: ["id", "title"],
         required: false,
       },
     ],
@@ -227,6 +319,12 @@ async function getTaskInProject(projectId: string, taskId: string) {
         model: User,
         as: "assignee",
         attributes: ["id", "email", "fullName"],
+        required: false,
+      },
+      {
+        model: Task,
+        as: "parentTask",
+        attributes: ["id", "title"],
         required: false,
       },
     ],
@@ -312,6 +410,18 @@ export async function updateTask(
     patch.assigneeId = assigneeId;
   }
 
+  if (Object.prototype.hasOwnProperty.call(body, "parentTaskId")) {
+    const parentTaskId =
+      body.parentTaskId != null && String(body.parentTaskId).trim() !== ""
+        ? String(body.parentTaskId).trim()
+        : null;
+    const parentInfo = await assertValidParentTask(parentTaskId, projectId, taskId);
+    patch.parentTaskId = parentTaskId;
+    if (parentInfo && !Object.prototype.hasOwnProperty.call(body, "sprintId")) {
+      patch.sprintId = parentInfo.sprintId;
+    }
+  }
+
   if (Object.keys(patch).length === 0) {
     const unchanged = await getTaskInProject(projectId, taskId);
     return toTaskDto(unchanged!.get({ plain: true }) as Parameters<typeof toTaskDto>[0]);
@@ -326,9 +436,17 @@ export async function updateTask(
         attributes: ["id", "email", "fullName"],
         required: false,
       },
+      {
+        model: Task,
+        as: "parentTask",
+        attributes: ["id", "title"],
+        required: false,
+      },
     ],
   });
-  return toTaskDto(task.get({ plain: true }) as Parameters<typeof toTaskDto>[0]);
+  const plain = task.get({ plain: true }) as TaskRow;
+  const subCount = await Task.count({ where: { parentTaskId: taskId } });
+  return toTaskDto({ ...plain, subtaskCount: subCount });
 }
 
 export async function deleteTask(userId: string, projectId: string, taskId: string): Promise<{ ok: boolean }> {

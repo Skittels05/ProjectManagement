@@ -5,7 +5,11 @@ import {
 } from "../../../../store/api/tasksApi";
 import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { TaskDto } from "../../../../store/types/tasks.types";
-import { applyTaskListQuery, type TaskListQuery } from "../../../../shared/lib/taskListQuery";
+import {
+  applyTaskListQuery,
+  flattenTaskHierarchy,
+  type TaskListQuery,
+} from "../../../../shared/lib/taskListQuery";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
@@ -50,10 +54,10 @@ export function ProjectTasksSection({
     error: tasksError,
   } = useGetTasksQuery({ projectId, sprintFilter });
 
-  const visibleTasks = useMemo(
-    () => applyTaskListQuery(tasks, taskListQuery, members),
-    [tasks, taskListQuery, members],
-  );
+  const visibleRows = useMemo(() => {
+    const filtered = applyTaskListQuery(tasks, taskListQuery, members);
+    return flattenTaskHierarchy(filtered);
+  }, [tasks, taskListQuery, members]);
 
   const tasksErrMsg = tasksError ? getRtkQueryErrorMessage(tasksError) : null;
 
@@ -92,11 +96,11 @@ export function ProjectTasksSection({
         {!tasksLoading && tasks.length === 0 ? (
           <p className="muted">No tasks in this view yet.</p>
         ) : null}
-        {!tasksLoading && tasks.length > 0 && visibleTasks.length === 0 ? (
+        {!tasksLoading && tasks.length > 0 && visibleRows.length === 0 ? (
           <p className="muted">No tasks match the current search or filters.</p>
         ) : null}
 
-        {visibleTasks.length > 0 ? (
+        {visibleRows.length > 0 ? (
           <div className="task-table-wrap">
             <table>
               <thead>
@@ -109,10 +113,20 @@ export function ProjectTasksSection({
                 </tr>
               </thead>
               <tbody>
-                {visibleTasks.map((task) => (
-                  <tr key={task.id}>
+                {visibleRows.map(({ task, depth }) => (
+                  <tr key={task.id} className={depth === 1 ? "task-row-subtask" : undefined}>
                     <td>
-                      <strong>{task.title}</strong>
+                      <div className={depth === 1 ? "task-title-indent" : undefined}>
+                        <strong>{task.title}</strong>
+                        {depth === 0 && task.subtaskCount > 0 ? (
+                          <span className="muted small-meta task-subtask-badge">
+                            {task.subtaskCount} subtask{task.subtaskCount === 1 ? "" : "s"}
+                          </span>
+                        ) : null}
+                        {depth === 1 && task.parentTitle ? (
+                          <span className="muted small-meta"> ↳ {task.parentTitle}</span>
+                        ) : null}
+                      </div>
                       {task.description ? (
                         <div className="muted small-meta">{task.description.slice(0, 120)}</div>
                       ) : null}

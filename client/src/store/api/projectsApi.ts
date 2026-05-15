@@ -26,7 +26,14 @@ export const projectsApi = baseApi.injectEndpoints({
     }),
     updateProject: build.mutation<
       ProjectDto,
-      { projectId: string; name?: string; description?: string | null }
+      {
+        projectId: string;
+        name?: string;
+        description?: string | null;
+        wipLimitTodo?: number | null;
+        wipLimitInProgress?: number | null;
+        wipLimitDone?: number | null;
+      }
     >({
       query: ({ projectId, ...body }) => ({
         url: `/projects/${projectId}`,

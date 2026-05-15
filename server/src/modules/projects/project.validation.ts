@@ -64,14 +64,32 @@ export const updateProjectValidation = [
     .withMessage("Description must be a string")
     .isLength({ max: 20000 })
     .withMessage("Description is too long"),
-  body()
-    .custom((_, { req }) => {
-      const b = req.body as Record<string, unknown>;
-      if (!Object.prototype.hasOwnProperty.call(b, "name") && !Object.prototype.hasOwnProperty.call(b, "description")) {
-        throw new Error("Provide name and/or description to update");
-      }
-      return true;
-    }),
+  body("wipLimitTodo")
+    .optional({ nullable: true })
+    .isInt({ min: 1, max: 999 })
+    .withMessage("WIP limit must be 1–999 or empty"),
+  body("wipLimitInProgress")
+    .optional({ nullable: true })
+    .isInt({ min: 1, max: 999 })
+    .withMessage("WIP limit must be 1–999 or empty"),
+  body("wipLimitDone")
+    .optional({ nullable: true })
+    .isInt({ min: 1, max: 999 })
+    .withMessage("WIP limit must be 1–999 or empty"),
+  body().custom((_, { req }) => {
+    const b = req.body as Record<string, unknown>;
+    const keys = [
+      "name",
+      "description",
+      "wipLimitTodo",
+      "wipLimitInProgress",
+      "wipLimitDone",
+    ];
+    if (!keys.some((k) => Object.prototype.hasOwnProperty.call(b, k))) {
+      throw new Error("Provide at least one field to update");
+    }
+    return true;
+  }),
 ];
 
 export const deleteProjectValidation = [projectIdParam];

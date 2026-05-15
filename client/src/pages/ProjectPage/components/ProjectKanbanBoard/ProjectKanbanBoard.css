@@ -55,12 +55,21 @@
   color: #e2e8f0;
 }
 
+.kanban-column--at-limit {
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
 .kanban-column-count {
   font-size: 0.78rem;
   color: #94a3b8;
   padding: 0.1rem 0.45rem;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.12);
+}
+
+.kanban-column-count--limit {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.15);
 }
 
 .kanban-column-empty {

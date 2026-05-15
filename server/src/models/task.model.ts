@@ -19,6 +19,11 @@ export function defineTask(sequelize: Sequelize) {
         allowNull: true,
         field: "sprint_id",
       },
+      parentTaskId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: "parent_task_id",
+      },
       title: {
         type: DataTypes.STRING(500),
         allowNull: false,

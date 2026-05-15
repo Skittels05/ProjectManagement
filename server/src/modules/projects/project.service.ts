@@ -35,6 +35,9 @@ function toDto(project: Model, role: string | null | undefined, members?: unknow
     name: project.get("name"),
     description: project.get("description"),
     createdBy: project.get("createdBy"),
+    wipLimitTodo: project.get("wipLimitTodo"),
+    wipLimitInProgress: project.get("wipLimitInProgress"),
+    wipLimitDone: project.get("wipLimitDone"),
     role: role ?? null,
     createdAt: project.get("createdAt"),
     updatedAt: project.get("updatedAt"),
@@ -211,10 +214,27 @@ function parseProjectName(value: unknown): string {
   return trimmedName;
 }
 
+function parseOptionalWipLimit(value: unknown, field: string): number | null {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > 999) {
+    throw new AppError(`${field} must be an integer from 1 to 999, or empty`, 400);
+  }
+  return n;
+}
+
 export async function updateProject(
   actorUserId: string,
   projectId: string,
-  body: { name?: unknown; description?: unknown },
+  body: {
+    name?: unknown;
+    description?: unknown;
+    wipLimitTodo?: unknown;
+    wipLimitInProgress?: unknown;
+    wipLimitDone?: unknown;
+  },
 ) {
   if (!isUuidV4(projectId)) {
     throw new AppError("Project not found", 404);
@@ -226,7 +246,7 @@ export async function updateProject(
   }
   await assertCanManageTeam(actorUserId, projectId, actor.get("role") as string);
 
-  const patch: { name?: string; description?: string | null } = {};
+  const patch: Record<string, unknown> = {};
 
   if (Object.prototype.hasOwnProperty.call(body, "name")) {
     patch.name = parseProjectName(body.name);
@@ -234,6 +254,19 @@ export async function updateProject(
 
   if (Object.prototype.hasOwnProperty.call(body, "description")) {
     patch.description = parseProjectDescription(body.description);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "wipLimitTodo")) {
+    patch.wipLimitTodo = parseOptionalWipLimit(body.wipLimitTodo, "WIP limit for To do");
+  }
+  if (Object.prototype.hasOwnProperty.call(body, "wipLimitInProgress")) {
+    patch.wipLimitInProgress = parseOptionalWipLimit(
+      body.wipLimitInProgress,
+      "WIP limit for In progress",
+    );
+  }
+  if (Object.prototype.hasOwnProperty.call(body, "wipLimitDone")) {
+    patch.wipLimitDone = parseOptionalWipLimit(body.wipLimitDone, "WIP limit for Done");
   }
 
   if (Object.keys(patch).length === 0) {
