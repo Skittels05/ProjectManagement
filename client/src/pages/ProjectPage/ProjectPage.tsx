@@ -9,6 +9,7 @@ import {
   useUpdateProjectMemberRoleMutation,
 } from "../../store/api/projectsApi";
 import { useDeleteSprintMutation, useGetSprintsQuery } from "../../store/api/sprintsApi";
+import { useGetTasksQuery } from "../../store/api/tasksApi";
 import type { ProjectMemberDto } from "../../store/types/projects.types";
 import type { SprintDto } from "../../store/types/sprints.types";
 import type { TaskDto } from "../../store/types/tasks.types";
@@ -23,6 +24,12 @@ import { AddTaskButton } from "./components/AddTaskButton/AddTaskButton";
 import { ProjectKanbanBoard } from "./components/ProjectKanbanBoard/ProjectKanbanBoard";
 import { ProjectTasksSection } from "./components/ProjectTasksSection/ProjectTasksSection";
 import { EditProjectModal } from "./components/EditProjectModal/EditProjectModal";
+import { ProjectTasksToolbar } from "./components/ProjectTasksToolbar/ProjectTasksToolbar";
+import {
+  DEFAULT_TASK_LIST_QUERY,
+  applyTaskListQuery,
+  type TaskListQuery,
+} from "../../shared/lib/taskListQuery";
 import "./ProjectPage.css";
 
 export type TasksViewMode = "list" | "kanban";
@@ -59,6 +66,7 @@ export function ProjectPage() {
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
   const [tasksView, setTasksView] = useState<TasksViewMode>("list");
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [taskListQuery, setTaskListQuery] = useState<TaskListQuery>(DEFAULT_TASK_LIST_QUERY);
 
   const routeProjectId = projectId ?? "";
   const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
@@ -71,9 +79,28 @@ export function ProjectPage() {
 
   const { data: sprints = [] } = useGetSprintsQuery(validProjectId ?? "", { skip: !validProjectId });
 
+  const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
+  const { data: scopeTasks = [] } = useGetTasksQuery(
+    { projectId: validProjectId ?? "", sprintFilter },
+    { skip: !validProjectId },
+  );
+
+  const patchTaskListQuery = useCallback((patch: Partial<TaskListQuery>) => {
+    setTaskListQuery((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const resetTaskListQuery = useCallback(() => {
+    setTaskListQuery(DEFAULT_TASK_LIST_QUERY);
+  }, []);
+
   const currentError = currentQueryError ? getRtkQueryErrorMessage(currentQueryError) : null;
 
   const members = current?.members ?? [];
+
+  const visibleTaskCount = useMemo(
+    () => applyTaskListQuery(scopeTasks, taskListQuery, members).length,
+    [scopeTasks, taskListQuery, members],
+  );
   const ownerCount = useMemo(() => members.filter((m) => isOwnerRoleName(m.role)).length, [members]);
   const roleSuggestions = useMemo(() => {
     const s = new Set<string>();
@@ -418,11 +445,22 @@ export function ProjectPage() {
               </Link>
             </header>
 
+            <ProjectTasksToolbar
+              query={taskListQuery}
+              members={members}
+              onChange={patchTaskListQuery}
+              onReset={resetTaskListQuery}
+              resultCount={visibleTaskCount}
+              totalCount={scopeTasks.length}
+            />
+
             {tasksView === "kanban" ? (
               <ProjectKanbanBoard
                 projectId={validProjectId}
                 iterationScope={iterationScope}
                 iterationLabel={iterationLabel}
+                members={members}
+                taskListQuery={taskListQuery}
                 onEditTask={openTaskEdit}
                 onAddTask={openTaskCreate}
               />
@@ -431,6 +469,8 @@ export function ProjectPage() {
                 projectId={validProjectId}
                 iterationScope={iterationScope}
                 iterationLabel={iterationLabel}
+                members={members}
+                taskListQuery={taskListQuery}
                 onEditTask={openTaskEdit}
                 onAddTask={openTaskCreate}
               />

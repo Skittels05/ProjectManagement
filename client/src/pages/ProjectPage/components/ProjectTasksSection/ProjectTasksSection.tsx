@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useDeleteTaskMutation,
   useGetTasksQuery,
 } from "../../../../store/api/tasksApi";
+import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { TaskDto } from "../../../../store/types/tasks.types";
+import { applyTaskListQuery, type TaskListQuery } from "../../../../shared/lib/taskListQuery";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
@@ -25,6 +27,8 @@ export type ProjectTasksSectionProps = {
   projectId: string;
   iterationScope: "backlog" | string;
   iterationLabel: string;
+  members: ProjectMemberDto[];
+  taskListQuery: TaskListQuery;
   onEditTask: (task: TaskDto) => void;
   onAddTask: () => void;
 };
@@ -33,6 +37,8 @@ export function ProjectTasksSection({
   projectId,
   iterationScope,
   iterationLabel,
+  members,
+  taskListQuery,
   onEditTask,
   onAddTask,
 }: ProjectTasksSectionProps) {
@@ -44,13 +50,18 @@ export function ProjectTasksSection({
     error: tasksError,
   } = useGetTasksQuery({ projectId, sprintFilter });
 
+  const visibleTasks = useMemo(
+    () => applyTaskListQuery(tasks, taskListQuery, members),
+    [tasks, taskListQuery, members],
+  );
+
   const tasksErrMsg = tasksError ? getRtkQueryErrorMessage(tasksError) : null;
 
   const [deleteTask] = useDeleteTaskMutation();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(task: TaskDto) {
-    if (!window.confirm(`Delete task “${task.title}”?`)) {
+    if (!window.confirm(`Delete task "${task.title}"?`)) {
       return;
     }
     setDeletingId(task.id);
@@ -81,8 +92,11 @@ export function ProjectTasksSection({
         {!tasksLoading && tasks.length === 0 ? (
           <p className="muted">No tasks in this view yet.</p>
         ) : null}
+        {!tasksLoading && tasks.length > 0 && visibleTasks.length === 0 ? (
+          <p className="muted">No tasks match the current search or filters.</p>
+        ) : null}
 
-        {tasks.length > 0 ? (
+        {visibleTasks.length > 0 ? (
           <div className="task-table-wrap">
             <table>
               <thead>
@@ -95,7 +109,7 @@ export function ProjectTasksSection({
                 </tr>
               </thead>
               <tbody>
-                {tasks.map((task) => (
+                {visibleTasks.map((task) => (
                   <tr key={task.id}>
                     <td>
                       <strong>{task.title}</strong>

@@ -17,16 +17,21 @@ import {
   useGetTasksQuery,
   useUpdateTaskMutation,
 } from "../../../../store/api/tasksApi";
+import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { TaskDto, TaskStatus } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import {
   KANBAN_COLUMNS,
   boardPositionAtIndex,
   columnDroppableId,
-  groupTasksByStatus,
   parseColumnDroppableId,
-  sortTasksByBoard,
 } from "../../../../shared/lib/kanban";
+import {
+  columnIdsFromGrouped,
+  filterTasks,
+  groupFilteredKanbanTasks,
+  type TaskListQuery,
+} from "../../../../shared/lib/taskListQuery";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
 import "./ProjectKanbanBoard.css";
@@ -35,6 +40,8 @@ export type ProjectKanbanBoardProps = {
   projectId: string;
   iterationScope: "backlog" | string;
   iterationLabel: string;
+  members: ProjectMemberDto[];
+  taskListQuery: TaskListQuery;
   onEditTask: (task: TaskDto) => void;
   onAddTask: () => void;
 };
@@ -43,15 +50,6 @@ type ColumnIds = Record<TaskStatus, string[]>;
 
 function emptyColumns(): ColumnIds {
   return { todo: [], in_progress: [], done: [] };
-}
-
-function columnsFromTasks(tasks: TaskDto[]): ColumnIds {
-  const grouped = groupTasksByStatus(tasks);
-  return {
-    todo: grouped.todo.map((t) => t.id),
-    in_progress: grouped.in_progress.map((t) => t.id),
-    done: grouped.done.map((t) => t.id),
-  };
 }
 
 function findContainer(columns: ColumnIds, id: string): TaskStatus | null {
@@ -157,6 +155,8 @@ export function ProjectKanbanBoard({
   projectId,
   iterationScope,
   iterationLabel,
+  members,
+  taskListQuery,
   onEditTask,
   onAddTask,
 }: ProjectKanbanBoardProps) {
@@ -172,17 +172,33 @@ export function ProjectKanbanBoard({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const groupedKanban = useMemo(
+    () => groupFilteredKanbanTasks(serverTasks, taskListQuery, members),
+    [serverTasks, taskListQuery, members],
+  );
+
+  const filteredCount = useMemo(
+    () => filterTasks(serverTasks, taskListQuery, members).length,
+    [serverTasks, taskListQuery, members],
+  );
+
   const tasksById = useMemo(() => {
     const map: Record<string, TaskDto> = {};
-    for (const t of sortTasksByBoard(serverTasks)) {
-      map[t.id] = t;
+    for (const status of KANBAN_COLUMNS) {
+      for (const t of groupedKanban[status.id]) {
+        map[t.id] = t;
+      }
     }
     return map;
-  }, [serverTasks]);
+  }, [groupedKanban]);
+
+  const layoutColumnIds = useMemo(() => columnIdsFromGrouped(groupedKanban), [groupedKanban]);
 
   useEffect(() => {
-    setColumnIds(columnsFromTasks(serverTasks));
-  }, [serverTasks]);
+    if (!activeId) {
+      setColumnIds(layoutColumnIds);
+    }
+  }, [layoutColumnIds, activeId]);
 
   const activeTask = activeId ? (tasksById[activeId] ?? null) : null;
   const errMsg = error ? getRtkQueryErrorMessage(error) : null;
@@ -276,7 +292,7 @@ export function ProjectKanbanBoard({
         body: { status, boardPosition },
       }).unwrap();
     } catch (err) {
-      setColumnIds(columnsFromTasks(serverTasks));
+      setColumnIds(layoutColumnIds);
       window.alert(getRtkQueryErrorMessage(err));
     } finally {
       setSaving(false);
@@ -285,7 +301,7 @@ export function ProjectKanbanBoard({
 
   function handleDragCancel() {
     setActiveId(null);
-    setColumnIds(columnsFromTasks(serverTasks));
+    setColumnIds(layoutColumnIds);
   }
 
   const panelTitle = `Kanban — ${iterationLabel}`;
@@ -305,8 +321,11 @@ export function ProjectKanbanBoard({
         {!isLoading && serverTasks.length === 0 ? (
           <p className="muted">No tasks in this view yet. Press + to add one.</p>
         ) : null}
+        {!isLoading && serverTasks.length > 0 && filteredCount === 0 ? (
+          <p className="muted">No tasks match the current search or filters.</p>
+        ) : null}
 
-        {serverTasks.length > 0 ? (
+        {filteredCount > 0 ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
