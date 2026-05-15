@@ -22,6 +22,7 @@ import { TaskModal } from "./components/TaskModal/TaskModal";
 import { AddTaskButton } from "./components/AddTaskButton/AddTaskButton";
 import { ProjectKanbanBoard } from "./components/ProjectKanbanBoard/ProjectKanbanBoard";
 import { ProjectTasksSection } from "./components/ProjectTasksSection/ProjectTasksSection";
+import { EditProjectModal } from "./components/EditProjectModal/EditProjectModal";
 import "./ProjectPage.css";
 
 export type TasksViewMode = "list" | "kanban";
@@ -57,6 +58,7 @@ export function ProjectPage() {
   const [taskModalMode, setTaskModalMode] = useState<"create" | "edit">("create");
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
   const [tasksView, setTasksView] = useState<TasksViewMode>("list");
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const routeProjectId = projectId ?? "";
   const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
@@ -368,6 +370,15 @@ export function ProjectPage() {
                 <button type="button" className="secondary-button" onClick={() => setMembersModalOpen(true)}>
                   Team & participants
                 </button>
+                {canManageTeam ? (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setSettingsModalOpen(true)}
+                  >
+                    Project settings
+                  </button>
+                ) : null}
                 <AddTaskButton onClick={openTaskCreate} />
                 <button
                   type="button"
@@ -388,7 +399,18 @@ export function ProjectPage() {
           <div className="project-main">
             <header className="project-main-header">
               <p className="eyebrow">Project</p>
-              <h2>{current.name}</h2>
+              <div className="project-main-header-row">
+                <h2>{current.name}</h2>
+                {canManageTeam ? (
+                  <button
+                    type="button"
+                    className="secondary-button project-settings-inline"
+                    onClick={() => setSettingsModalOpen(true)}
+                  >
+                    Edit
+                  </button>
+                ) : null}
+              </div>
               {current.description ? <p className="project-description">{current.description}</p> : null}
               <p className="muted small-meta">Updated {new Date(current.updatedAt).toLocaleString()}</p>
               <Link to="/" className="back-link">
@@ -448,6 +470,13 @@ export function ProjectPage() {
         projectId={validProjectId}
         sprint={editingSprint}
         onClose={closeSprintModal}
+      />
+
+      <EditProjectModal
+        isOpen={settingsModalOpen}
+        project={current}
+        onClose={() => setSettingsModalOpen(false)}
+        onDeleted={() => navigate("/")}
       />
     </section>
   );

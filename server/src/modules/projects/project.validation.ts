@@ -48,3 +48,30 @@ export const removeMemberValidation = [
 ];
 
 export const getProjectByIdValidation = [projectIdParam];
+
+export const updateProjectValidation = [
+  projectIdParam,
+  body("name")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("Name cannot be empty")
+    .isLength({ max: 255 })
+    .withMessage("Name must be at most 255 characters"),
+  body("description")
+    .optional({ values: "null" })
+    .isString()
+    .withMessage("Description must be a string")
+    .isLength({ max: 20000 })
+    .withMessage("Description is too long"),
+  body()
+    .custom((_, { req }) => {
+      const b = req.body as Record<string, unknown>;
+      if (!Object.prototype.hasOwnProperty.call(b, "name") && !Object.prototype.hasOwnProperty.call(b, "description")) {
+        throw new Error("Provide name and/or description to update");
+      }
+      return true;
+    }),
+];
+
+export const deleteProjectValidation = [projectIdParam];

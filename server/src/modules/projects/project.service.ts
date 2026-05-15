@@ -193,6 +193,81 @@ export async function getProjectForUser(projectId: string, userId: string) {
   return toDto(proj, membership.get("role") as string, members);
 }
 
+function parseProjectDescription(value: unknown): string | null {
+  if (value == null || String(value).trim() === "") {
+    return null;
+  }
+  return String(value).trim();
+}
+
+function parseProjectName(value: unknown): string {
+  const trimmedName = String(value ?? "").trim();
+  if (!trimmedName) {
+    throw new AppError("Name is required", 400);
+  }
+  if (trimmedName.length > 255) {
+    throw new AppError("Name must be at most 255 characters", 400);
+  }
+  return trimmedName;
+}
+
+export async function updateProject(
+  actorUserId: string,
+  projectId: string,
+  body: { name?: unknown; description?: unknown },
+) {
+  if (!isUuidV4(projectId)) {
+    throw new AppError("Project not found", 404);
+  }
+
+  const actor = await getMembership(projectId, actorUserId);
+  if (!actor) {
+    throw new AppError("Project not found", 404);
+  }
+  await assertCanManageTeam(actorUserId, projectId, actor.get("role") as string);
+
+  const patch: { name?: string; description?: string | null } = {};
+
+  if (Object.prototype.hasOwnProperty.call(body, "name")) {
+    patch.name = parseProjectName(body.name);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "description")) {
+    patch.description = parseProjectDescription(body.description);
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new AppError("No fields to update", 400);
+  }
+
+  const project = await Project.findByPk(projectId);
+  if (!project) {
+    throw new AppError("Project not found", 404);
+  }
+
+  await project.update(patch);
+  return getProjectForUser(projectId, actorUserId);
+}
+
+export async function deleteProject(actorUserId: string, projectId: string): Promise<{ ok: true }> {
+  if (!isUuidV4(projectId)) {
+    throw new AppError("Project not found", 404);
+  }
+
+  const actor = await getMembership(projectId, actorUserId);
+  if (!actor) {
+    throw new AppError("Project not found", 404);
+  }
+  await assertCanManageTeam(actorUserId, projectId, actor.get("role") as string);
+
+  const deleted = await Project.destroy({ where: { id: projectId } });
+  if (deleted === 0) {
+    throw new AppError("Project not found", 404);
+  }
+
+  return { ok: true };
+}
+
 export async function addProjectMember(
   actorUserId: string,
   projectId: string,

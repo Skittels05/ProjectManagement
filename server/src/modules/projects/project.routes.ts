@@ -11,6 +11,8 @@ import {
   updateMemberRoleValidation,
   removeMemberValidation,
   getProjectByIdValidation,
+  updateProjectValidation,
+  deleteProjectValidation,
 } from "./project.validation";
 import {
   listSprintsValidation,
@@ -96,6 +98,18 @@ projectsRouter.delete(
   deleteTaskValidation,
   validationMiddleware,
   asyncHandler(taskController.remove),
+);
+projectsRouter.patch(
+  "/:projectId",
+  updateProjectValidation,
+  validationMiddleware,
+  asyncHandler(controller.update),
+);
+projectsRouter.delete(
+  "/:projectId",
+  deleteProjectValidation,
+  validationMiddleware,
+  asyncHandler(controller.remove),
 );
 projectsRouter.get(
   "/:projectId",

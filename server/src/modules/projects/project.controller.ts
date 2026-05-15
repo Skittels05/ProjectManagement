@@ -17,6 +17,20 @@ export async function getById(req: Request, res: Response): Promise<void> {
   res.status(200).json({ project });
 }
 
+export async function update(req: Request, res: Response): Promise<void> {
+  const project = await projectService.updateProject(
+    req.user!.id,
+    segment(req.params.projectId),
+    req.body,
+  );
+  res.status(200).json({ project });
+}
+
+export async function remove(req: Request, res: Response): Promise<void> {
+  await projectService.deleteProject(req.user!.id, segment(req.params.projectId));
+  res.status(200).json({ ok: true });
+}
+
 export async function addMember(req: Request, res: Response): Promise<void> {
   const project = await projectService.addProjectMember(req.user!.id, segment(req.params.projectId), req.body);
   res.status(201).json({ project });

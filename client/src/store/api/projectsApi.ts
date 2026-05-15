@@ -24,6 +24,30 @@ export const projectsApi = baseApi.injectEndpoints({
       transformResponse: (response: { project: ProjectDto }) => response.project,
       invalidatesTags: [{ type: "Project", id: "LIST" }],
     }),
+    updateProject: build.mutation<
+      ProjectDto,
+      { projectId: string; name?: string; description?: string | null }
+    >({
+      query: ({ projectId, ...body }) => ({
+        url: `/projects/${projectId}`,
+        method: "patch",
+        data: body,
+      }),
+      transformResponse: (response: { project: ProjectDto }) => response.project,
+      invalidatesTags: (_result, _err, { projectId }) => [
+        { type: "Project", id: projectId },
+        { type: "Project", id: "LIST" },
+      ],
+    }),
+    deleteProject: build.mutation<{ ok: true }, string>({
+      query: (projectId) => ({ url: `/projects/${projectId}`, method: "delete" }),
+      invalidatesTags: (_result, _err, projectId) => [
+        { type: "Project", id: projectId },
+        { type: "Project", id: "LIST" },
+        { type: "Sprint", id: projectId },
+        { type: "Task", id: projectId },
+      ],
+    }),
     addProjectMember: build.mutation<
       ProjectDto,
       { projectId: string; email: string; role: string }
@@ -83,6 +107,8 @@ export const {
   useGetProjectsQuery,
   useGetProjectQuery,
   useCreateProjectMutation,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
   useAddProjectMemberMutation,
   useUpdateProjectMemberRoleMutation,
   useRemoveProjectMemberMutation,
