@@ -5,6 +5,9 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 import * as controller from "./project.controller";
 import * as sprintController from "./sprint.controller";
 import * as taskController from "./task.controller";
+import * as taskCommentController from "./task-comment.controller";
+import * as taskAttachmentController from "./task-attachment.controller";
+import { handleTaskAttachmentUpload } from "../../middlewares/upload.middleware";
 import {
   createProjectValidation,
   addMemberValidation,
@@ -26,6 +29,15 @@ import {
   updateTaskValidation,
   deleteTaskValidation,
 } from "./task.validation";
+import {
+  listCommentsValidation,
+  createCommentValidation,
+  updateCommentValidation,
+  deleteCommentValidation,
+  listAttachmentsValidation,
+  downloadAttachmentValidation,
+  deleteAttachmentValidation,
+} from "./task-engagement.validation";
 
 export const projectsRouter = Router();
 
@@ -98,6 +110,55 @@ projectsRouter.delete(
   deleteTaskValidation,
   validationMiddleware,
   asyncHandler(taskController.remove),
+);
+projectsRouter.get(
+  "/:projectId/tasks/:taskId/comments",
+  listCommentsValidation,
+  validationMiddleware,
+  asyncHandler(taskCommentController.list),
+);
+projectsRouter.post(
+  "/:projectId/tasks/:taskId/comments",
+  createCommentValidation,
+  validationMiddleware,
+  asyncHandler(taskCommentController.create),
+);
+projectsRouter.patch(
+  "/:projectId/tasks/:taskId/comments/:commentId",
+  updateCommentValidation,
+  validationMiddleware,
+  asyncHandler(taskCommentController.update),
+);
+projectsRouter.delete(
+  "/:projectId/tasks/:taskId/comments/:commentId",
+  deleteCommentValidation,
+  validationMiddleware,
+  asyncHandler(taskCommentController.remove),
+);
+projectsRouter.get(
+  "/:projectId/tasks/:taskId/attachments",
+  listAttachmentsValidation,
+  validationMiddleware,
+  asyncHandler(taskAttachmentController.list),
+);
+projectsRouter.post(
+  "/:projectId/tasks/:taskId/attachments",
+  listAttachmentsValidation,
+  validationMiddleware,
+  handleTaskAttachmentUpload,
+  asyncHandler(taskAttachmentController.upload),
+);
+projectsRouter.get(
+  "/:projectId/tasks/:taskId/attachments/:attachmentId/file",
+  downloadAttachmentValidation,
+  validationMiddleware,
+  asyncHandler(taskAttachmentController.download),
+);
+projectsRouter.delete(
+  "/:projectId/tasks/:taskId/attachments/:attachmentId",
+  deleteAttachmentValidation,
+  validationMiddleware,
+  asyncHandler(taskAttachmentController.remove),
 );
 projectsRouter.patch(
   "/:projectId",

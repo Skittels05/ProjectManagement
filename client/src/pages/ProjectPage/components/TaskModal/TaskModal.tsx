@@ -4,7 +4,10 @@ import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { SprintDto } from "../../../../store/types/sprints.types";
 import type { CreateTaskBody, TaskDto, TaskStatus, UpdateTaskBody } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { TaskAttachmentsPanel } from "./TaskAttachmentsPanel";
+import { TaskCommentsPanel } from "./TaskCommentsPanel";
 import "../ProjectTasksSection/ProjectTasksSection.css";
+import "./TaskModalEngagement.css";
 
 type TaskModalProps = {
   isOpen: boolean;
@@ -142,7 +145,7 @@ export function TaskModal({
         if (ev.target === ev.currentTarget) onClose();
       }}
     >
-      <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+      <div className="modal-card modal-card--task" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
         <div className="modal-header">
           <h2 id="task-modal-title" className="modal-title">
             {heading}
@@ -233,6 +236,17 @@ export function TaskModal({
             </button>
           </div>
         </form>
+
+        {mode === "edit" && task ? (
+          <div className="task-modal-engagement">
+            <TaskCommentsPanel projectId={projectId} taskId={task.id} />
+            <TaskAttachmentsPanel projectId={projectId} taskId={task.id} />
+          </div>
+        ) : (
+          <p className="muted small-meta task-modal-engagement-hint">
+            Save the task first to add comments and attachments.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -145,3 +145,4 @@ server/.env
 server/.env.*
 client/dist/
 server/dist/
+server/uploads/

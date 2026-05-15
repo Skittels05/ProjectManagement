@@ -1,0 +1,24 @@
+import { body, param } from "express-validator";
+
+const projectIdParam = param("projectId").isUUID(4).withMessage("Invalid project id");
+const taskIdParam = param("taskId").isUUID(4).withMessage("Invalid task id");
+const commentIdParam = param("commentId").isUUID(4).withMessage("Invalid comment id");
+const attachmentIdParam = param("attachmentId").isUUID(4).withMessage("Invalid attachment id");
+
+export const taskEngagementParams = [projectIdParam, taskIdParam];
+
+export const listCommentsValidation = taskEngagementParams;
+export const createCommentValidation = [
+  ...taskEngagementParams,
+  body("body").trim().notEmpty().withMessage("Comment is required").isLength({ max: 10000 }),
+];
+export const updateCommentValidation = [
+  ...taskEngagementParams,
+  commentIdParam,
+  body("body").trim().notEmpty().withMessage("Comment is required").isLength({ max: 10000 }),
+];
+export const deleteCommentValidation = [...taskEngagementParams, commentIdParam];
+
+export const listAttachmentsValidation = taskEngagementParams;
+export const downloadAttachmentValidation = [...taskEngagementParams, attachmentIdParam];
+export const deleteAttachmentValidation = [...taskEngagementParams, attachmentIdParam];

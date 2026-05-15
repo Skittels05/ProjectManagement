@@ -4,6 +4,7 @@ import { baseApi } from "./api/baseApi";
 import "./api/projectsApi";
 import "./api/sprintsApi";
 import "./api/tasksApi";
+import "./api/taskEngagementApi";
 import "./api/authApi";
 import authReducer from "./slices/authSlice";
 
