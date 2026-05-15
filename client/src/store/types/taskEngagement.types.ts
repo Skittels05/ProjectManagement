@@ -24,3 +24,20 @@ export type TaskAttachmentDto = {
   createdAt: string;
   uploader: TaskCommentUserDto | null;
 };
+
+export type TaskTimeLogDto = {
+  id: string;
+  taskId: string;
+  userId: string;
+  minutes: number;
+  note: string | null;
+  loggedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  user: TaskCommentUserDto | null;
+};
+
+export type TaskTimeLogsResponse = {
+  logs: TaskTimeLogDto[];
+  totalMinutes: number;
+};

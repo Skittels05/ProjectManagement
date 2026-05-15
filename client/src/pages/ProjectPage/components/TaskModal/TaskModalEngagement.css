@@ -12,6 +12,71 @@
   font-size: 1rem;
 }
 
+.task-time-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.task-time-summary h3 {
+  margin: 0;
+}
+
+.task-time-total {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #93c5fd;
+}
+
+.task-time-log-list {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.task-time-log-item {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.task-time-log-note {
+  margin: 0 0 0.5rem;
+  color: #cbd5e1;
+}
+
+.task-time-log-form-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 520px) {
+  .task-time-log-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.task-time-log-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.task-time-log-form input[type="text"],
+.task-time-log-form input[type="number"],
+.task-time-log-form input[type="datetime-local"] {
+  width: 100%;
+}
+
 .task-comment-list,
 .task-attachment-list {
   list-style: none;

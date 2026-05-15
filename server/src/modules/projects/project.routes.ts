@@ -7,6 +7,7 @@ import * as sprintController from "./sprint.controller";
 import * as taskController from "./task.controller";
 import * as taskCommentController from "./task-comment.controller";
 import * as taskAttachmentController from "./task-attachment.controller";
+import * as taskTimeLogController from "./task-time-log.controller";
 import { handleTaskAttachmentUpload } from "../../middlewares/upload.middleware";
 import {
   createProjectValidation,
@@ -37,6 +38,10 @@ import {
   listAttachmentsValidation,
   downloadAttachmentValidation,
   deleteAttachmentValidation,
+  listTimeLogsValidation,
+  createTimeLogValidation,
+  updateTimeLogValidation,
+  deleteTimeLogValidation,
 } from "./task-engagement.validation";
 
 export const projectsRouter = Router();
@@ -159,6 +164,30 @@ projectsRouter.delete(
   deleteAttachmentValidation,
   validationMiddleware,
   asyncHandler(taskAttachmentController.remove),
+);
+projectsRouter.get(
+  "/:projectId/tasks/:taskId/time-logs",
+  listTimeLogsValidation,
+  validationMiddleware,
+  asyncHandler(taskTimeLogController.list),
+);
+projectsRouter.post(
+  "/:projectId/tasks/:taskId/time-logs",
+  createTimeLogValidation,
+  validationMiddleware,
+  asyncHandler(taskTimeLogController.create),
+);
+projectsRouter.patch(
+  "/:projectId/tasks/:taskId/time-logs/:timeLogId",
+  updateTimeLogValidation,
+  validationMiddleware,
+  asyncHandler(taskTimeLogController.update),
+);
+projectsRouter.delete(
+  "/:projectId/tasks/:taskId/time-logs/:timeLogId",
+  deleteTimeLogValidation,
+  validationMiddleware,
+  asyncHandler(taskTimeLogController.remove),
 );
 projectsRouter.patch(
   "/:projectId",

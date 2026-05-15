@@ -1,6 +1,11 @@
 import { http } from "../../shared/api/http";
 import { baseApi } from "./baseApi";
-import type { TaskAttachmentDto, TaskCommentDto } from "../types/taskEngagement.types";
+import type {
+  TaskAttachmentDto,
+  TaskCommentDto,
+  TaskTimeLogDto,
+  TaskTimeLogsResponse,
+} from "../types/taskEngagement.types";
 
 type TaskRef = { projectId: string; taskId: string };
 
@@ -74,6 +79,49 @@ export const taskEngagementApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, arg) => [engagementTag(arg)],
     }),
+    getTaskTimeLogs: build.query<TaskTimeLogsResponse, TaskRef>({
+      query: ({ projectId, taskId }) => ({
+        url: `/projects/${projectId}/tasks/${taskId}/time-logs`,
+        method: "get",
+      }),
+      providesTags: (_r, _e, arg) => [engagementTag(arg)],
+    }),
+    createTaskTimeLog: build.mutation<
+      TaskTimeLogDto,
+      TaskRef & { minutes: number; note?: string | null; loggedAt?: string }
+    >({
+      query: ({ projectId, taskId, minutes, note, loggedAt }) => ({
+        url: `/projects/${projectId}/tasks/${taskId}/time-logs`,
+        method: "post",
+        data: { minutes, note, loggedAt },
+      }),
+      transformResponse: (response: { timeLog: TaskTimeLogDto }) => response.timeLog,
+      invalidatesTags: (_r, _e, arg) => [engagementTag(arg)],
+    }),
+    updateTaskTimeLog: build.mutation<
+      TaskTimeLogDto,
+      TaskRef & {
+        timeLogId: string;
+        minutes?: number;
+        note?: string | null;
+        loggedAt?: string;
+      }
+    >({
+      query: ({ projectId, taskId, timeLogId, ...body }) => ({
+        url: `/projects/${projectId}/tasks/${taskId}/time-logs/${timeLogId}`,
+        method: "patch",
+        data: body,
+      }),
+      transformResponse: (response: { timeLog: TaskTimeLogDto }) => response.timeLog,
+      invalidatesTags: (_r, _e, arg) => [engagementTag(arg)],
+    }),
+    deleteTaskTimeLog: build.mutation<void, TaskRef & { timeLogId: string }>({
+      query: ({ projectId, taskId, timeLogId }) => ({
+        url: `/projects/${projectId}/tasks/${taskId}/time-logs/${timeLogId}`,
+        method: "delete",
+      }),
+      invalidatesTags: (_r, _e, arg) => [engagementTag(arg)],
+    }),
   }),
 });
 
@@ -85,6 +133,10 @@ export const {
   useGetTaskAttachmentsQuery,
   useUploadTaskAttachmentMutation,
   useDeleteTaskAttachmentMutation,
+  useGetTaskTimeLogsQuery,
+  useCreateTaskTimeLogMutation,
+  useUpdateTaskTimeLogMutation,
+  useDeleteTaskTimeLogMutation,
 } = taskEngagementApi;
 
 export function taskAttachmentFileUrl(projectId: string, taskId: string, attachmentId: string): string {

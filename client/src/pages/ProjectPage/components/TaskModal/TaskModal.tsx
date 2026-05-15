@@ -7,6 +7,7 @@ import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { TaskAttachmentsPanel } from "./TaskAttachmentsPanel";
 import { TaskCommentsPanel } from "./TaskCommentsPanel";
 import { TaskSubtasksPanel } from "./TaskSubtasksPanel";
+import { TaskTimeLogsPanel } from "./TaskTimeLogsPanel";
 import "../ProjectTasksSection/ProjectTasksSection.css";
 import "./TaskModalEngagement.css";
 
@@ -276,12 +277,13 @@ export function TaskModal({
 
         {mode === "edit" && task ? (
           <div className="task-modal-engagement">
+            <TaskTimeLogsPanel projectId={projectId} taskId={task.id} />
             <TaskCommentsPanel projectId={projectId} taskId={task.id} />
             <TaskAttachmentsPanel projectId={projectId} taskId={task.id} />
           </div>
         ) : (
           <p className="muted small-meta task-modal-engagement-hint">
-            Save the task first to add comments and attachments.
+            Save the task first to log time, comments, and attachments.
           </p>
         )}
       </div>
