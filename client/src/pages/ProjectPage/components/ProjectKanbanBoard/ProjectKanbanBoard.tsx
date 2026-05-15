@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -28,7 +28,7 @@ import {
 } from "../../../../shared/lib/kanban";
 import {
   columnIdsFromGrouped,
-  filterTasks,
+  filterTasksForKanbanBoard,
   groupFilteredKanbanTasks,
   type TaskListQuery,
 } from "../../../../shared/lib/taskListQuery";
@@ -59,6 +59,84 @@ function findContainer(columns: ColumnIds, id: string): TaskStatus | null {
     if (columns[status].includes(id)) return status;
   }
   return null;
+}
+
+function moveTaskBetweenColumns(
+  columns: ColumnIds,
+  taskId: string,
+  from: TaskStatus,
+  to: TaskStatus,
+  insertBeforeId?: string,
+): ColumnIds {
+  if (from === to) return columns;
+
+  const fromItems = columns[from].filter((id) => id !== taskId);
+  const toItems = columns[to].filter((id) => id !== taskId);
+  let insertAt = toItems.length;
+  if (insertBeforeId) {
+    const idx = toItems.indexOf(insertBeforeId);
+    if (idx >= 0) insertAt = idx;
+  }
+  toItems.splice(insertAt, 0, taskId);
+
+  return { ...columns, [from]: fromItems, [to]: toItems };
+}
+
+function resolveColumnsAfterDrop(
+  columns: ColumnIds,
+  taskId: string,
+  overId: string,
+): { columns: ColumnIds; targetStatus: TaskStatus } | null {
+  let activeContainer = findContainer(columns, taskId);
+  if (!activeContainer) return null;
+
+  const droppedOnColumn = parseColumnDroppableId(overId);
+  let overContainer = findContainer(columns, overId) ?? droppedOnColumn;
+  if (!overContainer) return null;
+
+  let next = columns;
+
+  if (droppedOnColumn) {
+    if (activeContainer !== droppedOnColumn) {
+      next = moveTaskBetweenColumns(columns, taskId, activeContainer, droppedOnColumn);
+    }
+    overContainer = droppedOnColumn;
+  } else if (activeContainer === overContainer) {
+    const items = columns[activeContainer];
+    const oldIndex = items.indexOf(taskId);
+    let newIndex = items.indexOf(overId);
+    if (newIndex < 0) newIndex = items.length - 1;
+    if (oldIndex >= 0 && oldIndex !== newIndex) {
+      next = { ...columns, [activeContainer]: arrayMove(items, oldIndex, newIndex) };
+    }
+  } else {
+    next = moveTaskBetweenColumns(columns, taskId, activeContainer, overContainer, overId);
+  }
+
+  const targetStatus = findContainer(next, taskId);
+  if (!targetStatus) return null;
+
+  return { columns: next, targetStatus };
+}
+
+function buildTasksById(
+  serverTasks: TaskDto[],
+  columnIds: ColumnIds,
+  taskListQuery: TaskListQuery,
+  members: ProjectMemberDto[],
+): Record<string, TaskDto> {
+  const map: Record<string, TaskDto> = {};
+  for (const t of filterTasksForKanbanBoard(serverTasks, taskListQuery, members)) {
+    map[t.id] = t;
+  }
+  for (const { id: status } of KANBAN_COLUMNS) {
+    for (const id of columnIds[status]) {
+      if (map[id]) {
+        map[id] = { ...map[id], status };
+      }
+    }
+  }
+  return map;
 }
 
 type KanbanCardProps = {
@@ -169,6 +247,8 @@ export function ProjectKanbanBoard({
 
   const [updateTask] = useUpdateTaskMutation();
   const [columnIds, setColumnIds] = useState<ColumnIds>(emptyColumns);
+  const columnIdsRef = useRef(columnIds);
+  columnIdsRef.current = columnIds;
   const [activeId, setActiveId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -178,27 +258,22 @@ export function ProjectKanbanBoard({
   );
 
   const filteredCount = useMemo(
-    () => filterTasks(serverTasks, taskListQuery, members).length,
+    () => filterTasksForKanbanBoard(serverTasks, taskListQuery, members).length,
     [serverTasks, taskListQuery, members],
   );
 
-  const tasksById = useMemo(() => {
-    const map: Record<string, TaskDto> = {};
-    for (const status of KANBAN_COLUMNS) {
-      for (const t of groupedKanban[status.id]) {
-        map[t.id] = t;
-      }
-    }
-    return map;
-  }, [groupedKanban]);
+  const tasksById = useMemo(
+    () => buildTasksById(serverTasks, columnIds, taskListQuery, members),
+    [serverTasks, taskListQuery, members, columnIds],
+  );
 
   const layoutColumnIds = useMemo(() => columnIdsFromGrouped(groupedKanban), [groupedKanban]);
 
   useEffect(() => {
-    if (!activeId) {
-      setColumnIds(layoutColumnIds);
-    }
-  }, [layoutColumnIds, activeId]);
+    if (activeId || saving) return;
+    columnIdsRef.current = layoutColumnIds;
+    setColumnIds(layoutColumnIds);
+  }, [layoutColumnIds, activeId, saving]);
 
   const activeTask = activeId ? (tasksById[activeId] ?? null) : null;
   const errMsg = error ? getRtkQueryErrorMessage(error) : null;
@@ -217,72 +292,82 @@ export function ProjectKanbanBoard({
     const { active, over } = event;
     if (!over) return;
 
-    const activeContainer = findContainer(columnIds, String(active.id));
-    const overContainer = findContainer(columnIds, String(over.id));
-    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
-
     setColumnIds((prev) => {
+      const taskId = String(active.id);
+      const overId = String(over.id);
+      const activeContainer = findContainer(prev, taskId);
+      const overContainer = findContainer(prev, overId);
+      if (!activeContainer || !overContainer || activeContainer === overContainer) return prev;
+
       const activeItems = [...prev[activeContainer]];
       const overItems = [...prev[overContainer]];
-      const activeIndex = activeItems.indexOf(String(active.id));
+      const activeIndex = activeItems.indexOf(taskId);
       if (activeIndex < 0) return prev;
 
-      const overIndex = overItems.indexOf(String(over.id));
+      const overIndex = overItems.indexOf(overId);
       activeItems.splice(activeIndex, 1);
       const insertAt = overIndex >= 0 ? overIndex : overItems.length;
-      overItems.splice(insertAt, 0, String(active.id));
+      overItems.splice(insertAt, 0, taskId);
 
-      return {
+      const next = {
         ...prev,
         [activeContainer]: activeItems,
         [overContainer]: overItems,
       };
+      columnIdsRef.current = next;
+      return next;
     });
   }
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    setActiveId(null);
-    if (!over || saving) return;
-
-    const activeContainer = findContainer(columnIds, String(active.id));
-    const overContainer = findContainer(columnIds, String(over.id));
-    if (!activeContainer || !overContainer) return;
-
-    const taskId = String(active.id);
-    let nextColumns = columnIds;
-
-    if (activeContainer === overContainer) {
-      const items = columnIds[activeContainer];
-      const oldIndex = items.indexOf(taskId);
-      let newIndex = items.indexOf(String(over.id));
-      if (newIndex < 0) {
-        newIndex = items.length - 1;
-      }
-      if (oldIndex < 0 || oldIndex === newIndex) return;
-      nextColumns = {
-        ...columnIds,
-        [activeContainer]: arrayMove(items, oldIndex, newIndex),
-      };
-      setColumnIds(nextColumns);
-    } else {
-      nextColumns = columnIds;
+    if (!over || saving) {
+      setActiveId(null);
+      return;
     }
 
-    const targetListIds = nextColumns[overContainer];
-    const finalIndex = targetListIds.indexOf(taskId);
-    if (finalIndex < 0) return;
+    const taskId = String(active.id);
+    const overId = String(over.id);
+    const serverTask = serverTasks.find((t) => t.id === taskId);
+    if (!serverTask) {
+      setActiveId(null);
+      return;
+    }
 
+    const resolved = resolveColumnsAfterDrop(columnIdsRef.current, taskId, overId);
+    if (!resolved) {
+      setActiveId(null);
+      return;
+    }
+
+    const { columns: nextColumns, targetStatus: status } = resolved;
+    columnIdsRef.current = nextColumns;
+    setColumnIds(nextColumns);
+
+    const targetListIds = nextColumns[status];
+    const finalIndex = targetListIds.indexOf(taskId);
+    if (finalIndex < 0) {
+      setActiveId(null);
+      return;
+    }
+
+    const lookup = buildTasksById(serverTasks, nextColumns, taskListQuery, members);
     const columnTasks = targetListIds
       .filter((id) => id !== taskId)
       .map((id) => {
-        const t = tasksById[id];
-        return t ? { ...t, status: overContainer } : null;
+        const t = lookup[id];
+        return t ? { ...t, status } : null;
       })
       .filter((t): t is TaskDto => t != null);
 
     const boardPosition = boardPositionAtIndex(columnTasks, finalIndex);
-    const status = overContainer;
+    const statusChanged = serverTask.status !== status;
+    const positionChanged = serverTask.boardPosition !== boardPosition;
+
+    if (!statusChanged && !positionChanged) {
+      setActiveId(null);
+      return;
+    }
 
     setSaving(true);
     try {
@@ -292,15 +377,18 @@ export function ProjectKanbanBoard({
         body: { status, boardPosition },
       }).unwrap();
     } catch (err) {
+      columnIdsRef.current = layoutColumnIds;
       setColumnIds(layoutColumnIds);
       window.alert(getRtkQueryErrorMessage(err));
     } finally {
       setSaving(false);
+      setActiveId(null);
     }
   }
 
   function handleDragCancel() {
     setActiveId(null);
+    columnIdsRef.current = layoutColumnIds;
     setColumnIds(layoutColumnIds);
   }
 

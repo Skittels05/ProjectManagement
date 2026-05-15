@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { CreateTaskBody, TaskDto, UpdateTaskBody } from "../types/tasks.types";
+import type { CreateTaskBody, TaskDto, TaskStatus, UpdateTaskBody } from "../types/tasks.types";
 
 function taskListTag(projectId: string) {
   return { type: "Task" as const, id: `LIST-${projectId}` };
@@ -43,6 +43,35 @@ export const tasksApi = baseApi.injectEndpoints({
         data: body,
       }),
       transformResponse: (response: { task: TaskDto }) => response.task,
+      async onQueryStarted({ projectId, taskId, body }, { dispatch, queryFulfilled, getState }) {
+        const patches: { undo: () => void }[] = [];
+        const cachedArgs = tasksApi.util.selectCachedArgsForQuery(getState(), "getTasks");
+
+        for (const args of cachedArgs) {
+          if (args.projectId !== projectId) continue;
+          const patch = dispatch(
+            tasksApi.util.updateQueryData("getTasks", args, (draft) => {
+              const task = draft.find((t) => t.id === taskId);
+              if (!task) return;
+              if (body.status !== undefined) {
+                task.status = body.status as TaskStatus;
+              }
+              if (body.boardPosition !== undefined) {
+                task.boardPosition = body.boardPosition;
+              }
+            }),
+          );
+          patches.push(patch);
+        }
+
+        try {
+          await queryFulfilled;
+        } catch {
+          for (const patch of patches) {
+            patch.undo();
+          }
+        }
+      },
       invalidatesTags: (_result, _err, { projectId }) => [taskListTag(projectId)],
     }),
     deleteTask: build.mutation<void, { projectId: string; taskId: string }>({

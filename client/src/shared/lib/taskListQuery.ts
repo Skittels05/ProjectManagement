@@ -147,12 +147,21 @@ export function hasActiveTaskFilters(query: TaskListQuery): boolean {
   );
 }
 
+/** Kanban columns represent status — do not hide tasks by status filter while on the board. */
+export function filterTasksForKanbanBoard(
+  tasks: TaskDto[],
+  query: TaskListQuery,
+  members: ProjectMemberDto[],
+): TaskDto[] {
+  return filterTasks(tasks, { ...query, statusFilter: "all" }, members);
+}
+
 export function groupFilteredKanbanTasks(
   tasks: TaskDto[],
   query: TaskListQuery,
   members: ProjectMemberDto[],
 ): Record<TaskStatus, TaskDto[]> {
-  const filtered = filterTasks(tasks, query, members);
+  const filtered = filterTasksForKanbanBoard(tasks, query, members);
   const grouped: Record<TaskStatus, TaskDto[]> = {
     todo: [],
     in_progress: [],
