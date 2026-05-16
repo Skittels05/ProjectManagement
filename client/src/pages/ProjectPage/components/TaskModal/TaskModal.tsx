@@ -213,6 +213,7 @@ export function TaskModal({
             </label>
             <label>
               {t("project.priority")}
+              <span className="muted small-meta"> ({t("project.priorityHint")})</span>
               <input
                 type="number"
                 min={0}

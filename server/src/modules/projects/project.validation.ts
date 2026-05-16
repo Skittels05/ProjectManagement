@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 
 const projectIdParam = param("projectId").isUUID(4).withMessage("Invalid project id");
 
@@ -14,6 +14,15 @@ const memberRoleBody = body("role")
     }
     return true;
   });
+
+export const listProjectsValidation = [
+  query("search").optional().isString().isLength({ max: 200 }).withMessage("Search is too long"),
+  query("sort")
+    .optional()
+    .isIn(["updated_desc", "updated_asc", "name_asc", "name_desc"])
+    .withMessage("Invalid sort"),
+  query("filter").optional().isIn(["all", "owner"]).withMessage("Invalid filter"),
+];
 
 export const createProjectValidation = [
   body("name")

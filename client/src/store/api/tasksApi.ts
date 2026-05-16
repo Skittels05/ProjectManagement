@@ -1,25 +1,34 @@
 import { baseApi } from "./baseApi";
+import type { TasksApiQueryParams } from "../../shared/lib/tasksQueryParams";
 import type { CreateTaskBody, TaskDto, TaskStatus, UpdateTaskBody } from "../types/tasks.types";
 
 function taskListTag(projectId: string) {
   return { type: "Task" as const, id: `LIST-${projectId}` };
 }
 
-export type GetTasksArg = {
-  projectId: string;
-  sprintFilter?: "all" | "backlog" | string;
-};
+export type GetTasksArg = TasksApiQueryParams;
+
+function tasksQueryParams(arg: GetTasksArg): Record<string, string | boolean> {
+  const params: Record<string, string | boolean> = {};
+  if (arg.sprintFilter && arg.sprintFilter !== "all") {
+    params.sprintId = arg.sprintFilter === "backlog" ? "backlog" : arg.sprintFilter;
+  }
+  if (arg.search) params.search = arg.search;
+  if (arg.sort) params.sort = arg.sort;
+  if (arg.status && arg.status !== "all") params.status = arg.status;
+  if (arg.assignee && arg.assignee !== "all") params.assignee = arg.assignee;
+  if (arg.role) params.role = arg.role;
+  if (arg.rootsOnly) params.rootsOnly = "true";
+  return params;
+}
 
 export const tasksApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getTasks: build.query<TaskDto[], GetTasksArg>({
-      query: ({ projectId, sprintFilter = "all" }) => ({
-        url: `/projects/${projectId}/tasks`,
+      query: (arg) => ({
+        url: `/projects/${arg.projectId}/tasks`,
         method: "get",
-        params:
-          sprintFilter === "all" || sprintFilter === undefined
-            ? {}
-            : { sprintId: sprintFilter === "backlog" ? "backlog" : sprintFilter },
+        params: tasksQueryParams(arg),
       }),
       transformResponse: (response: { tasks: TaskDto[] }) => response.tasks,
       providesTags: (_result, _err, { projectId }) => [taskListTag(projectId)],

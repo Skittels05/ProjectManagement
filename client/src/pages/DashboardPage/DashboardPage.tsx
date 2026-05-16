@@ -3,8 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import { useGetProjectsQuery } from "../../store/api/projectsApi";
-import type { ProjectDto } from "../../store/types/projects.types";
-import { isOwnerRoleName } from "../../shared/lib/projectRole";
 import { useI18n } from "../../shared/i18n";
 import { CreateProjectModal } from "./components/CreateProjectModal/CreateProjectModal";
 import {
@@ -21,45 +19,9 @@ import {
 import { saveDashboardNavPath } from "../../shared/lib/dashboardNavStorage";
 import "./DashboardPage.css";
 
-function applyFilter(projects: ProjectDto[], filterBy: ProjectFilterOption): ProjectDto[] {
-  if (filterBy === "owner") {
-    return projects.filter((p) => isOwnerRoleName(String(p.role ?? "")));
-  }
-  return projects;
-}
-
-function applySearch(projects: ProjectDto[], q: string): ProjectDto[] {
-  const needle = q.trim().toLowerCase();
-  if (!needle) return projects;
-  return projects.filter((p) => {
-    const name = p.name.toLowerCase();
-    const desc = (p.description ?? "").toLowerCase();
-    return name.includes(needle) || desc.includes(needle);
-  });
-}
-
-function applySort(projects: ProjectDto[], sortBy: ProjectSortOption): ProjectDto[] {
-  const copy = [...projects];
-  copy.sort((a, b) => {
-    switch (sortBy) {
-      case "updated_asc":
-        return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
-      case "name_asc":
-        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-      case "name_desc":
-        return b.name.localeCompare(a.name, undefined, { sensitivity: "base" });
-      case "updated_desc":
-      default:
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    }
-  });
-  return copy;
-}
-
 export function DashboardPage() {
   const { t } = useI18n();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { data: list = [], isLoading: listLoading, error: listError } = useGetProjectsQuery();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { search, sortBy, filterBy } = useMemo(
@@ -81,19 +43,20 @@ export function DashboardPage() {
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
+  const projectsQuery = useMemo(
+    () => ({ search, sort: sortBy, filter: filterBy }),
+    [search, sortBy, filterBy],
+  );
+
+  const { data: list = [], isLoading: listLoading, error: listError } = useGetProjectsQuery(projectsQuery);
+
   useEffect(() => {
     saveDashboardNavPath(searchParams);
   }, [searchParams]);
 
-  const visibleProjects = useMemo(() => {
-    let next = applyFilter(list, filterBy);
-    next = applySearch(next, search);
-    next = applySort(next, sortBy);
-    return next;
-  }, [list, filterBy, search, sortBy]);
-
+  const hasListFilters = filterBy !== "all" || search.trim() !== "";
   const emptyMessage =
-    list.length === 0 ? t("dashboard.emptyNoProjects") : t("dashboard.emptyNoMatch");
+    hasListFilters && list.length === 0 ? t("dashboard.emptyNoMatch") : t("dashboard.emptyNoProjects");
 
   return (
     <section className="page dashboard-page">
@@ -112,7 +75,7 @@ export function DashboardPage() {
       </div>
 
       <ProjectListPanel
-        projects={visibleProjects}
+        projects={list}
         isLoading={listLoading}
         error={listError}
         emptyMessage={emptyMessage}

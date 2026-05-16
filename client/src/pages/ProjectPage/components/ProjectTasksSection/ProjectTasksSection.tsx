@@ -3,13 +3,9 @@ import {
   useDeleteTaskMutation,
   useGetTasksQuery,
 } from "../../../../store/api/tasksApi";
-import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { TaskDto } from "../../../../store/types/tasks.types";
-import {
-  applyTaskListQuery,
-  flattenTaskHierarchy,
-  type TaskListQuery,
-} from "../../../../shared/lib/taskListQuery";
+import { flattenTaskHierarchy, hasActiveTaskFilters } from "../../../../shared/lib/taskListQuery";
+import type { GetTasksArg } from "../../../../store/api/tasksApi";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { subtaskCountLabel, taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
@@ -24,36 +20,40 @@ function statusClass(status: string): string {
 
 export type ProjectTasksSectionProps = {
   projectId: string;
-  iterationScope: "backlog" | string;
+  tasksQueryArg: GetTasksArg;
   iterationLabel: string;
-  members: ProjectMemberDto[];
-  taskListQuery: TaskListQuery;
   onEditTask: (task: TaskDto) => void;
   onAddTask: () => void;
 };
 
 export function ProjectTasksSection({
   projectId,
-  iterationScope,
+  tasksQueryArg,
   iterationLabel,
-  members,
-  taskListQuery,
   onEditTask,
   onAddTask,
 }: ProjectTasksSectionProps) {
   const { t } = useI18n();
-  const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
 
   const {
     data: tasks = [],
     isLoading: tasksLoading,
     error: tasksError,
-  } = useGetTasksQuery({ projectId, sprintFilter });
+  } = useGetTasksQuery(tasksQueryArg);
 
-  const visibleRows = useMemo(() => {
-    const filtered = applyTaskListQuery(tasks, taskListQuery, members);
-    return flattenTaskHierarchy(filtered);
-  }, [tasks, taskListQuery, members]);
+  const visibleRows = useMemo(() => flattenTaskHierarchy(tasks), [tasks]);
+
+  const listQuery = useMemo(
+    () => ({
+      search: tasksQueryArg.search ?? "",
+      sortBy: tasksQueryArg.sort ?? "board",
+      statusFilter: tasksQueryArg.status ?? "all",
+      assigneeFilter: tasksQueryArg.assignee ?? "all",
+      roleFilter: tasksQueryArg.role ?? "all",
+    }),
+    [tasksQueryArg],
+  );
+  const isBacklogScope = tasksQueryArg.sprintFilter === "backlog";
 
   const tasksErrMsg = tasksError ? getRtkQueryErrorMessage(tasksError) : null;
 
@@ -81,16 +81,15 @@ export function ProjectTasksSection({
       <ProjectPanel title={panelTitle} headerAction={<AddTaskButton onClick={onAddTask} />}>
         <p className="muted tasks-scope-note">
           {t("project.tasksScope")} <strong>{iterationLabel}</strong>. {t("project.tasksNote")}
-          {iterationScope === "backlog" ? ` ${t("project.backlogNote")}` : null}
+          {isBacklogScope ? ` ${t("project.backlogNote")}` : null}
         </p>
 
         {tasksLoading ? <p className="muted">{t("project.loadingTasks")}</p> : null}
         {tasksErrMsg ? <p className="form-error">{tasksErrMsg}</p> : null}
         {!tasksLoading && tasks.length === 0 ? (
-          <p className="muted">{t("project.noTasksYet")}</p>
-        ) : null}
-        {!tasksLoading && tasks.length > 0 && visibleRows.length === 0 ? (
-          <p className="muted">{t("project.noTasksMatch")}</p>
+          <p className="muted">
+            {hasActiveTaskFilters(listQuery) ? t("project.noTasksMatch") : t("project.noTasksYet")}
+          </p>
         ) : null}
 
         {visibleRows.length > 0 ? (
@@ -101,6 +100,7 @@ export function ProjectTasksSection({
                   <th>{t("project.titleCol")}</th>
                   <th>{t("project.status")}</th>
                   <th>{t("project.sp")}</th>
+                  <th>{t("project.priority")}</th>
                   <th>{t("project.assignee")}</th>
                   <th />
                 </tr>
@@ -128,21 +128,26 @@ export function ProjectTasksSection({
                       <span className={statusClass(task.status)}>{taskStatusLabel(t, task.status)}</span>
                     </td>
                     <td className="muted">{task.storyPoints ?? t("project.dash")}</td>
+                    <td className="muted">{task.priority}</td>
                     <td className="muted">
                       {task.assignee?.fullName ?? task.assignee?.email ?? t("project.dash")}
                     </td>
                     <td>
                       <div className="task-actions">
-                        <button type="button" onClick={() => onEditTask(task)}>
+                        <button
+                          type="button"
+                          className="task-action-link"
+                          onClick={() => onEditTask(task)}
+                        >
                           {t("project.edit")}
                         </button>
                         <button
                           type="button"
-                          className="danger"
+                          className="link-danger"
                           disabled={deletingId === task.id}
                           onClick={() => void handleDelete(task)}
                         >
-                          {deletingId === task.id ? t("project.dash") : t("project.delete")}
+                          {deletingId === task.id ? t("project.removing") : t("project.delete")}
                         </button>
                       </div>
                     </td>

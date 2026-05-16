@@ -7,6 +7,7 @@ import "./api/tasksApi";
 import "./api/taskEngagementApi";
 import "./api/analyticsApi";
 import "./api/authApi";
+import "./api/adminApi";
 import authReducer from "./slices/authSlice";
 import settingsReducer from "./slices/settingsSlice";
 

@@ -1,9 +1,15 @@
 import type { ParsedQs } from "qs";
-import { Op } from "sequelize";
+import { Op, type WhereOptions } from "sequelize";
 import { ProjectMember, sequelize, Sprint, Task, User } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
 import { recordActivity } from "./activity.service";
+import {
+  assigneeIdsForProjectRole,
+  parseTaskListQuery,
+  taskListOrder,
+  taskSearchWhere,
+} from "./list-query";
 
 const TASK_STATUSES = new Set(["todo", "in_progress", "done"]);
 
@@ -177,13 +183,44 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
   }
   await assertMember(projectId, userId);
 
-  const where: Record<string, unknown> = { projectId };
+  const params = parseTaskListQuery(query);
+  const whereParts: WhereOptions[] = [{ projectId }];
+
   const sprintFilter = query?.sprintId;
   if (sprintFilter === "backlog") {
-    where.sprintId = null;
+    whereParts.push({ sprintId: null });
   } else if (typeof sprintFilter === "string" && isUuidV4(sprintFilter)) {
-    where.sprintId = sprintFilter;
+    whereParts.push({ sprintId: sprintFilter });
   }
+
+  if (params.rootsOnly) {
+    whereParts.push({ parentTaskId: null });
+  }
+
+  if (params.status !== "all") {
+    whereParts.push({ status: params.status });
+  }
+
+  if (params.assignee === "unassigned") {
+    whereParts.push({ assigneeId: null });
+  } else if (params.assignee !== "all") {
+    whereParts.push({ assigneeId: params.assignee });
+  }
+
+  if (params.role !== "all" && params.role !== "") {
+    const assigneeIds = await assigneeIdsForProjectRole(projectId, params.role);
+    if (assigneeIds.length === 0) {
+      return [];
+    }
+    whereParts.push({ assigneeId: { [Op.in]: assigneeIds } });
+  }
+
+  const searchWhere = taskSearchWhere(params.search);
+  if (searchWhere) {
+    whereParts.push(searchWhere);
+  }
+
+  const where = whereParts.length === 1 ? whereParts[0] : { [Op.and]: whereParts };
 
   const rows = await Task.findAll({
     where,
@@ -201,11 +238,8 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
         required: false,
       },
     ],
-    order: [
-      ["board_position", "ASC"],
-      ["priority", "DESC"],
-      ["created_at", "DESC"],
-    ],
+    order: taskListOrder(params.sort, params.rootsOnly),
+    subQuery: false,
   });
 
   const parentIds = rows

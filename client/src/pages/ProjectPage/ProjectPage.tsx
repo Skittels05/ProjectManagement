@@ -28,11 +28,8 @@ import { ProjectKanbanBoard } from "./components/ProjectKanbanBoard/ProjectKanba
 import { ProjectTasksSection } from "./components/ProjectTasksSection/ProjectTasksSection";
 import { EditProjectModal } from "./components/EditProjectModal/EditProjectModal";
 import { ProjectTasksToolbar } from "./components/ProjectTasksToolbar/ProjectTasksToolbar";
-import {
-  DEFAULT_TASK_LIST_QUERY,
-  applyTaskListQuery,
-  type TaskListQuery,
-} from "../../shared/lib/taskListQuery";
+import { DEFAULT_TASK_LIST_QUERY, type TaskListQuery } from "../../shared/lib/taskListQuery";
+import { buildTasksQueryParams } from "../../shared/lib/tasksQueryParams";
 import {
   buildProjectPageSearchParams,
   parseProjectPageState,
@@ -120,10 +117,13 @@ export function ProjectPage() {
   );
 
   const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
-  const { data: scopeTasks = [] } = useGetTasksQuery(
-    { projectId: validProjectId ?? "", sprintFilter },
-    { skip: !validProjectId },
-  );
+
+  const tasksQueryArg = useMemo(() => {
+    if (!validProjectId) return null;
+    return buildTasksQueryParams(validProjectId, sprintFilter, taskListQuery, tasksView);
+  }, [validProjectId, sprintFilter, taskListQuery, tasksView]);
+
+  const { data: scopeTasks = [] } = useGetTasksQuery(tasksQueryArg!, { skip: !tasksQueryArg });
 
   const patchTaskListQuery = useCallback(
     (patch: Partial<TaskListQuery>) => {
@@ -140,10 +140,7 @@ export function ProjectPage() {
 
   const members = current?.members ?? [];
 
-  const visibleTaskCount = useMemo(
-    () => applyTaskListQuery(scopeTasks, taskListQuery, members).length,
-    [scopeTasks, taskListQuery, members],
-  );
+  const visibleTaskCount = scopeTasks.length;
   const ownerCount = useMemo(() => members.filter((m) => isOwnerRoleName(m.role)).length, [members]);
   const roleSuggestions = useMemo(() => {
     const s = new Set<string>();
@@ -529,28 +526,24 @@ export function ProjectPage() {
               totalCount={scopeTasks.length}
             />
 
-            {tasksView === "kanban" ? (
+            {tasksView === "kanban" && tasksQueryArg ? (
               <ProjectKanbanBoard
                 projectId={validProjectId}
                 project={current}
-                iterationScope={iterationScope}
+                tasksQueryArg={tasksQueryArg}
                 iterationLabel={iterationLabel}
-                members={members}
-                taskListQuery={taskListQuery}
                 onEditTask={openTaskEdit}
                 onAddTask={() => openTaskCreate()}
               />
-            ) : (
+            ) : tasksQueryArg ? (
               <ProjectTasksSection
                 projectId={validProjectId}
-                iterationScope={iterationScope}
+                tasksQueryArg={tasksQueryArg}
                 iterationLabel={iterationLabel}
-                members={members}
-                taskListQuery={taskListQuery}
                 onEditTask={openTaskEdit}
                 onAddTask={() => openTaskCreate()}
               />
-            )}
+            ) : null}
           </div>
         </div>
       </div>

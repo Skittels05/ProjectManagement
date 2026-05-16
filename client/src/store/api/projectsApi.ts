@@ -1,10 +1,25 @@
 import { baseApi } from "./baseApi";
 import type { ProjectDto, RemoveMemberResult } from "../types/projects.types";
+import type { ProjectFilterOption, ProjectSortOption } from "../../pages/DashboardPage/components/DashboardProjectsToolbar/DashboardProjectsToolbar";
+
+export type GetProjectsQuery = {
+  search?: string;
+  sort?: ProjectSortOption;
+  filter?: ProjectFilterOption;
+};
 
 export const projectsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getProjects: build.query<ProjectDto[], void>({
-      query: () => ({ url: "/projects", method: "get" }),
+    getProjects: build.query<ProjectDto[], GetProjectsQuery>({
+      query: ({ search, sort, filter } = {}) => ({
+        url: "/projects",
+        method: "get",
+        params: {
+          ...(search?.trim() ? { search: search.trim() } : {}),
+          ...(sort ? { sort } : {}),
+          ...(filter && filter !== "all" ? { filter } : {}),
+        },
+      }),
       transformResponse: (response: { projects: ProjectDto[] }) => response.projects,
       providesTags: (result) =>
         result

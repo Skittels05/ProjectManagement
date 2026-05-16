@@ -84,12 +84,31 @@
 
 .task-actions {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-.task-actions button {
+.task-action-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
   font-size: 0.85rem;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.task-action-link:hover {
+  color: var(--accent-hover);
+}
+
+.task-actions .link-danger {
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .task-modal-grid {

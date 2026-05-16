@@ -57,6 +57,11 @@ export function AppShell() {
               >
                 {t("app.dashboard")}
               </Link>
+              {user?.isAdmin ? (
+                <Link to="/admin" className={location.pathname.startsWith("/admin") ? "active-link" : ""}>
+                  {t("app.admin")}
+                </Link>
+              ) : null}
               <span className="user-chip">{user?.fullName ?? user?.email}</span>
             </>
           ) : (

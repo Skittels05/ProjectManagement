@@ -11,6 +11,7 @@ import * as taskTimeLogController from "./task-time-log.controller";
 import * as analyticsController from "./analytics.controller";
 import { handleTaskAttachmentUpload } from "../../middlewares/upload.middleware";
 import {
+  listProjectsValidation,
   createProjectValidation,
   addMemberValidation,
   updateMemberRoleValidation,
@@ -56,7 +57,7 @@ export const projectsRouter = Router();
 
 projectsRouter.use(authMiddleware);
 
-projectsRouter.get("/", asyncHandler(controller.list));
+projectsRouter.get("/", listProjectsValidation, validationMiddleware, asyncHandler(controller.list));
 projectsRouter.post("/", createProjectValidation, validationMiddleware, asyncHandler(controller.create));
 projectsRouter.post(
   "/:projectId/members",

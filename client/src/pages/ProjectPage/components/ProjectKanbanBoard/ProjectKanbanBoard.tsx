@@ -17,7 +17,7 @@ import {
   useGetTasksQuery,
   useReorderKanbanColumnMutation,
 } from "../../../../store/api/tasksApi";
-import type { ProjectDto, ProjectMemberDto } from "../../../../store/types/projects.types";
+import type { ProjectDto } from "../../../../store/types/projects.types";
 import type { TaskDto, TaskStatus } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import {
@@ -28,10 +28,9 @@ import {
 import { kanbanColumnTitle, subtaskCountLabel, useI18n } from "../../../../shared/i18n";
 import {
   columnIdsFromGrouped,
-  filterTasksForKanbanBoard,
-  groupFilteredKanbanTasks,
-  type TaskListQuery,
+  groupKanbanTasksFromServer,
 } from "../../../../shared/lib/taskListQuery";
+import type { GetTasksArg } from "../../../../store/api/tasksApi";
 import {
   formatWipCount,
   isWipLimitExceeded,
@@ -47,10 +46,8 @@ export type ProjectKanbanBoardProps = {
     ProjectDto,
     "wipLimitTodo" | "wipLimitInProgress" | "wipLimitDone"
   >;
-  iterationScope: "backlog" | string;
+  tasksQueryArg: GetTasksArg;
   iterationLabel: string;
-  members: ProjectMemberDto[];
-  taskListQuery: TaskListQuery;
   onEditTask: (task: TaskDto) => void;
   onAddTask: () => void;
 };
@@ -128,14 +125,9 @@ function resolveColumnsAfterDrop(
   return { columns: next, targetStatus };
 }
 
-function buildTasksById(
-  serverTasks: TaskDto[],
-  columnIds: ColumnIds,
-  taskListQuery: TaskListQuery,
-  members: ProjectMemberDto[],
-): Record<string, TaskDto> {
+function buildTasksById(serverTasks: TaskDto[], columnIds: ColumnIds): Record<string, TaskDto> {
   const map: Record<string, TaskDto> = {};
-  for (const t of filterTasksForKanbanBoard(serverTasks, taskListQuery, members)) {
+  for (const t of serverTasks) {
     map[t.id] = t;
   }
   for (const status of KANBAN_COLUMN_IDS) {
@@ -203,6 +195,7 @@ function KanbanCardMeta({
 }) {
   const bits: string[] = [];
   if (task.storyPoints != null) bits.push(`${task.storyPoints} SP`);
+  if (task.priority > 0) bits.push(`P${task.priority}`);
   if (task.assignee) bits.push(task.assignee.fullName);
   if (task.subtaskCount > 0) bits.push(subtaskLabel(task.subtaskCount));
   if (bits.length === 0) return null;
@@ -275,10 +268,8 @@ function KanbanColumn({
 export function ProjectKanbanBoard({
   projectId,
   project,
-  iterationScope,
+  tasksQueryArg,
   iterationLabel,
-  members,
-  taskListQuery,
   onEditTask,
   onAddTask,
 }: ProjectKanbanBoardProps) {
@@ -293,12 +284,7 @@ export function ProjectKanbanBoard({
   );
   const subtaskLabelFn = (count: number) => subtaskCountLabel(t, count);
 
-  const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
-
-  const { data: serverTasks = [], isLoading, error } = useGetTasksQuery({
-    projectId,
-    sprintFilter,
-  });
+  const { data: serverTasks = [], isLoading, error } = useGetTasksQuery(tasksQueryArg);
 
   const [reorderKanbanColumn] = useReorderKanbanColumnMutation();
   const [columnIds, setColumnIds] = useState<ColumnIds>(emptyColumns);
@@ -307,19 +293,13 @@ export function ProjectKanbanBoard({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const groupedKanban = useMemo(
-    () => groupFilteredKanbanTasks(serverTasks, taskListQuery, members),
-    [serverTasks, taskListQuery, members],
-  );
+  const groupedKanban = useMemo(() => groupKanbanTasksFromServer(serverTasks), [serverTasks]);
 
-  const filteredCount = useMemo(
-    () => filterTasksForKanbanBoard(serverTasks, taskListQuery, members).length,
-    [serverTasks, taskListQuery, members],
-  );
+  const filteredCount = serverTasks.length;
 
   const tasksById = useMemo(
-    () => buildTasksById(serverTasks, columnIds, taskListQuery, members),
-    [serverTasks, taskListQuery, members, columnIds],
+    () => buildTasksById(serverTasks, columnIds),
+    [serverTasks, columnIds],
   );
 
   const layoutColumnIds = useMemo(() => columnIdsFromGrouped(groupedKanban), [groupedKanban]);

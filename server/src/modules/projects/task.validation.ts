@@ -47,6 +47,39 @@ export const listTasksValidation = [
       }
       return true;
     }),
+  query("search").optional().isString().isLength({ max: 200 }).withMessage("Search is too long"),
+  query("sort")
+    .optional()
+    .isIn([
+      "board",
+      "updated_desc",
+      "updated_asc",
+      "title_asc",
+      "title_desc",
+      "priority_desc",
+      "priority_asc",
+      "story_points_desc",
+      "story_points_asc",
+    ])
+    .withMessage("Invalid sort"),
+  query("status")
+    .optional()
+    .isIn(["all", "todo", "in_progress", "done"])
+    .withMessage("Invalid status"),
+  query("assignee")
+    .optional()
+    .custom((value) => {
+      if (value === undefined || value === null || value === "" || value === "all" || value === "unassigned") {
+        return true;
+      }
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(String(value))) {
+        throw new Error("assignee must be all, unassigned, or a UUID");
+      }
+      return true;
+    }),
+  query("role").optional().isString().isLength({ max: 32 }).withMessage("Invalid role filter"),
+  query("rootsOnly").optional().isIn(["true", "false", "1", "0"]).withMessage("Invalid rootsOnly"),
 ];
 
 export const createTaskValidation = [

@@ -1,9 +1,11 @@
-import { Op } from "sequelize";
+import type { ParsedQs } from "qs";
+import { Op, Sequelize } from "sequelize";
 import type { Model } from "sequelize";
 import { sequelize, Project, ProjectMember, User } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
 import { recordActivity } from "./activity.service";
+import { parseProjectListQuery, projectListOrder } from "./list-query";
 
 const ROLES = {
   OWNER: "owner",
@@ -153,24 +155,40 @@ export async function createProject(userId: string, body: { name: string; descri
   }
 }
 
-export async function listProjectsForUser(userId: string) {
+export async function listProjectsForUser(userId: string, query: ParsedQs = {}) {
+  const { search, sort, filter } = parseProjectListQuery(query);
+
+  const memberWhere: Record<string, unknown> =
+    filter === "owner"
+      ? {
+          userId,
+          [Op.and]: Sequelize.where(
+            Sequelize.fn("LOWER", Sequelize.fn("TRIM", Sequelize.col("role"))),
+            "owner",
+          ),
+        }
+      : { userId };
+
+  const projectWhere: Record<string, unknown> = {};
+  if (search) {
+    const pattern = `%${search.replace(/[%_\\]/g, "\\$&")}%`;
+    projectWhere[Op.or as unknown as string] = [
+      { name: { [Op.iLike]: pattern } },
+      { description: { [Op.iLike]: pattern } },
+    ];
+  }
+
   const rows = await ProjectMember.findAll({
-    where: { userId },
+    where: memberWhere,
     include: [
       {
         model: Project,
         as: "project",
         required: true,
+        where: Object.keys(projectWhere).length > 0 ? projectWhere : undefined,
       },
     ],
-  });
-
-  rows.sort((a, b) => {
-    const pb = (b.get("project") as Model).get("updatedAt") as Date;
-    const pa = (a.get("project") as Model).get("updatedAt") as Date;
-    const tb = new Date(pb).getTime();
-    const ta = new Date(pa).getTime();
-    return tb - ta;
+    order: projectListOrder(sort),
   });
 
   return rows.map((row) =>

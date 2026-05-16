@@ -8,7 +8,7 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function list(req: Request, res: Response): Promise<void> {
-  const projects = await projectService.listProjectsForUser(req.user!.id);
+  const projects = await projectService.listProjectsForUser(req.user!.id, req.query);
   res.status(200).json({ projects });
 }
 

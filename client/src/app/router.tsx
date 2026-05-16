@@ -6,6 +6,8 @@ import { DashboardPage } from "../pages/DashboardPage/DashboardPage";
 import { LoginPage } from "../pages/LoginPage/LoginPage";
 import { ProjectPage } from "../pages/ProjectPage/ProjectPage";
 import { ProjectAnalyticsPage } from "../pages/ProjectAnalyticsPage/ProjectAnalyticsPage";
+import { AdminPage } from "../pages/AdminPage/AdminPage";
+import { AdminRoute } from "../components/AdminRoute/AdminRoute";
 import { RegisterPage } from "../pages/RegisterPage/RegisterPage";
 
 export const router = createBrowserRouter([
@@ -20,6 +22,10 @@ export const router = createBrowserRouter([
           { path: "projects/:projectId", element: <ProjectPage /> },
           { path: "projects/:projectId/analytics", element: <ProjectAnalyticsPage /> },
         ],
+      },
+      {
+        element: <AdminRoute />,
+        children: [{ path: "admin", element: <AdminPage /> }],
       },
       {
         element: <PublicOnlyRoute />,

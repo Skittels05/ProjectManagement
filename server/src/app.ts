@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { env } from "./config/env";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { authRouter } from "./modules/auth/auth.routes";
+import { adminRouter } from "./modules/admin/admin.routes";
 import { projectsRouter } from "./modules/projects/project.routes";
 
 export const app = express();
@@ -39,5 +40,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/admin", adminRouter);
 app.use("/api/projects", projectsRouter);
 app.use(errorMiddleware);
