@@ -55,6 +55,5 @@ export function deleteStoredFile(storageKey: string): void {
       fs.unlinkSync(abs);
     }
   } catch {
-    // ignore missing or invalid paths during cleanup
   }
 }

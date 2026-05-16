@@ -24,21 +24,6 @@
   flex: 1 1 180px;
 }
 
-.project-tasks-toolbar label {
-  color: var(--text-muted);
-}
-
-.project-tasks-toolbar input,
-.project-tasks-toolbar select {
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  padding: 0.65rem 0.85rem;
-  background: var(--surface-input);
-  color: var(--text-primary);
-  font: inherit;
-  min-width: 0;
-}
-
 .project-tasks-toolbar-actions {
   display: flex;
   align-items: center;

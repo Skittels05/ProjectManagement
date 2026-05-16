@@ -8,6 +8,7 @@ import * as taskController from "./task.controller";
 import * as taskCommentController from "./task-comment.controller";
 import * as taskAttachmentController from "./task-attachment.controller";
 import * as taskTimeLogController from "./task-time-log.controller";
+import * as analyticsController from "./analytics.controller";
 import { handleTaskAttachmentUpload } from "../../middlewares/upload.middleware";
 import {
   createProjectValidation,
@@ -44,6 +45,12 @@ import {
   updateTimeLogValidation,
   deleteTimeLogValidation,
 } from "./task-engagement.validation";
+import {
+  listActivityValidation,
+  projectAnalyticsValidation,
+  sprintAnalyticsValidation,
+  timeLogReportValidation,
+} from "./analytics.validation";
 
 export const projectsRouter = Router();
 
@@ -92,6 +99,42 @@ projectsRouter.delete(
   deleteSprintValidation,
   validationMiddleware,
   asyncHandler(sprintController.remove),
+);
+projectsRouter.get(
+  "/:projectId/analytics/velocity",
+  projectAnalyticsValidation,
+  validationMiddleware,
+  asyncHandler(analyticsController.teamVelocity),
+);
+projectsRouter.get(
+  "/:projectId/analytics/sprints/:sprintId/stats",
+  sprintAnalyticsValidation,
+  validationMiddleware,
+  asyncHandler(analyticsController.sprintStats),
+);
+projectsRouter.get(
+  "/:projectId/analytics/sprints/:sprintId/burndown",
+  sprintAnalyticsValidation,
+  validationMiddleware,
+  asyncHandler(analyticsController.sprintBurndown),
+);
+projectsRouter.get(
+  "/:projectId/analytics/sprints/:sprintId/scatter",
+  sprintAnalyticsValidation,
+  validationMiddleware,
+  asyncHandler(analyticsController.sprintScatter),
+);
+projectsRouter.get(
+  "/:projectId/analytics/time-logs",
+  timeLogReportValidation,
+  validationMiddleware,
+  asyncHandler(analyticsController.timeLogReport),
+);
+projectsRouter.get(
+  "/:projectId/activity",
+  listActivityValidation,
+  validationMiddleware,
+  asyncHandler(analyticsController.listActivity),
 );
 projectsRouter.get(
   "/:projectId/tasks",

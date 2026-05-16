@@ -1,6 +1,5 @@
 "use strict";
 
-/** Kanban order is stored on tasks.board_position (per project, sprint, status). */
 module.exports = {
   async up(queryInterface) {
     await queryInterface.addIndex("tasks", ["project_id", "status", "board_position"], {

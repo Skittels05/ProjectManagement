@@ -147,12 +147,10 @@ export function hasActiveTaskFilters(query: TaskListQuery): boolean {
   );
 }
 
-/** Only top-level tasks appear on the Kanban board (subtasks live under their parent). */
 export function topLevelTasks(tasks: TaskDto[]): TaskDto[] {
   return tasks.filter((t) => t.parentTaskId == null);
 }
 
-/** Kanban columns represent status — do not hide tasks by status filter while on the board. */
 export function filterTasksForKanbanBoard(
   tasks: TaskDto[],
   query: TaskListQuery,
@@ -163,7 +161,6 @@ export function filterTasksForKanbanBoard(
 
 export type TaskTreeRow = { task: TaskDto; depth: 0 | 1 };
 
-/** Parents first, then their subtasks indented in the list view. */
 export function flattenTaskHierarchy(tasks: TaskDto[]): TaskTreeRow[] {
   const byParent = new Map<string | null, TaskDto[]>();
   for (const task of tasks) {

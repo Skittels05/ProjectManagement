@@ -36,6 +36,131 @@ button {
   cursor: pointer;
 }
 
+.toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  min-width: 0;
+}
+
+.toolbar-field-grow {
+  flex: 1 1 180px;
+}
+
+.toolbar-field label {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+:is(
+    .toolbar-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+    .toolbar-field select,
+    .toolbar-field textarea,
+    .auth-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    .auth-form select,
+    .auth-form textarea,
+    .project-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    .project-form select,
+    .project-form textarea,
+    .modal-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+    .modal-form select,
+    .modal-form textarea,
+    .task-modal-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+    .task-modal-form select,
+    .task-modal-form textarea,
+    .members-table input:not([type="checkbox"]):not([type="radio"]),
+    .members-table select,
+    .task-time-log-form input,
+    .task-comment-form textarea,
+    .task-comment-edit textarea,
+    .task-subtask-add input,
+    .task-subtask-add select
+  ) {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  background: var(--surface-input);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+:is(.toolbar-field select, .auth-form select, .project-form select, .modal-form select, .task-modal-form select, .members-table select, .task-subtask-add select) {
+  appearance: none;
+  padding-right: 2.35rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 12px 8px;
+  cursor: pointer;
+}
+
+[data-theme="light"] :is(.toolbar-field select, .auth-form select, .project-form select, .modal-form select, .task-modal-form select, .members-table select, .task-subtask-add select) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+}
+
+:is(.toolbar-field input, .auth-form input, .modal-form input, .task-modal-form input, .members-table input, .task-time-log-form input, .task-subtask-add input):focus,
+:is(.toolbar-field select, .auth-form select, .project-form select, .modal-form select, .task-modal-form select, .members-table select, .task-subtask-add select):focus,
+:is(.toolbar-field textarea, .auth-form textarea, .project-form textarea, .modal-form textarea, .task-modal-form textarea, .task-comment-form textarea):focus {
+  outline: none;
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+:is(.toolbar-field input, .modal-form input, .task-modal-form input, .task-time-log-form input):disabled,
+:is(.toolbar-field select, .modal-form select, .task-modal-form select):disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+:is(.toolbar-field input[type="date"], .toolbar-field input[type="datetime-local"], .modal-form input[type="date"]) {
+  color-scheme: dark;
+}
+
+[data-theme="light"] :is(.toolbar-field input[type="date"], .toolbar-field input[type="datetime-local"], .modal-form input[type="date"]) {
+  color-scheme: light;
+}
+
+select option {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+}
+
+textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.primary-button {
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.1rem;
+  background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+  color: var(--text-on-accent);
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 #app {
   min-height: 100vh;
 }

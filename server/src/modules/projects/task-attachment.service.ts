@@ -77,7 +77,6 @@ export async function createAttachment(
     try {
       fs.unlinkSync(file.path);
     } catch {
-      // ignore cleanup errors
     }
     throw new AppError("File type is not allowed", 400);
   }

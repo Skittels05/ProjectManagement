@@ -5,6 +5,7 @@ import "./api/projectsApi";
 import "./api/sprintsApi";
 import "./api/tasksApi";
 import "./api/taskEngagementApi";
+import "./api/analyticsApi";
 import "./api/authApi";
 import authReducer from "./slices/authSlice";
 import settingsReducer from "./slices/settingsSlice";

@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 import { ProjectMember, sequelize, Sprint, Task, User } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
+import { recordActivity } from "./activity.service";
 
 const TASK_STATUSES = new Set(["todo", "in_progress", "done"]);
 
@@ -306,7 +307,21 @@ export async function createTask(userId: string, projectId: string, body: Record
     throw new AppError("Task not found", 404);
   }
 
-  return toTaskDto(withAssignee.get({ plain: true }) as Parameters<typeof toTaskDto>[0]);
+  const created = toTaskDto(withAssignee.get({ plain: true }) as Parameters<typeof toTaskDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "task.created",
+    entityType: "task",
+    entityId: String(created.id),
+    metadata: {
+      title: created.title,
+      sprintId: created.sprintId ?? null,
+      status: created.status,
+    },
+  });
+
+  return created;
 }
 
 async function getTaskInProject(projectId: string, taskId: string) {
@@ -428,6 +443,11 @@ export async function updateTask(
     return toTaskDto(unchanged!.get({ plain: true }) as Parameters<typeof toTaskDto>[0]);
   }
 
+  const prevStatus = task.get("status") as string;
+  const prevSprintId = task.get("sprintId") as string | null;
+  const prevStoryPoints = task.get("storyPoints") as number | null;
+  const taskTitle = task.get("title") as string;
+
   await task.update(patch);
   await task.reload({
     include: [
@@ -447,7 +467,54 @@ export async function updateTask(
   });
   const plain = task.get({ plain: true }) as TaskRow;
   const subCount = await Task.count({ where: { parentTaskId: taskId } });
-  return toTaskDto({ ...plain, subtaskCount: subCount });
+  const dto = toTaskDto({ ...plain, subtaskCount: subCount });
+
+  const activityMeta = { taskId, title: taskTitle };
+  if (patch.status != null && patch.status !== prevStatus) {
+    await recordActivity({
+      projectId,
+      userId,
+      action: "task.status_changed",
+      entityType: "task",
+      entityId: taskId,
+      metadata: { ...activityMeta, from: prevStatus, to: patch.status },
+    });
+  } else if (Object.keys(patch).some((k) => k !== "boardPosition")) {
+    await recordActivity({
+      projectId,
+      userId,
+      action: "task.updated",
+      entityType: "task",
+      entityId: taskId,
+      metadata: activityMeta,
+    });
+  }
+  if (patch.sprintId !== undefined && patch.sprintId !== prevSprintId) {
+    await recordActivity({
+      projectId,
+      userId,
+      action: "task.sprint_changed",
+      entityType: "task",
+      entityId: taskId,
+      metadata: {
+        ...activityMeta,
+        from: prevSprintId,
+        to: (patch.sprintId as string | null) ?? null,
+      },
+    });
+  }
+  if (patch.storyPoints !== undefined && patch.storyPoints !== prevStoryPoints) {
+    await recordActivity({
+      projectId,
+      userId,
+      action: "task.story_points_changed",
+      entityType: "task",
+      entityId: taskId,
+      metadata: { ...activityMeta, from: prevStoryPoints, to: patch.storyPoints },
+    });
+  }
+
+  return dto;
 }
 
 const BOARD_POSITION_STEP = 10;
@@ -527,7 +594,26 @@ export async function reorderKanbanColumn(
 
   const plain = updated.get({ plain: true }) as TaskRow;
   const subCount = await Task.count({ where: { parentTaskId: taskId } });
-  return toTaskDto({ ...plain, subtaskCount: subCount });
+  const dto = toTaskDto({ ...plain, subtaskCount: subCount });
+
+  const prevStatus = movedTask.get("status") as string;
+  if (status !== prevStatus) {
+    await recordActivity({
+      projectId,
+      userId,
+      action: "task.status_changed",
+      entityType: "task",
+      entityId: taskId,
+      metadata: {
+        taskId,
+        title: dto.title,
+        from: prevStatus,
+        to: status,
+      },
+    });
+  }
+
+  return dto;
 }
 
 export async function deleteTask(userId: string, projectId: string, taskId: string): Promise<{ ok: boolean }> {
@@ -541,6 +627,15 @@ export async function deleteTask(userId: string, projectId: string, taskId: stri
     throw new AppError("Task not found", 404);
   }
 
+  const title = task.get("title") as string;
   await task.destroy();
+  await recordActivity({
+    projectId,
+    userId,
+    action: "task.deleted",
+    entityType: "task",
+    entityId: taskId,
+    metadata: { title },
+  });
   return { ok: true };
 }

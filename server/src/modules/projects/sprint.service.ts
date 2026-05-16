@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { ProjectMember, Sprint, Project } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
+import { recordActivity } from "./activity.service";
 
 const SPRINT_STATUSES = new Set(["planned", "active", "completed"]);
 const MANAGE_MEMBER_ROLES = new Set(["owner", "manager"]);
@@ -152,7 +153,16 @@ export async function createSprint(userId: string, projectId: string, body: Reco
     status,
   });
 
-  return toSprintDto(sprint.get({ plain: true }) as Parameters<typeof toSprintDto>[0]);
+  const dto = toSprintDto(sprint.get({ plain: true }) as Parameters<typeof toSprintDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "sprint.created",
+    entityType: "sprint",
+    entityId: dto.id,
+    metadata: { name: dto.name, status: dto.status },
+  });
+  return dto;
 }
 
 export async function updateSprint(
@@ -220,7 +230,16 @@ export async function updateSprint(
 
   await sprint.update(patch);
   await sprint.reload();
-  return toSprintDto(sprint.get({ plain: true }) as Parameters<typeof toSprintDto>[0]);
+  const dto = toSprintDto(sprint.get({ plain: true }) as Parameters<typeof toSprintDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "sprint.updated",
+    entityType: "sprint",
+    entityId: dto.id,
+    metadata: { name: dto.name, status: dto.status },
+  });
+  return dto;
 }
 
 export async function deleteSprint(userId: string, projectId: string, sprintId: string): Promise<{ ok: boolean }> {
@@ -235,6 +254,15 @@ export async function deleteSprint(userId: string, projectId: string, sprintId: 
     throw new AppError("Sprint not found", 404);
   }
 
+  const name = sprint.get("name") as string;
   await sprint.destroy();
+  await recordActivity({
+    projectId,
+    userId,
+    action: "sprint.deleted",
+    entityType: "sprint",
+    entityId: sprintId,
+    metadata: { name },
+  });
   return { ok: true };
 }

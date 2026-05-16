@@ -5,6 +5,7 @@ import { PublicOnlyRoute } from "../components/PublicOnlyRoute/PublicOnlyRoute";
 import { DashboardPage } from "../pages/DashboardPage/DashboardPage";
 import { LoginPage } from "../pages/LoginPage/LoginPage";
 import { ProjectPage } from "../pages/ProjectPage/ProjectPage";
+import { ProjectAnalyticsPage } from "../pages/ProjectAnalyticsPage/ProjectAnalyticsPage";
 import { RegisterPage } from "../pages/RegisterPage/RegisterPage";
 
 export const router = createBrowserRouter([
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           { path: "projects/:projectId", element: <ProjectPage /> },
+          { path: "projects/:projectId/analytics", element: <ProjectAnalyticsPage /> },
         ],
       },
       {

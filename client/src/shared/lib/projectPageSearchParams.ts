@@ -61,7 +61,6 @@ export function parseIterationScopeFromParams(
   const raw = params.get("scope");
   if (!raw || raw === "backlog") return "backlog";
   if (!isUuidV4(raw)) return "backlog";
-  // Keep URL scope until sprints are loaded — avoid resetting to backlog on first paint.
   if (!sprintsResolved) return raw;
   return sprintIds.includes(raw) ? raw : "backlog";
 }

@@ -478,6 +478,14 @@ export function ProjectPage() {
                 >
                   {tasksView === "kanban" ? t("project.listView") : t("project.kanban")}
                 </button>
+                <Link
+                  to={`/projects/${validProjectId}/analytics${
+                    iterationScope !== "backlog" ? `?sprint=${iterationScope}&tab=sprint` : "?tab=sprint"
+                  }`}
+                  className="secondary-button"
+                >
+                  {t("analytics.openAnalytics")}
+                </Link>
               </div>
               <p className="muted project-page-toolbar-meta">
                 {memberCountLabel(t, members.length)} · {t("project.yourRole")}{" "}

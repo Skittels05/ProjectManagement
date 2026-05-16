@@ -49,7 +49,6 @@ export function boardPositionAtIndex(columnTasks: TaskDto[], index: number): num
   return mid;
 }
 
-/** Assign positions 0, 10, 20, … for a column order (matches server kanban reorder). */
 export function boardPositionsForOrder(length: number): number[] {
   return Array.from({ length }, (_, i) => i * 10);
 }
