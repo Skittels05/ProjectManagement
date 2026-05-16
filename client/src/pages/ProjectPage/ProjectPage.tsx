@@ -1,6 +1,6 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { RootState } from "../../store";
 import {
   useAddProjectMemberMutation,
@@ -33,12 +33,20 @@ import {
   applyTaskListQuery,
   type TaskListQuery,
 } from "../../shared/lib/taskListQuery";
+import {
+  buildProjectPageSearchParams,
+  parseProjectPageState,
+  projectPageSearchParamsEqual,
+} from "../../shared/lib/projectPageSearchParams";
+import { loadDashboardNavPath } from "../../shared/lib/dashboardNavStorage";
+import { saveProjectNavPath } from "../../shared/lib/projectNavStorage";
 import "./ProjectPage.css";
 
 export type TasksViewMode = "list" | "kanban";
 
 export function ProjectPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { t } = useI18n();
@@ -58,7 +66,6 @@ export function ProjectPage() {
   const [removingFor, setRemovingFor] = useState<string | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
 
-  const [iterationScope, setIterationScope] = useState<IterationScope>("backlog");
   const [workspaceDrawerOpen, setWorkspaceDrawerOpen] = useState(false);
   const [membersModalOpen, setMembersModalOpen] = useState(false);
   const [sprintModalOpen, setSprintModalOpen] = useState(false);
@@ -70,9 +77,7 @@ export function ProjectPage() {
   const [taskModalMode, setTaskModalMode] = useState<"create" | "edit">("create");
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
   const [defaultParentTaskId, setDefaultParentTaskId] = useState<string | null>(null);
-  const [tasksView, setTasksView] = useState<TasksViewMode>("list");
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-  const [taskListQuery, setTaskListQuery] = useState<TaskListQuery>(DEFAULT_TASK_LIST_QUERY);
 
   const routeProjectId = projectId ?? "";
   const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
@@ -83,7 +88,36 @@ export function ProjectPage() {
     error: currentQueryError,
   } = useGetProjectQuery(validProjectId ?? "", { skip: !validProjectId });
 
-  const { data: sprints = [] } = useGetSprintsQuery(validProjectId ?? "", { skip: !validProjectId });
+  const {
+    data: sprints = [],
+    isSuccess: sprintsLoaded,
+    isError: sprintsFailed,
+  } = useGetSprintsQuery(validProjectId ?? "", { skip: !validProjectId });
+
+  const sprintsResolved = sprintsLoaded || sprintsFailed;
+  const sprintIds = useMemo(() => sprints.map((s) => s.id), [sprints]);
+  const { iterationScope, tasksView, taskListQuery } = useMemo(
+    () => parseProjectPageState(searchParams, sprintIds, sprintsResolved),
+    [searchParams, sprintIds, sprintsResolved],
+  );
+
+  const syncProjectUrl = useCallback(
+    (
+      patch: Partial<{
+        iterationScope: IterationScope;
+        tasksView: TasksViewMode;
+        taskListQuery: TaskListQuery;
+      }>,
+    ) => {
+      const nextScope = patch.iterationScope ?? iterationScope;
+      const nextView = patch.tasksView ?? tasksView;
+      const nextQuery = patch.taskListQuery ?? taskListQuery;
+      const built = buildProjectPageSearchParams(nextScope, nextView, nextQuery);
+      if (projectPageSearchParamsEqual(built, searchParams)) return;
+      setSearchParams(built, { replace: true });
+    },
+    [iterationScope, tasksView, taskListQuery, searchParams, setSearchParams],
+  );
 
   const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
   const { data: scopeTasks = [] } = useGetTasksQuery(
@@ -91,13 +125,16 @@ export function ProjectPage() {
     { skip: !validProjectId },
   );
 
-  const patchTaskListQuery = useCallback((patch: Partial<TaskListQuery>) => {
-    setTaskListQuery((prev) => ({ ...prev, ...patch }));
-  }, []);
+  const patchTaskListQuery = useCallback(
+    (patch: Partial<TaskListQuery>) => {
+      syncProjectUrl({ taskListQuery: { ...taskListQuery, ...patch } });
+    },
+    [syncProjectUrl, taskListQuery],
+  );
 
   const resetTaskListQuery = useCallback(() => {
-    setTaskListQuery(DEFAULT_TASK_LIST_QUERY);
-  }, []);
+    syncProjectUrl({ taskListQuery: DEFAULT_TASK_LIST_QUERY });
+  }, [syncProjectUrl]);
 
   const currentError = currentQueryError ? getRtkQueryErrorMessage(currentQueryError) : null;
 
@@ -155,10 +192,31 @@ export function ProjectPage() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  const selectIterationScope = useCallback((next: IterationScope) => {
-    setIterationScope(next);
-    setWorkspaceDrawerOpen(false);
-  }, []);
+  useEffect(() => {
+    if (!sprintsResolved) return;
+    const rawScope = searchParams.get("scope");
+    if (!rawScope || rawScope === "backlog") return;
+    if (sprintIds.includes(rawScope)) return;
+    const built = buildProjectPageSearchParams("backlog", tasksView, taskListQuery);
+    if (!projectPageSearchParamsEqual(built, searchParams)) {
+      setSearchParams(built, { replace: true });
+    }
+  }, [sprintIds, sprintsResolved, searchParams, setSearchParams, taskListQuery, tasksView]);
+
+  useEffect(() => {
+    if (!validProjectId) return;
+    const pendingScope = searchParams.get("scope");
+    if (pendingScope && pendingScope !== "backlog" && !sprintsResolved) return;
+    saveProjectNavPath(validProjectId, searchParams);
+  }, [validProjectId, searchParams, sprintsResolved]);
+
+  const selectIterationScope = useCallback(
+    (next: IterationScope) => {
+      syncProjectUrl({ iterationScope: next });
+      setWorkspaceDrawerOpen(false);
+    },
+    [syncProjectUrl],
+  );
 
   const iterationLabel = useMemo(() => {
     if (iterationScope === "backlog") {
@@ -268,7 +326,7 @@ export function ProjectPage() {
     try {
       await deleteSprint({ projectId: validProjectId, sprintId: sprint.id }).unwrap();
       if (iterationScope === sprint.id) {
-        setIterationScope("backlog");
+        syncProjectUrl({ iterationScope: "backlog" });
       }
     } catch (err) {
       window.alert(getRtkQueryErrorMessage(err));
@@ -318,7 +376,7 @@ export function ProjectPage() {
     return (
       <section className="page project-page">
         <p className="form-error">{t("project.invalidLink")}</p>
-        <Link to="/">{t("project.backToDashboard")}</Link>
+        <Link to={loadDashboardNavPath()}>{t("project.backToDashboard")}</Link>
       </section>
     );
   }
@@ -335,7 +393,7 @@ export function ProjectPage() {
     return (
       <section className="page project-page">
         <p className="form-error">{currentError ?? t("project.notFound")}</p>
-        <Link to="/">{t("project.backToDashboard")}</Link>
+        <Link to={loadDashboardNavPath()}>{t("project.backToDashboard")}</Link>
       </section>
     );
   }
@@ -413,7 +471,9 @@ export function ProjectPage() {
                 <button
                   type="button"
                   className={`secondary-button project-toolbar-kanban${tasksView === "kanban" ? " project-toolbar-view-active" : ""}`}
-                  onClick={() => setTasksView((v) => (v === "kanban" ? "list" : "kanban"))}
+                  onClick={() =>
+                    syncProjectUrl({ tasksView: tasksView === "kanban" ? "list" : "kanban" })
+                  }
                   aria-pressed={tasksView === "kanban"}
                 >
                   {tasksView === "kanban" ? t("project.listView") : t("project.kanban")}
@@ -447,7 +507,7 @@ export function ProjectPage() {
                   date: formatLocaleDateTime(current.updatedAt, locale),
                 })}
               </p>
-              <Link to="/" className="back-link">
+              <Link to={loadDashboardNavPath()} className="back-link">
                 {t("project.allProjects")}
               </Link>
             </header>

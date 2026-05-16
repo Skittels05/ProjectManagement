@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { loadProjectNavPath } from "../../../../shared/lib/projectNavStorage";
 import type { SerializedError } from "@reduxjs/toolkit";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import type { ProjectDto } from "../../../../store/types/projects.types";
@@ -26,7 +27,7 @@ export function ProjectListPanel({ projects, isLoading, error, emptyMessage }: P
       <ul className="project-list">
         {projects.map((project) => (
           <li key={project.id}>
-            <Link to={`/projects/${project.id}`} className="project-card">
+            <Link to={loadProjectNavPath(project.id)} className="project-card">
               <span className="project-card-title">{project.name}</span>
               {project.description ? (
                 <span className="project-card-desc">{project.description}</span>

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import { useGetProjectsQuery } from "../../store/api/projectsApi";
@@ -13,6 +14,11 @@ import {
 } from "./components/DashboardProjectsToolbar/DashboardProjectsToolbar";
 import { DashboardHeroCard } from "./components/DashboardHeroCard/DashboardHeroCard";
 import { ProjectListPanel } from "./components/ProjectListPanel/ProjectListPanel";
+import {
+  buildDashboardSearchParams,
+  parseDashboardState,
+} from "../../shared/lib/dashboardSearchParams";
+import { saveDashboardNavPath } from "../../shared/lib/dashboardNavStorage";
 import "./DashboardPage.css";
 
 function applyFilter(projects: ProjectDto[], filterBy: ProjectFilterOption): ProjectDto[] {
@@ -54,11 +60,30 @@ export function DashboardPage() {
   const { t } = useI18n();
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: list = [], isLoading: listLoading, error: listError } = useGetProjectsQuery();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<ProjectSortOption>("updated_desc");
-  const [filterBy, setFilterBy] = useState<ProjectFilterOption>("all");
+  const { search, sortBy, filterBy } = useMemo(
+    () => parseDashboardState(searchParams),
+    [searchParams],
+  );
+
+  const syncDashboardUrl = useCallback(
+    (patch: Partial<{ search: string; sortBy: ProjectSortOption; filterBy: ProjectFilterOption }>) => {
+      const next = {
+        search: patch.search ?? search,
+        sortBy: patch.sortBy ?? sortBy,
+        filterBy: patch.filterBy ?? filterBy,
+      };
+      setSearchParams(buildDashboardSearchParams(next), { replace: true });
+    },
+    [search, sortBy, filterBy, setSearchParams],
+  );
+
   const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    saveDashboardNavPath(searchParams);
+  }, [searchParams]);
 
   const visibleProjects = useMemo(() => {
     let next = applyFilter(list, filterBy);
@@ -77,11 +102,11 @@ export function DashboardPage() {
       <div className="project-panel dashboard-controls-panel">
         <DashboardProjectsToolbar
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={(value) => syncDashboardUrl({ search: value })}
           sortBy={sortBy}
-          onSortChange={setSortBy}
+          onSortChange={(value) => syncDashboardUrl({ sortBy: value })}
           filterBy={filterBy}
-          onFilterChange={setFilterBy}
+          onFilterChange={(value) => syncDashboardUrl({ filterBy: value })}
           onNewProject={() => setCreateModalOpen(true)}
         />
       </div>
