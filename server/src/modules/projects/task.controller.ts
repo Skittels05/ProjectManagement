@@ -22,6 +22,15 @@ export async function update(req: Request, res: Response): Promise<void> {
   res.status(200).json({ task });
 }
 
+export async function reorderKanban(req: Request, res: Response): Promise<void> {
+  const task = await taskService.reorderKanbanColumn(
+    req.user!.id,
+    segment(req.params.projectId),
+    req.body,
+  );
+  res.status(200).json({ task });
+}
+
 export async function remove(req: Request, res: Response): Promise<void> {
   await taskService.deleteTask(req.user!.id, segment(req.params.projectId), segment(req.params.taskId));
   res.status(204).send();

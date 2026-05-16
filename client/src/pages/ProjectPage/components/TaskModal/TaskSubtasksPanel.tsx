@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { useCreateTaskMutation } from "../../../../store/api/tasksApi";
 import type { TaskDto, TaskStatus } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { taskStatusLabel, useI18n } from "../../../../shared/i18n";
 
 type TaskSubtasksPanelProps = {
   projectId: string;
@@ -16,6 +17,7 @@ export function TaskSubtasksPanel({
   subtasks,
   onEditSubtask,
 }: TaskSubtasksPanelProps) {
+  const { t } = useI18n();
   const [createTask] = useCreateTaskMutation();
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<TaskStatus>("todo");
@@ -51,10 +53,10 @@ export function TaskSubtasksPanel({
   return (
     <section className="task-subtasks-panel" aria-labelledby="task-subtasks-heading">
       <h3 id="task-subtasks-heading" className="task-subtasks-heading">
-        Subtasks
+        {t("project.subtasks")}
       </h3>
       {subtasks.length === 0 ? (
-        <p className="muted small-meta">No subtasks yet.</p>
+        <p className="muted small-meta">{t("project.noSubtasks")}</p>
       ) : (
         <ul className="task-subtasks-list">
           {subtasks.map((st) => (
@@ -62,9 +64,7 @@ export function TaskSubtasksPanel({
               <button type="button" className="task-subtask-link" onClick={() => onEditSubtask(st)}>
                 {st.title}
               </button>
-              <span className="muted small-meta">
-                {st.status === "in_progress" ? "In progress" : st.status === "done" ? "Done" : "To do"}
-              </span>
+              <span className="muted small-meta">{taskStatusLabel(t, st.status)}</span>
             </li>
           ))}
         </ul>
@@ -74,17 +74,17 @@ export function TaskSubtasksPanel({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="New subtask title"
+          placeholder={t("project.newSubtaskPlaceholder")}
           maxLength={500}
           disabled={saving}
         />
         <select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} disabled={saving}>
-          <option value="todo">To do</option>
-          <option value="in_progress">In progress</option>
-          <option value="done">Done</option>
+          <option value="todo">{taskStatusLabel(t, "todo")}</option>
+          <option value="in_progress">{taskStatusLabel(t, "in_progress")}</option>
+          <option value="done">{taskStatusLabel(t, "done")}</option>
         </select>
         <button type="submit" disabled={saving || title.trim() === ""}>
-          {saving ? "Adding…" : "Add"}
+          {saving ? t("project.adding") : t("project.add")}
         </button>
       </form>
       {error ? <p className="form-error">{error}</p> : null}

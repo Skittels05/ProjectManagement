@@ -6,6 +6,7 @@ import type {
   TaskSortOption,
   TaskStatusFilter,
 } from "../../../../shared/lib/taskListQuery";
+import { taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import "./ProjectTasksToolbar.css";
 
 type ProjectTasksToolbarProps = {
@@ -25,6 +26,7 @@ export function ProjectTasksToolbar({
   resultCount,
   totalCount,
 }: ProjectTasksToolbarProps) {
+  const { t } = useI18n();
   const roleOptions = [...new Set(members.map((m) => m.role.trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, undefined, { sensitivity: "base" }),
   );
@@ -38,59 +40,59 @@ export function ProjectTasksToolbar({
   return (
     <div className="project-tasks-toolbar">
       <div className="toolbar-field toolbar-field-grow">
-        <label htmlFor="project-task-search">Search</label>
+        <label htmlFor="project-task-search">{t("project.searchTasks")}</label>
         <input
           id="project-task-search"
           type="search"
           value={query.search}
           onChange={(e) => onChange({ search: e.target.value })}
-          placeholder="Title, description, assignee…"
+          placeholder={t("project.searchTasksPlaceholder")}
           autoComplete="off"
         />
       </div>
 
       <div className="toolbar-field">
-        <label htmlFor="project-task-sort">Sort</label>
+        <label htmlFor="project-task-sort">{t("dashboard.sort")}</label>
         <select
           id="project-task-sort"
           value={query.sortBy}
           onChange={(e) => onChange({ sortBy: e.target.value as TaskSortOption })}
         >
-          <option value="board">Board order</option>
-          <option value="updated_desc">Recently updated</option>
-          <option value="updated_asc">Oldest update first</option>
-          <option value="title_asc">Title A–Z</option>
-          <option value="title_desc">Title Z–A</option>
-          <option value="priority_desc">Priority high → low</option>
-          <option value="priority_asc">Priority low → high</option>
-          <option value="story_points_desc">Story points high → low</option>
-          <option value="story_points_asc">Story points low → high</option>
+          <option value="board">{t("project.sortBoard")}</option>
+          <option value="updated_desc">{t("project.sortUpdatedDesc")}</option>
+          <option value="updated_asc">{t("project.sortUpdatedAsc")}</option>
+          <option value="title_asc">{t("project.sortTitleAsc")}</option>
+          <option value="title_desc">{t("project.sortTitleDesc")}</option>
+          <option value="priority_desc">{t("project.sortPriorityDesc")}</option>
+          <option value="priority_asc">{t("project.sortPriorityAsc")}</option>
+          <option value="story_points_desc">{t("project.sortSpDesc")}</option>
+          <option value="story_points_asc">{t("project.sortSpAsc")}</option>
         </select>
       </div>
 
       <div className="toolbar-field">
-        <label htmlFor="project-task-status">Status</label>
+        <label htmlFor="project-task-status">{t("project.status")}</label>
         <select
           id="project-task-status"
           value={query.statusFilter}
           onChange={(e) => onChange({ statusFilter: e.target.value as TaskStatusFilter })}
         >
-          <option value="all">All statuses</option>
-          <option value="todo">To do</option>
-          <option value="in_progress">In progress</option>
-          <option value="done">Done</option>
+          <option value="all">{t("project.allStatuses")}</option>
+          <option value="todo">{taskStatusLabel(t, "todo")}</option>
+          <option value="in_progress">{taskStatusLabel(t, "in_progress")}</option>
+          <option value="done">{taskStatusLabel(t, "done")}</option>
         </select>
       </div>
 
       <div className="toolbar-field">
-        <label htmlFor="project-task-assignee">Assignee</label>
+        <label htmlFor="project-task-assignee">{t("project.assignee")}</label>
         <select
           id="project-task-assignee"
           value={query.assigneeFilter}
           onChange={(e) => onChange({ assigneeFilter: e.target.value as TaskAssigneeFilter })}
         >
-          <option value="all">Anyone</option>
-          <option value="unassigned">Unassigned</option>
+          <option value="all">{t("project.anyone")}</option>
+          <option value="unassigned">{t("project.unassigned")}</option>
           {members.map((m) => (
             <option key={m.userId} value={m.userId}>
               {m.fullName || m.email}
@@ -100,13 +102,13 @@ export function ProjectTasksToolbar({
       </div>
 
       <div className="toolbar-field">
-        <label htmlFor="project-task-role">Member role</label>
+        <label htmlFor="project-task-role">{t("project.memberRole")}</label>
         <select
           id="project-task-role"
           value={query.roleFilter}
           onChange={(e) => onChange({ roleFilter: e.target.value as TaskRoleFilter })}
         >
-          <option value="all">Any role</option>
+          <option value="all">{t("project.anyRole")}</option>
           {roleOptions.map((role) => (
             <option key={role} value={role}>
               {role}
@@ -118,13 +120,13 @@ export function ProjectTasksToolbar({
       {showReset ? (
         <div className="project-tasks-toolbar-actions">
           <button type="button" className="secondary-button" onClick={onReset}>
-            Clear filters
+            {t("project.clearFilters")}
           </button>
         </div>
       ) : null}
 
       <p className="muted project-tasks-toolbar-meta">
-        Showing {resultCount} of {totalCount} task{totalCount === 1 ? "" : "s"}
+        {t("project.showingTasks", { shown: resultCount, total: totalCount })}
       </p>
     </div>
   );

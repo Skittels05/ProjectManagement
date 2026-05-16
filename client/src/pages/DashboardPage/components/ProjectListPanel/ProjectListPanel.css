@@ -13,26 +13,35 @@
   gap: 0.35rem;
   padding: 1.1rem 1.25rem;
   border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(30, 41, 59, 0.5);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  border: 1px solid var(--project-card-border);
+  background: var(--project-card-bg);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .project-card:hover {
-  border-color: rgba(96, 165, 250, 0.45);
-  background: rgba(30, 58, 95, 0.35);
+  border-color: var(--project-card-hover-border);
+  background: var(--project-card-hover-bg);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
 .project-card-title {
   font-weight: 600;
   font-size: 1.05rem;
+  color: var(--text-primary);
 }
 
 .project-card-desc {
   font-size: 0.92rem;
   line-height: 1.4;
+  color: var(--text-secondary);
 }
 
 .project-card-meta {
   font-size: 0.8rem;
+  color: var(--text-muted);
 }

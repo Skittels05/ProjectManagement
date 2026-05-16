@@ -1,0 +1,133 @@
+/* Design tokens — dark default */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-on-accent: #ffffff;
+
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-soft: #93c5fd;
+  --accent-bg: rgba(59, 130, 246, 0.18);
+  --accent-gradient-start: #3b82f6;
+  --accent-gradient-end: #2563eb;
+
+  --danger: #f87171;
+  --danger-hover: #fca5a5;
+  --danger-bg: rgba(127, 29, 29, 0.4);
+  --danger-border: rgba(248, 113, 113, 0.45);
+
+  --surface-page: #09090b;
+  --surface-body: #09090b;
+  --surface-elevated: #141419;
+  --surface-panel: #18181f;
+  --surface-sidebar: #111116;
+  --surface-toolbar: rgba(9, 9, 11, 0.94);
+  --surface-overlay: rgba(9, 9, 11, 0.92);
+  --surface-card: #1c1c24;
+  --surface-muted: #22222c;
+  --surface-input: #1a1a22;
+  --surface-hover: rgba(148, 163, 184, 0.1);
+
+  --border: rgba(148, 163, 184, 0.22);
+  --border-strong: rgba(148, 163, 184, 0.35);
+  --border-subtle: rgba(148, 163, 184, 0.14);
+  --border-accent: rgba(59, 130, 246, 0.55);
+  --border-danger: rgba(248, 113, 113, 0.35);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-glow: rgba(59, 130, 246, 0.15);
+
+  --chip-bg: rgba(59, 130, 246, 0.2);
+  --btn-secondary-bg: rgba(148, 163, 184, 0.14);
+  --btn-secondary-hover: rgba(148, 163, 184, 0.22);
+  --count-bg: rgba(59, 130, 246, 0.12);
+
+  --kanban-column-bg: var(--surface-card);
+  --kanban-over-bg: rgba(59, 130, 246, 0.1);
+  --wip-limit-color: #fca5a5;
+  --wip-limit-bg: rgba(248, 113, 113, 0.18);
+
+  --modal-backdrop: rgba(0, 0, 0, 0.72);
+  --drawer-backdrop: rgba(0, 0, 0, 0.55);
+  --body-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(37, 99, 235, 0.18), transparent), #09090b;
+
+  --project-card-bg: var(--surface-card);
+  --project-card-border: var(--border);
+  --project-card-hover-bg: var(--surface-muted);
+  --project-card-hover-border: var(--border-accent);
+
+  --kanban-card-bg: var(--surface-elevated);
+  --kanban-card-border: var(--border-strong);
+  --kanban-card-hover-border: var(--border-accent);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-on-accent: #ffffff;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #1e40af;
+  --accent-bg: rgba(37, 99, 235, 0.1);
+  --accent-gradient-start: #3b82f6;
+  --accent-gradient-end: #2563eb;
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+
+  --surface-page: #f1f5f9;
+  --surface-body: #f8fafc;
+  --surface-elevated: #ffffff;
+  --surface-panel: #ffffff;
+  --surface-sidebar: #ffffff;
+  --surface-toolbar: rgba(255, 255, 255, 0.94);
+  --surface-overlay: rgba(255, 255, 255, 0.96);
+  --surface-card: #ffffff;
+  --surface-muted: #f1f5f9;
+  --surface-input: #ffffff;
+  --surface-hover: rgba(37, 99, 235, 0.06);
+
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-subtle: #e2e8f0;
+  --border-accent: #93c5fd;
+  --border-danger: #fecaca;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-glow: rgba(37, 99, 235, 0.08);
+
+  --chip-bg: rgba(37, 99, 235, 0.1);
+  --btn-secondary-bg: #f1f5f9;
+  --btn-secondary-hover: #e2e8f0;
+  --count-bg: rgba(37, 99, 235, 0.08);
+
+  --kanban-column-bg: #ffffff;
+  --kanban-over-bg: rgba(37, 99, 235, 0.06);
+  --wip-limit-color: #b91c1c;
+  --wip-limit-bg: #fef2f2;
+
+  --modal-backdrop: rgba(15, 23, 42, 0.45);
+  --drawer-backdrop: rgba(15, 23, 42, 0.35);
+  --body-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(37, 99, 235, 0.08), transparent), #f8fafc;
+
+  --project-card-bg: #ffffff;
+  --project-card-border: #2563eb;
+  --project-card-hover-bg: #ffffff;
+  --project-card-hover-border: #1d4ed8;
+
+  --kanban-card-bg: #ffffff;
+  --kanban-card-border: #2563eb;
+  --kanban-card-hover-border: #1d4ed8;
+}

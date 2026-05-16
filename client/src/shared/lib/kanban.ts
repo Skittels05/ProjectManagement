@@ -1,10 +1,6 @@
 import type { TaskDto, TaskStatus } from "../../store/types/tasks.types";
 
-export const KANBAN_COLUMNS: { id: TaskStatus; title: string }[] = [
-  { id: "todo", title: "To do" },
-  { id: "in_progress", title: "In progress" },
-  { id: "done", title: "Done" },
-];
+export const KANBAN_COLUMN_IDS: TaskStatus[] = ["todo", "in_progress", "done"];
 
 export function columnDroppableId(status: TaskStatus): string {
   return `column:${status}`;
@@ -42,11 +38,18 @@ export function groupTasksByStatus(tasks: TaskDto[]): Record<TaskStatus, TaskDto
 
 export function boardPositionAtIndex(columnTasks: TaskDto[], index: number): number {
   if (columnTasks.length === 0) return 0;
-  if (index <= 0) return columnTasks[0]!.boardPosition - 10;
+  if (index <= 0) return Math.max(0, columnTasks[0]!.boardPosition - 10);
   if (index >= columnTasks.length) {
     return columnTasks[columnTasks.length - 1]!.boardPosition + 10;
   }
   const prev = columnTasks[index - 1]!.boardPosition;
   const next = columnTasks[index]!.boardPosition;
-  return Math.floor((prev + next) / 2);
+  const mid = Math.floor((prev + next) / 2);
+  if (mid <= prev) return prev + 10;
+  return mid;
+}
+
+/** Assign positions 0, 10, 20, … for a column order (matches server kanban reorder). */
+export function boardPositionsForOrder(length: number): number[] {
+  return Array.from({ length }, (_, i) => i * 10);
 }

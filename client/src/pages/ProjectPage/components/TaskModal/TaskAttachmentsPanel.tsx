@@ -8,6 +8,7 @@ import {
 import type { TaskAttachmentDto } from "../../../../store/types/taskEngagement.types";
 import { isImageAttachment } from "../../../../shared/lib/attachments";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useI18n } from "../../../../shared/i18n";
 import { TaskAttachmentImagePreview } from "./TaskAttachmentImagePreview";
 
 type TaskAttachmentsPanelProps = {
@@ -15,8 +16,8 @@ type TaskAttachmentsPanelProps = {
   taskId: string;
 };
 
-function formatBytes(bytes: number | null): string {
-  if (bytes == null || bytes <= 0) return "—";
+function formatBytes(bytes: number | null, dash: string): string {
+  if (bytes == null || bytes <= 0) return dash;
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -29,6 +30,9 @@ type AttachmentRowProps = {
   downloading: boolean;
   onDownload: () => void;
   onDelete: () => void;
+  downloadLabel: string;
+  removeLabel: string;
+  dash: string;
 };
 
 function AttachmentRow({
@@ -38,6 +42,9 @@ function AttachmentRow({
   downloading,
   onDownload,
   onDelete,
+  downloadLabel,
+  removeLabel,
+  dash,
 }: AttachmentRowProps) {
   const isImage = isImageAttachment(attachment.mimeType, attachment.originalFilename);
 
@@ -55,16 +62,16 @@ function AttachmentRow({
         <div className="task-attachment-info">
           <span className="task-attachment-name">{attachment.originalFilename}</span>
           <span className="muted small-meta">
-            {formatBytes(attachment.sizeBytes)}
+            {formatBytes(attachment.sizeBytes, dash)}
             {attachment.uploader ? ` · ${attachment.uploader.fullName}` : ""}
           </span>
         </div>
         <div className="task-attachment-actions">
           <button type="button" disabled={downloading} onClick={onDownload}>
-            {downloading ? "…" : "Download"}
+            {downloading ? dash : downloadLabel}
           </button>
           <button type="button" className="danger" onClick={onDelete}>
-            Remove
+            {removeLabel}
           </button>
         </div>
       </div>
@@ -73,6 +80,7 @@ function AttachmentRow({
 }
 
 export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanelProps) {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: attachments = [], isLoading, error } = useGetTaskAttachmentsQuery({ projectId, taskId });
   const [upload, { isLoading: uploading }] = useUploadTaskAttachmentMutation();
@@ -107,7 +115,7 @@ export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanel
   }
 
   async function handleDelete(attachmentId: string, filename: string) {
-    if (!window.confirm(`Remove "${filename}"?`)) return;
+    if (!window.confirm(t("project.removeAttachmentConfirm", { name: filename }))) return;
     setActionError(null);
     try {
       await deleteAttachment({ projectId, taskId, attachmentId }).unwrap();
@@ -120,10 +128,10 @@ export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanel
 
   return (
     <section className="task-engagement-panel" aria-labelledby="task-attachments-heading">
-      <h3 id="task-attachments-heading">Attachments</h3>
-      <p className="muted small-meta">Images are shown inline. Max file size 10 MB.</p>
+      <h3 id="task-attachments-heading">{t("project.attachments")}</h3>
+      <p className="muted small-meta">{t("project.attachmentsHint")}</p>
 
-      {isLoading ? <p className="muted">Loading attachments…</p> : null}
+      {isLoading ? <p className="muted">{t("project.loadingAttachments")}</p> : null}
       {listError ? <p className="form-error">{listError}</p> : null}
       {actionError ? <p className="form-error">{actionError}</p> : null}
 
@@ -137,11 +145,14 @@ export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanel
             downloading={downloadingId === a.id}
             onDownload={() => void handleDownload(a.id, a.originalFilename)}
             onDelete={() => void handleDelete(a.id, a.originalFilename)}
+            downloadLabel={t("project.download")}
+            removeLabel={t("project.remove")}
+            dash={t("project.dash")}
           />
         ))}
       </ul>
 
-      {!isLoading && attachments.length === 0 ? <p className="muted">No files attached yet.</p> : null}
+      {!isLoading && attachments.length === 0 ? <p className="muted">{t("project.noAttachments")}</p> : null}
 
       <input
         ref={fileInputRef}
@@ -157,7 +168,7 @@ export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanel
         disabled={uploading}
         onClick={() => fileInputRef.current?.click()}
       >
-        {uploading ? "Uploading…" : "Upload file"}
+        {uploading ? t("project.uploading") : t("project.uploadFile")}
       </button>
     </section>
   );

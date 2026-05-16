@@ -27,15 +27,15 @@
   padding: 0;
   border: none;
   border-radius: 10px;
-  background: rgba(148, 163, 184, 0.15);
-  color: #e2e8f0;
+  background: var(--btn-secondary-bg);
+  color: var(--text-secondary);
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
 }
 
 .project-sidebar-drawer-close:hover {
-  background: rgba(148, 163, 184, 0.28);
+  background: var(--btn-secondary-hover);
 }
 
 @media (max-width: 900px) {
@@ -80,7 +80,7 @@
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
-  color: inherit;
+  color: var(--text-primary);
   cursor: pointer;
   font: inherit;
   transition:
@@ -89,12 +89,13 @@
 }
 
 .sidebar-scope-btn:hover {
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--surface-hover);
 }
 
 .sidebar-scope-btn-active {
-  border-color: rgba(96, 165, 250, 0.45);
-  background: rgba(59, 130, 246, 0.12);
+  border-color: var(--border-accent);
+  background: var(--accent-bg);
+  color: var(--accent);
 }
 
 .sidebar-scope-name {
@@ -112,11 +113,11 @@
   gap: 0.5rem;
   padding-top: 0.25rem;
   margin-top: auto;
-  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .project-sidebar-sprint-actions .danger-button {
-  border: 1px solid rgba(248, 113, 113, 0.45);
+  border: 1px solid var(--border-danger);
   background: rgba(220, 38, 38, 0.15);
   color: #fecaca;
 }

@@ -11,15 +11,10 @@ import {
   type TaskListQuery,
 } from "../../../../shared/lib/taskListQuery";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { subtaskCountLabel, taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
 import "./ProjectTasksSection.css";
-
-function statusLabel(status: string): string {
-  if (status === "in_progress") return "In progress";
-  if (status === "done") return "Done";
-  return "To do";
-}
 
 function statusClass(status: string): string {
   if (status === "done") return "task-status task-status-done";
@@ -46,6 +41,7 @@ export function ProjectTasksSection({
   onEditTask,
   onAddTask,
 }: ProjectTasksSectionProps) {
+  const { t } = useI18n();
   const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
 
   const {
@@ -65,7 +61,7 @@ export function ProjectTasksSection({
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(task: TaskDto) {
-    if (!window.confirm(`Delete task "${task.title}"?`)) {
+    if (!window.confirm(t("project.deleteTaskConfirm", { title: task.title }))) {
       return;
     }
     setDeletingId(task.id);
@@ -78,26 +74,23 @@ export function ProjectTasksSection({
     }
   }
 
-  const panelTitle = `Tasks — ${iterationLabel}`;
+  const panelTitle = t("project.tasksTitle", { scope: iterationLabel });
 
   return (
     <div className="project-tasks-section">
       <ProjectPanel title={panelTitle} headerAction={<AddTaskButton onClick={onAddTask} />}>
         <p className="muted tasks-scope-note">
-          Current scope: <strong>{iterationLabel}</strong>. Press <strong>+</strong> to add a task. Edit or delete in
-          the list.
-          {iterationScope === "backlog"
-            ? " New items stay in the backlog until you assign a sprint in the editor."
-            : null}
+          {t("project.tasksScope")} <strong>{iterationLabel}</strong>. {t("project.tasksNote")}
+          {iterationScope === "backlog" ? ` ${t("project.backlogNote")}` : null}
         </p>
 
-        {tasksLoading ? <p className="muted">Loading tasks…</p> : null}
+        {tasksLoading ? <p className="muted">{t("project.loadingTasks")}</p> : null}
         {tasksErrMsg ? <p className="form-error">{tasksErrMsg}</p> : null}
         {!tasksLoading && tasks.length === 0 ? (
-          <p className="muted">No tasks in this view yet.</p>
+          <p className="muted">{t("project.noTasksYet")}</p>
         ) : null}
         {!tasksLoading && tasks.length > 0 && visibleRows.length === 0 ? (
-          <p className="muted">No tasks match the current search or filters.</p>
+          <p className="muted">{t("project.noTasksMatch")}</p>
         ) : null}
 
         {visibleRows.length > 0 ? (
@@ -105,10 +98,10 @@ export function ProjectTasksSection({
             <table>
               <thead>
                 <tr>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>SP</th>
-                  <th>Assignee</th>
+                  <th>{t("project.titleCol")}</th>
+                  <th>{t("project.status")}</th>
+                  <th>{t("project.sp")}</th>
+                  <th>{t("project.assignee")}</th>
                   <th />
                 </tr>
               </thead>
@@ -120,7 +113,7 @@ export function ProjectTasksSection({
                         <strong>{task.title}</strong>
                         {depth === 0 && task.subtaskCount > 0 ? (
                           <span className="muted small-meta task-subtask-badge">
-                            {task.subtaskCount} subtask{task.subtaskCount === 1 ? "" : "s"}
+                            {subtaskCountLabel(t, task.subtaskCount)}
                           </span>
                         ) : null}
                         {depth === 1 && task.parentTitle ? (
@@ -132,14 +125,16 @@ export function ProjectTasksSection({
                       ) : null}
                     </td>
                     <td>
-                      <span className={statusClass(task.status)}>{statusLabel(task.status)}</span>
+                      <span className={statusClass(task.status)}>{taskStatusLabel(t, task.status)}</span>
                     </td>
-                    <td className="muted">{task.storyPoints ?? "—"}</td>
-                    <td className="muted">{task.assignee?.fullName ?? task.assignee?.email ?? "—"}</td>
+                    <td className="muted">{task.storyPoints ?? t("project.dash")}</td>
+                    <td className="muted">
+                      {task.assignee?.fullName ?? task.assignee?.email ?? t("project.dash")}
+                    </td>
                     <td>
                       <div className="task-actions">
                         <button type="button" onClick={() => onEditTask(task)}>
-                          Edit
+                          {t("project.edit")}
                         </button>
                         <button
                           type="button"
@@ -147,7 +142,7 @@ export function ProjectTasksSection({
                           disabled={deletingId === task.id}
                           onClick={() => void handleDelete(task)}
                         >
-                          {deletingId === task.id ? "…" : "Delete"}
+                          {deletingId === task.id ? t("project.dash") : t("project.delete")}
                         </button>
                       </div>
                     </td>

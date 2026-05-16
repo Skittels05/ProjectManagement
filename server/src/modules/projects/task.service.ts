@@ -1,5 +1,6 @@
 import type { ParsedQs } from "qs";
-import { ProjectMember, Sprint, Task, User } from "../../models";
+import { Op } from "sequelize";
+import { ProjectMember, sequelize, Sprint, Task, User } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
 
@@ -445,6 +446,86 @@ export async function updateTask(
     ],
   });
   const plain = task.get({ plain: true }) as TaskRow;
+  const subCount = await Task.count({ where: { parentTaskId: taskId } });
+  return toTaskDto({ ...plain, subtaskCount: subCount });
+}
+
+const BOARD_POSITION_STEP = 10;
+
+export async function reorderKanbanColumn(
+  userId: string,
+  projectId: string,
+  body: Record<string, unknown>,
+) {
+  if (!isUuidV4(projectId)) {
+    throw new AppError("Project not found", 404);
+  }
+  await assertMember(projectId, userId);
+
+  const taskId = String(body.taskId ?? "").trim();
+  if (!isUuidV4(taskId)) {
+    throw new AppError("Invalid task id", 400);
+  }
+
+  const status = normalizeStatus(body.status, "todo");
+
+  if (!Array.isArray(body.orderedTaskIds) || body.orderedTaskIds.length === 0) {
+    throw new AppError("orderedTaskIds must be a non-empty array", 400);
+  }
+
+  const orderedTaskIds = body.orderedTaskIds.map((id) => String(id).trim());
+  if (orderedTaskIds.some((id) => !isUuidV4(id))) {
+    throw new AppError("Each orderedTaskId must be a valid UUID", 400);
+  }
+
+  const unique = new Set(orderedTaskIds);
+  if (unique.size !== orderedTaskIds.length) {
+    throw new AppError("orderedTaskIds must not contain duplicates", 400);
+  }
+
+  if (!orderedTaskIds.includes(taskId)) {
+    throw new AppError("orderedTaskIds must include the moved task", 400);
+  }
+
+  const movedTask = await Task.findOne({ where: { id: taskId, projectId } });
+  if (!movedTask) {
+    throw new AppError("Task not found", 404);
+  }
+
+  const rows = await Task.findAll({
+    where: {
+      projectId,
+      id: { [Op.in]: orderedTaskIds },
+      parentTaskId: null,
+    },
+  });
+
+  if (rows.length !== orderedTaskIds.length) {
+    throw new AppError("One or more tasks were not found on this board", 400);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    for (let index = 0; index < orderedTaskIds.length; index++) {
+      const id = orderedTaskIds[index]!;
+      const patch: Record<string, unknown> = {
+        boardPosition: index * BOARD_POSITION_STEP,
+      };
+      if (id === taskId) {
+        patch.status = status;
+      }
+      await Task.update(patch, {
+        where: { id, projectId },
+        transaction,
+      });
+    }
+  });
+
+  const updated = await getTaskInProject(projectId, taskId);
+  if (!updated) {
+    throw new AppError("Task not found", 404);
+  }
+
+  const plain = updated.get({ plain: true }) as TaskRow;
   const subCount = await Task.count({ where: { parentTaskId: taskId } });
   return toTaskDto({ ...plain, subtaskCount: subCount });
 }

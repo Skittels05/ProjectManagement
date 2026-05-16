@@ -18,16 +18,16 @@
 }
 
 .projects-toolbar label {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .projects-toolbar input,
 .projects-toolbar select {
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 0.65rem 0.85rem;
-  background: rgba(15, 23, 42, 0.7);
-  color: #f8fafc;
+  background: var(--surface-input);
+  color: var(--text-primary);
   font: inherit;
   min-width: 0;
 }

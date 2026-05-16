@@ -7,7 +7,9 @@
   padding: 0.85rem 1rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
 }
 
 .project-tasks-toolbar .toolbar-field {
@@ -23,16 +25,16 @@
 }
 
 .project-tasks-toolbar label {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .project-tasks-toolbar input,
 .project-tasks-toolbar select {
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 0.65rem 0.85rem;
-  background: rgba(15, 23, 42, 0.7);
-  color: #f8fafc;
+  background: var(--surface-input);
+  color: var(--text-primary);
   font: inherit;
   min-width: 0;
 }

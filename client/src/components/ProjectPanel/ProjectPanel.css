@@ -1,6 +1,7 @@
 .project-panel {
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-sm);
   border-radius: 20px;
   padding: 1.5rem 2rem;
   display: flex;
@@ -23,11 +24,11 @@
 
 .project-form textarea,
 .project-form select {
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 0.85rem 1rem;
-  background: rgba(15, 23, 42, 0.7);
-  color: #f8fafc;
+  background: var(--surface-input);
+  color: var(--text-primary);
   font: inherit;
 }
 

@@ -7,10 +7,12 @@ import "./api/tasksApi";
 import "./api/taskEngagementApi";
 import "./api/authApi";
 import authReducer from "./slices/authSlice";
+import settingsReducer from "./slices/settingsSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    settings: settingsReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware),

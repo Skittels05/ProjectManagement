@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchTaskAttachmentBlob } from "../../../../store/api/taskEngagementApi";
+import { useI18n } from "../../../../shared/i18n";
 
 type TaskAttachmentImagePreviewProps = {
   projectId: string;
@@ -14,6 +15,7 @@ export function TaskAttachmentImagePreview({
   attachmentId,
   alt,
 }: TaskAttachmentImagePreviewProps) {
+  const { t } = useI18n();
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -57,7 +59,7 @@ export function TaskAttachmentImagePreview({
       href={src}
       target="_blank"
       rel="noopener noreferrer"
-      title="Open full size"
+      title={t("project.openFullSize")}
     >
       <img src={src} alt={alt} className="task-attachment-preview" loading="lazy" />
     </a>

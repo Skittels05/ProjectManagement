@@ -1,7 +1,7 @@
 .task-modal-engagement {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -27,7 +27,7 @@
 .task-time-total {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #93c5fd;
+  color: var(--accent-hover);
 }
 
 .task-time-log-list {
@@ -42,13 +42,13 @@
 .task-time-log-item {
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
 }
 
 .task-time-log-note {
   margin: 0 0 0.5rem;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .task-time-log-form-row {
@@ -91,8 +91,8 @@
 .task-attachment-item {
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
 }
 
 .task-comment-meta {
@@ -148,7 +148,7 @@
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--surface-muted);
   line-height: 0;
 }
 
@@ -188,7 +188,7 @@
 .task-subtasks-panel {
   margin-top: 1.25rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-top: 1px solid var(--border);
 }
 
 .task-subtasks-heading {
@@ -214,7 +214,7 @@
   background: none;
   border: none;
   padding: 0;
-  color: #93c5fd;
+  color: var(--accent-hover);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -238,5 +238,5 @@
 .task-modal-engagement-hint {
   margin: 1rem 0 0;
   padding-top: 1rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  border-top: 1px solid var(--border-subtle);
 }

@@ -29,6 +29,7 @@ import {
   createTaskValidation,
   updateTaskValidation,
   deleteTaskValidation,
+  reorderKanbanValidation,
 } from "./task.validation";
 import {
   listCommentsValidation,
@@ -103,6 +104,12 @@ projectsRouter.post(
   createTaskValidation,
   validationMiddleware,
   asyncHandler(taskController.create),
+);
+projectsRouter.patch(
+  "/:projectId/tasks/kanban-order",
+  reorderKanbanValidation,
+  validationMiddleware,
+  asyncHandler(taskController.reorderKanban),
 );
 projectsRouter.patch(
   "/:projectId/tasks/:taskId",

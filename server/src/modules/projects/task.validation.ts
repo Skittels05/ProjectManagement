@@ -139,3 +139,24 @@ export const updateTaskValidation = [
 ];
 
 export const deleteTaskValidation = [projectIdParam, taskIdParam];
+
+export const reorderKanbanValidation = [
+  projectIdParam,
+  body("taskId").isUUID(4).withMessage("Invalid task id"),
+  body("status")
+    .trim()
+    .notEmpty()
+    .withMessage("Status is required")
+    .custom((value) => {
+      const s = String(value).toLowerCase();
+      const normalized = s === "in progress" ? "in_progress" : s;
+      if (!["todo", "in_progress", "done"].includes(normalized)) {
+        throw new Error("Status must be todo, in_progress, or done");
+      }
+      return true;
+    }),
+  body("orderedTaskIds")
+    .isArray({ min: 1 })
+    .withMessage("orderedTaskIds must be a non-empty array"),
+  body("orderedTaskIds.*").isUUID(4).withMessage("Each task id must be a valid UUID"),
+];

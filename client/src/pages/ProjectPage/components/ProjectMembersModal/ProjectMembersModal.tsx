@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { useI18n } from "../../../../shared/i18n";
 import { MembersTable, type MembersTableProps } from "../MembersTable/MembersTable";
 import { ProjectInviteForm } from "../ProjectInviteForm/ProjectInviteForm";
 import "./ProjectMembersModal.css";
@@ -29,6 +30,8 @@ export function ProjectMembersModal({
   onInviteSubmit,
   ...tableProps
 }: ProjectMembersModalProps) {
+  const { t } = useI18n();
+
   if (!isOpen) {
     return null;
   }
@@ -49,19 +52,17 @@ export function ProjectMembersModal({
       >
         <div className="modal-header">
           <h2 id="project-members-modal-title" className="modal-title">
-            Team & participants
+            {t("project.teamModalTitle")}
           </h2>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t("dashboard.close")}>
             ×
           </button>
         </div>
-        <p className="modal-subtitle muted">
-          View everyone on the project. Owners and managers can invite people and adjust roles below.
-        </p>
+        <p className="modal-subtitle muted">{t("project.teamModalSubtitle")}</p>
 
         {canManageTeam ? (
           <div className="project-members-modal-invite">
-            <p className="eyebrow project-members-invite-label">Invite</p>
+            <p className="eyebrow project-members-invite-label">{t("project.invite")}</p>
             <ProjectInviteForm
               embedded
               inviteEmail={inviteEmail}

@@ -15,11 +15,16 @@ import {
   toDatetimeLocalValue,
 } from "../../../../shared/lib/duration";
 import { sameUserId } from "../../../../shared/lib/uuid";
+import { formatLocaleDateTime } from "../../../../shared/lib/formatDate";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useI18n } from "../../../../shared/i18n";
+import { useAppSelector } from "../../../../store/hooks";
 
 type TaskTimeLogsPanelProps = { projectId: string; taskId: string };
 
 export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps) {
+  const { t } = useI18n();
+  const locale = useAppSelector((s) => s.settings.locale);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data, isLoading, error } = useGetTaskTimeLogsQuery({ projectId, taskId });
   const [createLog, { isLoading: creating }] = useCreateTaskTimeLogMutation();
@@ -44,7 +49,7 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
     e.preventDefault();
     const total = parseDurationInput(hours, minutes);
     if (total == null) {
-      setFormError("Enter a duration between 1 minute and 24 hours.");
+      setFormError(t("project.durationError"));
       return;
     }
     setFormError(null);
@@ -68,7 +73,7 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
   async function saveEdit(timeLogId: string) {
     const total = parseDurationInput(editHours, editMinutes);
     if (total == null) {
-      setFormError("Enter a valid duration.");
+      setFormError(t("project.durationInvalid"));
       return;
     }
     try {
@@ -90,10 +95,12 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
   return (
     <section className="task-engagement-panel">
       <div className="task-time-summary">
-        <h3>Time logged</h3>
-        <span className="task-time-total">{formatDurationMinutes(totalMinutes)} total</span>
+        <h3>{t("project.timeLogged")}</h3>
+        <span className="task-time-total">
+          {t("project.timeTotal", { duration: formatDurationMinutes(totalMinutes) })}
+        </span>
       </div>
-      {isLoading ? <p className="muted">Loading…</p> : null}
+      {isLoading ? <p className="muted">{t("project.loadingTasks")}</p> : null}
       {error ? <p className="form-error">{getRtkQueryErrorMessage(error)}</p> : null}
       <ul className="task-time-log-list">
         {logs.map((log) => (
@@ -124,8 +131,9 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
               setEditingId(null);
               setFormError(null);
             }}
+            locale={locale}
             onDelete={async () => {
-              if (!window.confirm("Delete this time entry?")) return;
+              if (!window.confirm(t("project.deleteTimeConfirm"))) return;
               try {
                 await deleteLog({ projectId, taskId, timeLogId: log.id }).unwrap();
               } catch (err) {
@@ -135,11 +143,11 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
           />
         ))}
       </ul>
-      {!isLoading && logs.length === 0 ? <p className="muted">No time logged yet.</p> : null}
+      {!isLoading && logs.length === 0 ? <p className="muted">{t("project.noTimeLogged")}</p> : null}
       <form className="task-time-log-form" onSubmit={(e) => void handleAdd(e)}>
         <div className="task-time-log-form-row">
           <label>
-            Hours
+            {t("project.hours")}
             <input
               type="number"
               min={0}
@@ -151,7 +159,7 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
             />
           </label>
           <label>
-            Minutes
+            {t("project.minutes")}
             <input
               type="number"
               min={0}
@@ -162,7 +170,7 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
             />
           </label>
           <label>
-            When
+            {t("project.when")}
             <input
               type="datetime-local"
               value={loggedAt}
@@ -172,19 +180,19 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
           </label>
         </div>
         <label className="full-row">
-          Note <span className="muted">(optional)</span>
+          {t("project.noteOptional")}
           <input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="What did you work on?"
+            placeholder={t("project.timeNotePlaceholder")}
             maxLength={2000}
             disabled={creating}
           />
         </label>
         {formError ? <p className="form-error">{formError}</p> : null}
         <button type="submit" disabled={creating}>
-          {creating ? "Saving…" : "Log time"}
+          {creating ? t("project.saving") : t("project.logTime")}
         </button>
       </form>
     </section>
@@ -200,6 +208,7 @@ function TimeLogRow(props: {
   editNote: string;
   editLoggedAt: string;
   updating: boolean;
+  locale: string;
   onEdit: () => void;
   onEditHoursChange: (v: string) => void;
   onEditMinutesChange: (v: string) => void;
@@ -209,9 +218,10 @@ function TimeLogRow(props: {
   onCancel: () => void;
   onDelete: () => void;
 }) {
-  const { log, isOwn, isEditing, updating } = props;
-  const who = log.user?.fullName ?? log.user?.email ?? "User";
-  const when = new Date(log.loggedAt).toLocaleString();
+  const { t } = useI18n();
+  const { log, isOwn, isEditing, updating, locale } = props;
+  const who = log.user?.fullName ?? log.user?.email ?? t("project.user");
+  const when = formatLocaleDateTime(log.loggedAt, locale);
 
   return (
     <li className="task-time-log-item">
@@ -225,7 +235,7 @@ function TimeLogRow(props: {
         <>
           <div className="task-time-log-form-row">
             <label>
-              Hours
+              {t("project.hours")}
               <input
                 type="number"
                 min={0}
@@ -235,7 +245,7 @@ function TimeLogRow(props: {
               />
             </label>
             <label>
-              Minutes
+              {t("project.minutes")}
               <input
                 type="number"
                 min={0}
@@ -245,7 +255,7 @@ function TimeLogRow(props: {
               />
             </label>
             <label>
-              When
+              {t("project.when")}
               <input
                 type="datetime-local"
                 value={props.editLoggedAt}
@@ -257,7 +267,7 @@ function TimeLogRow(props: {
             type="text"
             value={props.editNote}
             onChange={(e) => props.onEditNoteChange(e.target.value)}
-            placeholder="Note (optional)"
+            placeholder={t("project.noteOptional")}
           />
           <TimeLogActions saving={updating} onSave={props.onSave} onCancel={props.onCancel} />
         </>
@@ -279,25 +289,27 @@ function TimeLogActions(props: {
   onCancel: () => void;
   editMode?: boolean;
 }) {
+  const { t } = useI18n();
+
   if (props.editMode) {
     return (
       <div className="task-comment-actions">
         <button type="button" onClick={props.onSave}>
-          Edit
+          {t("project.edit")}
         </button>
         <button type="button" className="danger" onClick={props.onCancel}>
-          Delete
+          {t("project.delete")}
         </button>
-      </div>
+        </div>
     );
   }
   return (
     <div className="task-comment-actions">
       <button type="button" disabled={props.saving} onClick={props.onSave}>
-        Save
+        {t("project.saveChanges")}
       </button>
       <button type="button" className="secondary-button" disabled={props.saving} onClick={props.onCancel}>
-        Cancel
+        {t("dashboard.cancel")}
       </button>
     </div>
   );

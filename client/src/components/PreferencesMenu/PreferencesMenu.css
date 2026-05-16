@@ -1,0 +1,63 @@
+.topbar-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--btn-secondary-bg);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.topbar-icon-btn:hover {
+  border-color: var(--border-accent);
+  background: var(--accent-bg);
+}
+
+.preferences-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.topbar-icon-btn--theme.is-dark-theme {
+  color: #f8fafc;
+}
+
+.topbar-icon-btn--theme.is-light-theme {
+  color: #0f172a;
+}
+
+.topbar-lang-btn {
+  min-width: 2.5rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.topbar-lang-btn:hover {
+  border-color: var(--border-accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}

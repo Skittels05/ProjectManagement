@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import { isAssignableMemberRole } from "../../../../shared/lib/projectRole";
 import { sameUserId } from "../../../../shared/lib/uuid";
+import { memberCountLabel, useI18n } from "../../../../shared/i18n";
 import "../ProjectTeamSection/ProjectTeamSection.css";
 
 type MemberRoleFieldProps = {
@@ -10,7 +11,7 @@ type MemberRoleFieldProps = {
   onCommit: (next: string) => void;
 };
 
-function MemberRoleField({ member, busy, onCommit }: MemberRoleFieldProps) {
+function MemberRoleField({ member, busy, onCommit, roleAriaLabel }: MemberRoleFieldProps & { roleAriaLabel: string }) {
   const [draft, setDraft] = useState(member.role);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ function MemberRoleField({ member, busy, onCommit }: MemberRoleFieldProps) {
       value={draft}
       disabled={busy}
       maxLength={32}
-      aria-label={`Role for ${member.fullName}`}
+      aria-label={roleAriaLabel}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={() => {
         const next = draft.trim();
@@ -69,6 +70,8 @@ export function MembersTable({
   onRoleChange,
   onRemoveMember,
 }: MembersTableProps) {
+  const { t } = useI18n();
+
   return (
     <>
       <datalist id="team-role-suggestions">
@@ -76,19 +79,17 @@ export function MembersTable({
           <option key={r} value={r} />
         ))}
       </datalist>
-      <p className="muted small-meta">
-        {members.length} member{members.length === 1 ? "" : "s"}
-      </p>
+      <p className="muted small-meta">{memberCountLabel(t, members.length, "members")}</p>
       {memberError ? <p className="form-error">{memberError}</p> : null}
 
       <div className="members-table-wrap">
         <table className="members-table">
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Role</th>
+              <th scope="col">{t("project.nameCol")}</th>
+              <th scope="col">{t("project.roleCol")}</th>
               <th scope="col" className="members-actions-col">
-                Actions
+                {t("project.actions")}
               </th>
             </tr>
           </thead>
@@ -102,7 +103,7 @@ export function MembersTable({
                     <div className="member-name-cell">
                       <span className="member-name">{member.fullName}</span>
                       <span className="member-email muted">{member.email}</span>
-                      {isSelf ? <span className="member-you muted">You</span> : null}
+                      {isSelf ? <span className="member-you muted">{t("project.you")}</span> : null}
                     </div>
                   </td>
                   <td>
@@ -110,6 +111,7 @@ export function MembersTable({
                       <MemberRoleField
                         member={member}
                         busy={busy}
+                        roleAriaLabel={t("project.roleFor", { name: member.fullName })}
                         onCommit={(next) => onRoleChange(member, next)}
                       />
                     ) : (
@@ -124,7 +126,7 @@ export function MembersTable({
                         disabled={busy}
                         onClick={() => onRemoveMember(member)}
                       >
-                        Remove
+                        {t("project.remove")}
                       </button>
                     ) : null}
                     {canLeaveProject(member) ? (
@@ -134,7 +136,7 @@ export function MembersTable({
                         disabled={busy}
                         onClick={() => onRemoveMember(member)}
                       >
-                        Leave
+                        {t("project.leave")}
                       </button>
                     ) : null}
                   </td>

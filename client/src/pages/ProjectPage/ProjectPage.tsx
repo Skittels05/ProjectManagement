@@ -16,6 +16,9 @@ import type { TaskDto } from "../../store/types/tasks.types";
 import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projectRole";
 import { isUuidV4, sameUserId } from "../../shared/lib/uuid";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
+import { formatLocaleDateTime } from "../../shared/lib/formatDate";
+import { memberCountLabel, useI18n } from "../../shared/i18n";
+import { useAppSelector } from "../../store/hooks";
 import { ProjectMembersModal } from "./components/ProjectMembersModal/ProjectMembersModal";
 import { ProjectSidebar, type IterationScope } from "./components/ProjectSidebar/ProjectSidebar";
 import { SprintModal } from "./components/SprintModal/SprintModal";
@@ -38,6 +41,8 @@ export function ProjectPage() {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { t } = useI18n();
+  const locale = useAppSelector((s) => s.settings.locale);
 
   const [addMember] = useAddProjectMemberMutation();
   const [updateMemberRole] = useUpdateProjectMemberRoleMutation();
@@ -157,11 +162,11 @@ export function ProjectPage() {
 
   const iterationLabel = useMemo(() => {
     if (iterationScope === "backlog") {
-      return "Backlog";
+      return t("project.backlog");
     }
     const sp = sprints.find((s) => s.id === iterationScope);
-    return sp?.name ?? "Sprint";
-  }, [iterationScope, sprints]);
+    return sp?.name ?? t("project.sprint");
+  }, [iterationScope, sprints, t]);
 
   function openTaskCreate(parentId: string | null = null) {
     setTaskModalMode("create");
@@ -189,9 +194,7 @@ export function ProjectPage() {
     setInviteError(null);
     const roleTrim = inviteRole.trim();
     if (!isAssignableMemberRole(roleTrim)) {
-      setInviteError(
-        "Choose an existing role or enter a new one (1–32 characters). The owner role cannot be assigned.",
-      );
+      setInviteError(t("project.inviteRoleError"));
       return;
     }
     setInviteBusy(true);
@@ -214,7 +217,7 @@ export function ProjectPage() {
     const nextTrim = next.trim();
     if (!validProjectId || nextTrim === member.role.trim()) return;
     if (!isAssignableMemberRole(nextTrim)) {
-      setMemberError("The owner role cannot be assigned. Use 1–32 characters for other roles.");
+      setMemberError(t("project.ownerRoleError"));
       return;
     }
     setMemberError(null);
@@ -236,8 +239,8 @@ export function ProjectPage() {
     if (!validProjectId) return;
     const isSelf = sameUserId(member.userId, user?.id);
     const message = isSelf
-      ? "Leave this project? You will need a new invite to return."
-      : `Remove ${member.fullName} from the project?`;
+      ? t("project.leaveConfirm")
+      : t("project.removeMemberConfirm", { name: member.fullName });
     if (!window.confirm(message)) return;
     setMemberError(null);
     setRemovingFor(member.userId);
@@ -258,11 +261,7 @@ export function ProjectPage() {
 
   async function handleDeleteSprint(sprint: SprintDto) {
     if (!validProjectId) return;
-    if (
-      !window.confirm(
-        `Delete sprint “${sprint.name}”? Tasks will move back to the backlog (unassigned).`,
-      )
-    ) {
+    if (!window.confirm(t("project.deleteSprintConfirm", { name: sprint.name }))) {
       return;
     }
     setDeletingSprintId(sprint.id);
@@ -318,8 +317,8 @@ export function ProjectPage() {
   if (!validProjectId) {
     return (
       <section className="page project-page">
-        <p className="form-error">Invalid project link.</p>
-        <Link to="/">Back to dashboard</Link>
+        <p className="form-error">{t("project.invalidLink")}</p>
+        <Link to="/">{t("project.backToDashboard")}</Link>
       </section>
     );
   }
@@ -327,7 +326,7 @@ export function ProjectPage() {
   if (currentLoading) {
     return (
       <section className="page project-page">
-        <p className="muted">Loading project…</p>
+        <p className="muted">{t("project.loading")}</p>
       </section>
     );
   }
@@ -335,8 +334,8 @@ export function ProjectPage() {
   if (currentError || !current) {
     return (
       <section className="page project-page">
-        <p className="form-error">{currentError ?? "Project not found."}</p>
-        <Link to="/">Back to dashboard</Link>
+        <p className="form-error">{currentError ?? t("project.notFound")}</p>
+        <Link to="/">{t("project.backToDashboard")}</Link>
       </section>
     );
   }
@@ -396,10 +395,10 @@ export function ProjectPage() {
                   aria-expanded={workspaceDrawerOpen}
                   aria-controls="project-workspace-panel"
                 >
-                  Workspace
+                  {t("project.workspace")}
                 </button>
                 <button type="button" className="secondary-button" onClick={() => setMembersModalOpen(true)}>
-                  Team & participants
+                  {t("project.team")}
                 </button>
                 {canManageTeam ? (
                   <button
@@ -407,7 +406,7 @@ export function ProjectPage() {
                     className="secondary-button"
                     onClick={() => setSettingsModalOpen(true)}
                   >
-                    Project settings
+                    {t("project.settings")}
                   </button>
                 ) : null}
                 <AddTaskButton onClick={openTaskCreate} />
@@ -417,19 +416,19 @@ export function ProjectPage() {
                   onClick={() => setTasksView((v) => (v === "kanban" ? "list" : "kanban"))}
                   aria-pressed={tasksView === "kanban"}
                 >
-                  {tasksView === "kanban" ? "List view" : "Kanban"}
+                  {tasksView === "kanban" ? t("project.listView") : t("project.kanban")}
                 </button>
               </div>
               <p className="muted project-page-toolbar-meta">
-                {members.length} member{members.length === 1 ? "" : "s"} · your role:{" "}
-                <strong>{myRole ?? "—"}</strong>
+                {memberCountLabel(t, members.length)} · {t("project.yourRole")}{" "}
+                <strong>{myRole ?? t("project.dash")}</strong>
               </p>
             </div>
           </header>
 
           <div className="project-main">
             <header className="project-main-header">
-              <p className="eyebrow">Project</p>
+              <p className="eyebrow">{t("project.eyebrow")}</p>
               <div className="project-main-header-row">
                 <h2>{current.name}</h2>
                 {canManageTeam ? (
@@ -438,14 +437,18 @@ export function ProjectPage() {
                     className="secondary-button project-settings-inline"
                     onClick={() => setSettingsModalOpen(true)}
                   >
-                    Edit
+                    {t("project.edit")}
                   </button>
                 ) : null}
               </div>
               {current.description ? <p className="project-description">{current.description}</p> : null}
-              <p className="muted small-meta">Updated {new Date(current.updatedAt).toLocaleString()}</p>
+              <p className="muted small-meta">
+                {t("project.updated", {
+                  date: formatLocaleDateTime(current.updatedAt, locale),
+                })}
+              </p>
               <Link to="/" className="back-link">
-                ← All projects
+                {t("project.allProjects")}
               </Link>
             </header>
 

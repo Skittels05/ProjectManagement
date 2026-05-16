@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { useCreateProjectMutation } from "../../../../store/api/projectsApi";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useI18n } from "../../../../shared/i18n";
 import "./CreateProjectModal.css";
 
 type CreateProjectModalProps = {
@@ -9,6 +10,7 @@ type CreateProjectModalProps = {
 };
 
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
+  const { t } = useI18n();
   const [createProject, { isLoading: createLoading }] = useCreateProjectMutation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -57,42 +59,42 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
       <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-project-title">
         <div className="modal-header">
           <h2 id="create-project-title" className="modal-title">
-            New project
+            {t("dashboard.modalTitle")}
           </h2>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t("dashboard.close")}>
             ×
           </button>
         </div>
-        <p className="modal-subtitle muted">Add a workspace for your team. You can edit details later.</p>
+        <p className="modal-subtitle muted">{t("dashboard.modalSubtitle")}</p>
         <form className="project-form auth-form" onSubmit={(e) => void handleCreate(e)} style={{ marginTop: 0 }}>
           <label>
-            Name
+            {t("dashboard.name")}
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Product workspace"
+              placeholder={t("dashboard.namePlaceholder")}
               maxLength={255}
               required
               autoFocus
             />
           </label>
           <label>
-            Description <span className="muted">(optional)</span>
+            {t("dashboard.descriptionOptional")}
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Short summary for the team"
+              placeholder={t("dashboard.descriptionPlaceholder")}
               rows={3}
             />
           </label>
           {createError ? <p className="form-error">{createError}</p> : null}
           <div className="modal-actions">
             <button type="button" className="secondary-button" onClick={onClose} disabled={createLoading}>
-              Cancel
+              {t("dashboard.cancel")}
             </button>
             <button type="submit" disabled={createLoading}>
-              {createLoading ? "Creating…" : "Create project"}
+              {createLoading ? t("dashboard.creating") : t("dashboard.createProject")}
             </button>
           </div>
         </form>

@@ -4,6 +4,7 @@ import type { RootState } from "../../store";
 import { useGetProjectsQuery } from "../../store/api/projectsApi";
 import type { ProjectDto } from "../../store/types/projects.types";
 import { isOwnerRoleName } from "../../shared/lib/projectRole";
+import { useI18n } from "../../shared/i18n";
 import { CreateProjectModal } from "./components/CreateProjectModal/CreateProjectModal";
 import {
   DashboardProjectsToolbar,
@@ -50,6 +51,7 @@ function applySort(projects: ProjectDto[], sortBy: ProjectSortOption): ProjectDt
 }
 
 export function DashboardPage() {
+  const { t } = useI18n();
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: list = [], isLoading: listLoading, error: listError } = useGetProjectsQuery();
 
@@ -66,9 +68,7 @@ export function DashboardPage() {
   }, [list, filterBy, search, sortBy]);
 
   const emptyMessage =
-    list.length === 0
-      ? "You are not in any project yet. Click “New project” to create one."
-      : "No projects match your search or filters.";
+    list.length === 0 ? t("dashboard.emptyNoProjects") : t("dashboard.emptyNoMatch");
 
   return (
     <section className="page dashboard-page">

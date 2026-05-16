@@ -1,3 +1,4 @@
+import { useI18n } from "../../../../shared/i18n";
 import "./AddTaskButton.css";
 
 type AddTaskButtonProps = {
@@ -5,14 +6,17 @@ type AddTaskButtonProps = {
   title?: string;
 };
 
-export function AddTaskButton({ onClick, title = "Add task" }: AddTaskButtonProps) {
+export function AddTaskButton({ onClick, title }: AddTaskButtonProps) {
+  const { t } = useI18n();
+  const label = title ?? t("project.addTask");
+
   return (
     <button
       type="button"
       className="add-task-btn"
       onClick={onClick}
-      aria-label={title}
-      title={title}
+      aria-label={label}
+      title={label}
     >
       +
     </button>

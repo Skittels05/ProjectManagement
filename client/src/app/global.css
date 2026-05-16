@@ -1,9 +1,11 @@
+@import "./theme.css";
+
 :root {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #e5eefb;
-  background: #0f172a;
+  color: var(--text-primary);
+  background: var(--surface-base);
 }
 
 * {
@@ -14,10 +16,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.2), transparent 30%),
-    #0f172a;
-  color: #e5eefb;
+  background: var(--body-gradient);
+  color: var(--text-primary);
 }
 
 a {
@@ -26,7 +26,9 @@ a {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -52,7 +54,7 @@ button {
 }
 
 .muted {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .eyebrow {
@@ -60,12 +62,12 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.78rem;
-  color: #60a5fa;
+  color: var(--accent);
 }
 
 .form-error {
   margin: 0;
-  color: #fca5a5;
+  color: var(--danger-hover);
 }
 
 .small-meta {
@@ -73,13 +75,44 @@ button {
 }
 
 .secondary-button {
-  border: none;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.9rem 1rem;
-  background: rgba(148, 163, 184, 0.18);
-  color: #e2e8f0;
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
   font: inherit;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--btn-secondary-hover);
+  border-color: var(--border-accent);
+  color: var(--accent);
+}
+
+.topbar-actions a {
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.topbar-actions a:hover,
+.topbar-actions a.active-link {
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text-primary);
+}
+
+strong {
+  color: var(--text-primary);
 }
 
 .auth-form {
@@ -97,21 +130,23 @@ button {
 }
 
 .auth-form input,
-.auth-form select {
-  border: 1px solid rgba(148, 163, 184, 0.3);
+.auth-form select,
+.auth-form textarea {
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 0.85rem 1rem;
-  background: rgba(15, 23, 42, 0.7);
-  color: #f8fafc;
+  background: var(--surface-input);
+  color: var(--text-primary);
   font: inherit;
 }
 
-.auth-form button {
+.auth-form button[type="submit"],
+.auth-form button:not(.secondary-button):not(.danger) {
   border: none;
   border-radius: 12px;
   padding: 0.9rem 1rem;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
+  background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+  color: var(--text-on-accent);
   font-weight: 600;
   font: inherit;
   cursor: pointer;
@@ -119,11 +154,11 @@ button {
 
 .back-link {
   margin-top: 0.5rem;
-  color: #93c5fd;
+  color: var(--accent-hover);
 }
 
 .back-link:hover {
-  color: #bfdbfe;
+  color: var(--accent-soft);
 }
 
 .link-danger {
@@ -131,17 +166,42 @@ button {
   background: none;
   padding: 0;
   font: inherit;
-  color: #f87171;
+  color: var(--danger);
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
 }
 
 .link-danger:hover {
-  color: #fca5a5;
+  color: var(--danger-hover);
 }
 
 .link-danger:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.danger-button {
+  border: 1px solid var(--danger-border);
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  background: var(--danger-bg);
+  color: var(--danger-hover);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger-button:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.danger-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.danger,
+.danger {
+  color: var(--danger);
 }

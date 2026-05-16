@@ -1,4 +1,5 @@
 import { type FormEvent } from "react";
+import { useI18n } from "../../../../shared/i18n";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 
 type ProjectInviteFormProps = {
@@ -24,18 +25,13 @@ export function ProjectInviteForm({
   onSubmit,
   embedded = false,
 }: ProjectInviteFormProps) {
+  const { t } = useI18n();
+
   const formInner = (
     <>
-      {!embedded ? (
-        <p className="muted small-meta">
-          Pick a role that already exists in this project (except owner) or type a new role (1–32 characters). The
-          owner role cannot be assigned here.
-        </p>
-      ) : (
-        <p className="muted small-meta" style={{ marginTop: 0 }}>
-          Invite by email. Use an existing role name or a new one (1–32 characters). Owner cannot be assigned here.
-        </p>
-      )}
+      <p className="muted small-meta" style={embedded ? { marginTop: 0 } : undefined}>
+        {t("project.inviteHint")}
+      </p>
       <form className="project-form auth-form invite-form" onSubmit={(e) => void onSubmit(e)}>
         <datalist id="invite-role-suggestions">
           {roleSuggestions.map((r) => (
@@ -43,31 +39,31 @@ export function ProjectInviteForm({
           ))}
         </datalist>
         <label>
-          Email
+          {t("project.inviteEmail")}
           <input
             type="email"
             value={inviteEmail}
             onChange={(e) => onInviteEmailChange(e.target.value)}
-            placeholder="teammate@company.com"
+            placeholder={t("project.inviteEmailPlaceholder")}
             autoComplete="email"
             required
           />
         </label>
         <label>
-          Role
+          {t("project.inviteRole")}
           <input
             type="text"
             list="invite-role-suggestions"
             value={inviteRole}
             onChange={(e) => onInviteRoleChange(e.target.value)}
-            placeholder="e.g. developer, analyst"
+            placeholder={t("project.inviteRolePlaceholder")}
             maxLength={32}
             required
           />
         </label>
         {inviteError ? <p className="form-error">{inviteError}</p> : null}
         <button type="submit" disabled={inviteBusy}>
-          {inviteBusy ? "Sending…" : "Add to project"}
+          {inviteBusy ? t("project.sending") : t("project.addToProject")}
         </button>
       </form>
     </>
@@ -77,5 +73,5 @@ export function ProjectInviteForm({
     return formInner;
   }
 
-  return <ProjectPanel title="Invite member">{formInner}</ProjectPanel>;
+  return <ProjectPanel title={t("project.invite")}>{formInner}</ProjectPanel>;
 }

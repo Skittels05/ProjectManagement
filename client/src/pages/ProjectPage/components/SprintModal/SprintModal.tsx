@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useCreateSprintMutation, useUpdateSprintMutation } from "../../../../store/api/sprintsApi";
 import type { SprintDto, SprintStatus } from "../../../../store/types/sprints.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useI18n } from "../../../../shared/i18n";
 import "./SprintModal.css";
 
 function toYmdLocal(d: Date): string {
@@ -31,6 +32,7 @@ type SprintModalProps = {
 };
 
 export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: SprintModalProps) {
+  const { t } = useI18n();
   const [createSprint] = useCreateSprintMutation();
   const [updateSprint] = useUpdateSprintMutation();
 
@@ -123,7 +125,7 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
     }
   }
 
-  const title = mode === "create" ? "New sprint" : "Edit sprint";
+  const title = mode === "create" ? t("project.sprintNew") : t("project.sprintEdit");
 
   return (
     <div
@@ -143,15 +145,15 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
           <h2 id="sprint-modal-title" className="modal-title">
             {title}
           </h2>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t("dashboard.close")}>
             ×
           </button>
         </div>
-        <p className="modal-subtitle muted">Set dates and status. Only one sprint can be active at a time.</p>
+        <p className="modal-subtitle muted">{t("project.sprintSubtitle")}</p>
         <form className="project-form auth-form sprint-modal-form" onSubmit={(e) => void handleSubmit(e)}>
           <div className="sprint-modal-grid">
             <label className="full-row">
-              Name
+              {t("dashboard.name")}
               <input
                 type="text"
                 value={name}
@@ -162,33 +164,37 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
               />
             </label>
             <label className="full-row">
-              Goal <span className="muted">(optional)</span>
+              {t("project.goalOptional")}
               <textarea value={goal} onChange={(ev) => setGoal(ev.target.value)} rows={2} maxLength={20000} />
             </label>
             <label>
-              Start
+              {t("project.start")}
               <input type="date" value={startsAt} onChange={(ev) => setStartsAt(ev.target.value)} required />
             </label>
             <label>
-              End
+              {t("project.end")}
               <input type="date" value={endsAt} onChange={(ev) => setEndsAt(ev.target.value)} required />
             </label>
             <label className="full-row">
-              Status
+              {t("project.status")}
               <select value={status} onChange={(ev) => setStatus(ev.target.value as SprintStatus)}>
-                <option value="planned">Planned</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
+                <option value="planned">{t("project.sprintPlanned")}</option>
+                <option value="active">{t("project.sprintActive")}</option>
+                <option value="completed">{t("project.sprintCompleted")}</option>
               </select>
             </label>
           </div>
           {error ? <p className="form-error">{error}</p> : null}
           <div className="modal-actions">
             <button type="button" className="secondary-button" onClick={onClose} disabled={saving}>
-              Cancel
+              {t("dashboard.cancel")}
             </button>
             <button type="submit" disabled={saving}>
-              {saving ? "Saving…" : mode === "create" ? "Create sprint" : "Save changes"}
+              {saving
+                ? t("project.saving")
+                : mode === "create"
+                  ? t("project.createSprint")
+                  : t("project.saveChanges")}
             </button>
           </div>
         </form>

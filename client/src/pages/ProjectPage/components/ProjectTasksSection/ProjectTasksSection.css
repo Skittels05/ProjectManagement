@@ -29,7 +29,7 @@
 }
 
 .task-row-subtask td {
-  background: rgba(15, 23, 42, 0.25);
+  background: var(--surface-muted);
 }
 
 .task-table-wrap {
@@ -52,7 +52,7 @@
 
 .task-table-wrap th {
   font-weight: 600;
-  color: var(--muted, #666);
+  color: var(--text-muted);
 }
 
 .task-status {
@@ -64,18 +64,22 @@
 }
 
 .task-status-todo {
-  background: #eef2ff;
-  color: #3730a3;
+  background: var(--accent-bg);
+  color: var(--accent);
 }
 
 .task-status-in_progress {
-  background: #fff7ed;
-  color: #c2410c;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--accent-hover);
 }
 
 .task-status-done {
-  background: #ecfdf5;
-  color: #047857;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+[data-theme="light"] .task-status-done {
+  color: #15803d;
 }
 
 .task-actions {

@@ -4,6 +4,7 @@ import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { SprintDto } from "../../../../store/types/sprints.types";
 import type { CreateTaskBody, TaskDto, TaskStatus, UpdateTaskBody } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import { TaskAttachmentsPanel } from "./TaskAttachmentsPanel";
 import { TaskCommentsPanel } from "./TaskCommentsPanel";
 import { TaskSubtasksPanel } from "./TaskSubtasksPanel";
@@ -40,6 +41,7 @@ export function TaskModal({
   onEditSubtask,
   onClose,
 }: TaskModalProps) {
+  const { t } = useI18n();
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
 
@@ -149,9 +151,9 @@ export function TaskModal({
   const heading =
     mode === "create"
       ? defaultParentTaskId
-        ? "New subtask"
-        : "New task"
-      : "Edit task";
+        ? t("project.newSubtask")
+        : t("project.newTask")
+      : t("project.editTask");
   const parentTask =
     defaultParentTaskId != null ? allTasks.find((t) => t.id === defaultParentTaskId) : null;
   const subtasks =
@@ -175,19 +177,19 @@ export function TaskModal({
           <h2 id="task-modal-title" className="modal-title">
             {heading}
           </h2>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+          <button type="button" className="modal-close" onClick={onClose} aria-label={t("dashboard.close")}>
             ×
           </button>
         </div>
         <p className="modal-subtitle muted">
           {isSubtask && parentTask
-            ? `Subtask of “${parentTask.title}”. Sprint follows the parent.`
-            : "Assign to backlog or a sprint, set status and optional story points."}
+            ? t("project.subtaskOf", { title: parentTask.title })
+            : t("project.taskSubtitle")}
         </p>
         <form className="project-form auth-form" onSubmit={(ev) => void handleSubmit(ev)}>
           <div className="task-modal-grid">
             <label className="full-row">
-              Title
+              {t("project.taskTitle")}
               <input
                 type="text"
                 value={title}
@@ -198,19 +200,19 @@ export function TaskModal({
               />
             </label>
             <label className="full-row">
-              Description <span className="muted">(optional)</span>
+              {t("dashboard.descriptionOptional")}
               <textarea value={description} onChange={(ev) => setDescription(ev.target.value)} rows={3} />
             </label>
             <label>
-              Status
+              {t("project.status")}
               <select value={status} onChange={(ev) => setStatus(ev.target.value as TaskStatus)}>
-                <option value="todo">To do</option>
-                <option value="in_progress">In progress</option>
-                <option value="done">Done</option>
+                <option value="todo">{taskStatusLabel(t, "todo")}</option>
+                <option value="in_progress">{taskStatusLabel(t, "in_progress")}</option>
+                <option value="done">{taskStatusLabel(t, "done")}</option>
               </select>
             </label>
             <label>
-              Priority
+              {t("project.priority")}
               <input
                 type="number"
                 min={0}
@@ -220,9 +222,9 @@ export function TaskModal({
               />
             </label>
             <label>
-              Story points <span className="muted">(optional)</span>
+              {t("project.storyPointsOptional")}
               <select value={storyPoints} onChange={(ev) => setStoryPoints(ev.target.value)}>
-                <option value="">—</option>
+                <option value="">{t("project.dash")}</option>
                 {SP_OPTIONS.filter((x) => x !== "").map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
@@ -232,9 +234,9 @@ export function TaskModal({
             </label>
             {!isSubtask ? (
               <label>
-                Sprint
+                {t("project.sprintLabel")}
                 <select value={sprintChoice} onChange={(ev) => setSprintChoice(ev.target.value)}>
-                  <option value="">Backlog (no sprint)</option>
+                  <option value="">{t("project.backlogNoSprint")}</option>
                   {sprints.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -244,9 +246,9 @@ export function TaskModal({
               </label>
             ) : null}
             <label className="full-row">
-              Assignee
+              {t("project.assignee")}
               <select value={assigneeChoice} onChange={(ev) => setAssigneeChoice(ev.target.value)}>
-                <option value="">Unassigned</option>
+                <option value="">{t("project.unassigned")}</option>
                 {members.map((m) => (
                   <option key={m.userId} value={m.userId}>
                     {m.fullName} ({m.email})
@@ -258,10 +260,14 @@ export function TaskModal({
           {error ? <p className="form-error">{error}</p> : null}
           <div className="modal-actions">
             <button type="button" className="secondary-button" onClick={onClose} disabled={saving}>
-              Cancel
+              {t("dashboard.cancel")}
             </button>
             <button type="submit" disabled={saving}>
-              {saving ? "Saving…" : mode === "create" ? "Create task" : "Save changes"}
+              {saving
+                ? t("project.saving")
+                : mode === "create"
+                  ? t("project.createTask")
+                  : t("project.saveChanges")}
             </button>
           </div>
         </form>
@@ -282,9 +288,7 @@ export function TaskModal({
             <TaskAttachmentsPanel projectId={projectId} taskId={task.id} />
           </div>
         ) : (
-          <p className="muted small-meta task-modal-engagement-hint">
-            Save the task first to log time, comments, and attachments.
-          </p>
+          <p className="muted small-meta task-modal-engagement-hint">{t("project.saveTaskFirst")}</p>
         )}
       </div>
     </div>

@@ -9,11 +9,16 @@ import {
 } from "../../../../store/api/taskEngagementApi";
 import type { TaskCommentDto } from "../../../../store/types/taskEngagement.types";
 import { sameUserId } from "../../../../shared/lib/uuid";
+import { formatLocaleDateTime } from "../../../../shared/lib/formatDate";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useI18n } from "../../../../shared/i18n";
+import { useAppSelector } from "../../../../store/hooks";
 
 type TaskCommentsPanelProps = { projectId: string; taskId: string };
 
 export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps) {
+  const { t } = useI18n();
+  const locale = useAppSelector((s) => s.settings.locale);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: comments = [], isLoading, error } = useGetTaskCommentsQuery({ projectId, taskId });
   const [createComment, { isLoading: creating }] = useCreateTaskCommentMutation();
@@ -51,8 +56,8 @@ export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps)
 
   return (
     <section className="task-engagement-panel">
-      <h3>Comments</h3>
-      {isLoading ? <p className="muted">Loading…</p> : null}
+      <h3>{t("project.comments")}</h3>
+      {isLoading ? <p className="muted">{t("project.loadingTasks")}</p> : null}
       {error ? <p className="form-error">{getRtkQueryErrorMessage(error)}</p> : null}
       <ul className="task-comment-list">
         {comments.map((c) => (
@@ -73,8 +78,9 @@ export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps)
               setEditingId(null);
               setEditDraft("");
             }}
+            locale={locale}
             onDelete={async () => {
-              if (!window.confirm("Delete comment?")) return;
+              if (!window.confirm(t("project.deleteCommentConfirm"))) return;
               try {
                 await deleteComment({ projectId, taskId, commentId: c.id }).unwrap();
               } catch (err) {
@@ -84,18 +90,18 @@ export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps)
           />
         ))}
       </ul>
-      {!isLoading && comments.length === 0 ? <p className="muted">No comments yet.</p> : null}
+      {!isLoading && comments.length === 0 ? <p className="muted">{t("project.noComments")}</p> : null}
       <form className="task-comment-form" onSubmit={(e) => void handleAdd(e)}>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Write a comment…"
+          placeholder={t("project.commentPlaceholder")}
           rows={2}
           disabled={creating}
         />
         {formError ? <p className="form-error">{formError}</p> : null}
         <button type="submit" disabled={creating || !draft.trim()}>
-          {creating ? "Posting…" : "Add comment"}
+          {creating ? t("project.posting") : t("project.addComment")}
         </button>
       </form>
     </section>
@@ -113,10 +119,12 @@ function CommentRow(props: {
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  locale: string;
 }) {
-  const { comment, isOwn, isEditing, editDraft, updating } = props;
-  const who = comment.user?.fullName ?? comment.user?.email ?? "User";
-  const when = new Date(comment.createdAt).toLocaleString();
+  const { t } = useI18n();
+  const { comment, isOwn, isEditing, editDraft, updating, locale } = props;
+  const who = comment.user?.fullName ?? comment.user?.email ?? t("project.user");
+  const when = formatLocaleDateTime(comment.createdAt, locale);
 
   return (
     <li className="task-comment-item">
@@ -147,14 +155,16 @@ function CommentActions(props: {
   onCancel: () => void;
   editMode?: boolean;
 }) {
+  const { t } = useI18n();
+
   if (props.editMode) {
     return (
       <div className="task-comment-actions">
         <button type="button" onClick={props.onSave}>
-          Edit
+          {t("project.edit")}
         </button>
         <button type="button" className="danger" onClick={props.onCancel}>
-          Delete
+          {t("project.delete")}
         </button>
       </div>
     );
@@ -162,10 +172,10 @@ function CommentActions(props: {
   return (
     <div className="task-comment-actions">
       <button type="button" disabled={props.saving} onClick={props.onSave}>
-        Save
+        {t("project.saveChanges")}
       </button>
       <button type="button" className="secondary-button" disabled={props.saving} onClick={props.onCancel}>
-        Cancel
+        {t("dashboard.cancel")}
       </button>
     </div>
   );

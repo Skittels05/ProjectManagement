@@ -15,17 +15,17 @@ import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } 
 import { CSS } from "@dnd-kit/utilities";
 import {
   useGetTasksQuery,
-  useUpdateTaskMutation,
+  useReorderKanbanColumnMutation,
 } from "../../../../store/api/tasksApi";
 import type { ProjectDto, ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { TaskDto, TaskStatus } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import {
-  KANBAN_COLUMNS,
-  boardPositionAtIndex,
+  KANBAN_COLUMN_IDS,
   columnDroppableId,
   parseColumnDroppableId,
 } from "../../../../shared/lib/kanban";
+import { kanbanColumnTitle, subtaskCountLabel, useI18n } from "../../../../shared/i18n";
 import {
   columnIdsFromGrouped,
   filterTasksForKanbanBoard,
@@ -64,7 +64,7 @@ function emptyColumns(): ColumnIds {
 function findContainer(columns: ColumnIds, id: string): TaskStatus | null {
   const col = parseColumnDroppableId(id);
   if (col) return col;
-  for (const { id: status } of KANBAN_COLUMNS) {
+  for (const status of KANBAN_COLUMN_IDS) {
     if (columns[status].includes(id)) return status;
   }
   return null;
@@ -138,7 +138,7 @@ function buildTasksById(
   for (const t of filterTasksForKanbanBoard(serverTasks, taskListQuery, members)) {
     map[t.id] = t;
   }
-  for (const { id: status } of KANBAN_COLUMNS) {
+  for (const status of KANBAN_COLUMN_IDS) {
     for (const id of columnIds[status]) {
       if (map[id]) {
         map[id] = { ...map[id], status };
@@ -152,9 +152,11 @@ type KanbanCardProps = {
   task: TaskDto;
   onEdit: () => void;
   overlay?: boolean;
+  editLabel: string;
+  subtaskLabel: (count: number) => string;
 };
 
-function KanbanCard({ task, onEdit, overlay = false }: KanbanCardProps) {
+function KanbanCard({ task, onEdit, overlay = false, editLabel, subtaskLabel }: KanbanCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     disabled: overlay,
@@ -176,7 +178,7 @@ function KanbanCard({ task, onEdit, overlay = false }: KanbanCardProps) {
       {...(overlay ? {} : { ...attributes, ...listeners })}
     >
       <p className="kanban-card-title">{task.title}</p>
-      <KanbanCardMeta task={task} />
+      <KanbanCardMeta task={task} subtaskLabel={subtaskLabel} />
       <button
         type="button"
         className="kanban-card-edit"
@@ -186,17 +188,23 @@ function KanbanCard({ task, onEdit, overlay = false }: KanbanCardProps) {
         }}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        Edit
+        {editLabel}
       </button>
     </article>
   );
 }
 
-function KanbanCardMeta({ task }: { task: TaskDto }) {
+function KanbanCardMeta({
+  task,
+  subtaskLabel,
+}: {
+  task: TaskDto;
+  subtaskLabel: (count: number) => string;
+}) {
   const bits: string[] = [];
   if (task.storyPoints != null) bits.push(`${task.storyPoints} SP`);
   if (task.assignee) bits.push(task.assignee.fullName);
-  if (task.subtaskCount > 0) bits.push(`${task.subtaskCount} subtask${task.subtaskCount === 1 ? "" : "s"}`);
+  if (task.subtaskCount > 0) bits.push(subtaskLabel(task.subtaskCount));
   if (bits.length === 0) return null;
   return <p className="muted small-meta kanban-card-meta">{bits.join(" · ")}</p>;
 }
@@ -208,9 +216,22 @@ type KanbanColumnProps = {
   tasksById: Record<string, TaskDto>;
   wipLimit: number | null;
   onEditTask: (task: TaskDto) => void;
+  dropHere: string;
+  editLabel: string;
+  subtaskLabel: (count: number) => string;
 };
 
-function KanbanColumn({ status, title, taskIds, tasksById, wipLimit, onEditTask }: KanbanColumnProps) {
+function KanbanColumn({
+  status,
+  title,
+  taskIds,
+  tasksById,
+  wipLimit,
+  onEditTask,
+  dropHere,
+  editLabel,
+  subtaskLabel,
+}: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: columnDroppableId(status) });
   const atLimit = isWipLimitExceeded(taskIds.length, wipLimit);
 
@@ -228,13 +249,21 @@ function KanbanColumn({ status, title, taskIds, tasksById, wipLimit, onEditTask 
       </header>
       <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
         {taskIds.length === 0 ? (
-          <p className="muted kanban-column-empty">Drop tasks here</p>
+          <p className="muted kanban-column-empty">{dropHere}</p>
         ) : (
           <div className="kanban-column-list">
             {taskIds.map((id) => {
               const task = tasksById[id];
               if (!task) return null;
-              return <KanbanCard key={id} task={task} onEdit={() => onEditTask(task)} />;
+              return (
+                <KanbanCard
+                  key={id}
+                  task={task}
+                  onEdit={() => onEditTask(task)}
+                  editLabel={editLabel}
+                  subtaskLabel={subtaskLabel}
+                />
+              );
             })}
           </div>
         )}
@@ -253,6 +282,17 @@ export function ProjectKanbanBoard({
   onEditTask,
   onAddTask,
 }: ProjectKanbanBoardProps) {
+  const { t } = useI18n();
+  const kanbanColumns = useMemo(
+    () =>
+      KANBAN_COLUMN_IDS.map((id) => ({
+        id,
+        title: kanbanColumnTitle(t, id),
+      })),
+    [t],
+  );
+  const subtaskLabelFn = (count: number) => subtaskCountLabel(t, count);
+
   const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
 
   const { data: serverTasks = [], isLoading, error } = useGetTasksQuery({
@@ -260,7 +300,7 @@ export function ProjectKanbanBoard({
     sprintFilter,
   });
 
-  const [updateTask] = useUpdateTaskMutation();
+  const [reorderKanbanColumn] = useReorderKanbanColumnMutation();
   const [columnIds, setColumnIds] = useState<ColumnIds>(emptyColumns);
   const columnIdsRef = useRef(columnIds);
   columnIdsRef.current = columnIds;
@@ -366,20 +406,13 @@ export function ProjectKanbanBoard({
       return;
     }
 
-    const lookup = buildTasksById(serverTasks, nextColumns, taskListQuery, members);
-    const columnTasks = targetListIds
-      .filter((id) => id !== taskId)
-      .map((id) => {
-        const t = lookup[id];
-        return t ? { ...t, status } : null;
-      })
-      .filter((t): t is TaskDto => t != null);
-
-    const boardPosition = boardPositionAtIndex(columnTasks, finalIndex);
     const statusChanged = serverTask.status !== status;
-    const positionChanged = serverTask.boardPosition !== boardPosition;
+    const layoutIds = layoutColumnIds[status];
+    const orderUnchanged =
+      layoutIds.length === targetListIds.length &&
+      layoutIds.every((id, i) => id === targetListIds[i]);
 
-    if (!statusChanged && !positionChanged) {
+    if (!statusChanged && orderUnchanged) {
       setActiveId(null);
       return;
     }
@@ -388,18 +421,19 @@ export function ProjectKanbanBoard({
     if (statusChanged && isWipLimitExceeded(targetListIds.length, wipLimit)) {
       columnIdsRef.current = layoutColumnIds;
       setColumnIds(layoutColumnIds);
-      const colTitle = KANBAN_COLUMNS.find((c) => c.id === status)?.title ?? status;
-      window.alert(`WIP limit reached for "${colTitle}" (${wipLimit} cards max).`);
+      const colTitle = kanbanColumnTitle(t, status);
+      window.alert(t("project.wipLimit", { column: colTitle, limit: wipLimit ?? 0 }));
       setActiveId(null);
       return;
     }
 
     setSaving(true);
     try {
-      await updateTask({
+      await reorderKanbanColumn({
         projectId,
         taskId,
-        body: { status, boardPosition },
+        status,
+        orderedTaskIds: targetListIds,
       }).unwrap();
     } catch (err) {
       columnIdsRef.current = layoutColumnIds;
@@ -417,25 +451,24 @@ export function ProjectKanbanBoard({
     setColumnIds(layoutColumnIds);
   }
 
-  const panelTitle = `Kanban — ${iterationLabel}`;
+  const panelTitle = t("project.kanbanTitle", { scope: iterationLabel });
 
   return (
     <div className="project-kanban-section">
       <ProjectPanel title={panelTitle} headerAction={<AddTaskButton onClick={onAddTask} />}>
         <p className="muted tasks-scope-note">
-          Drag cards between columns to change status. Press <strong>+</strong> to add a task. Scope:{" "}
-          <strong>{iterationLabel}</strong>.
+          {t("project.kanbanNote")} <strong>{iterationLabel}</strong>.
         </p>
 
-        {isLoading ? <p className="muted">Loading board…</p> : null}
+        {isLoading ? <p className="muted">{t("project.loadingBoard")}</p> : null}
         {errMsg ? <p className="form-error">{errMsg}</p> : null}
-        {saving ? <p className="muted kanban-saving">Saving…</p> : null}
+        {saving ? <p className="muted kanban-saving">{t("project.saving")}</p> : null}
 
         {!isLoading && serverTasks.length === 0 ? (
-          <p className="muted">No tasks in this view yet. Press + to add one.</p>
+          <p className="muted">{t("project.noTasksYet")}</p>
         ) : null}
         {!isLoading && serverTasks.length > 0 && filteredCount === 0 ? (
-          <p className="muted">No tasks match the current search or filters.</p>
+          <p className="muted">{t("project.noTasksMatch")}</p>
         ) : null}
 
         {filteredCount > 0 ? (
@@ -448,7 +481,7 @@ export function ProjectKanbanBoard({
             onDragCancel={handleDragCancel}
           >
             <div className="kanban-board">
-              {KANBAN_COLUMNS.map((col) => (
+              {kanbanColumns.map((col) => (
                 <KanbanColumn
                   key={col.id}
                   status={col.id}
@@ -457,12 +490,21 @@ export function ProjectKanbanBoard({
                   tasksById={tasksById}
                   wipLimit={wipLimitForStatus(project, col.id)}
                   onEditTask={onEditTask}
+                  dropHere={t("project.dropHere")}
+                  editLabel={t("project.edit")}
+                  subtaskLabel={subtaskLabelFn}
                 />
               ))}
             </div>
             <DragOverlay>
               {activeTask ? (
-                <KanbanCard task={activeTask} onEdit={() => onEditTask(activeTask)} overlay />
+                <KanbanCard
+                  task={activeTask}
+                  onEdit={() => onEditTask(activeTask)}
+                  overlay
+                  editLabel={t("project.edit")}
+                  subtaskLabel={subtaskLabelFn}
+                />
               ) : null}
             </DragOverlay>
           </DndContext>
