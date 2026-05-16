@@ -1,6 +1,7 @@
 import { TimeLog, User } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
+import { recordActivity } from "./activity.service";
 import { assertTaskInProject } from "./task-access";
 
 function toUserMini(u: { id: string; email: string; fullName: string } | null | undefined) {
@@ -91,7 +92,8 @@ export async function createTimeLog(
   userId: string,
   body: Record<string, unknown>,
 ) {
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   const minutes = parseMinutes(body.minutes);
   const note = parseNote(body.note);
@@ -106,7 +108,16 @@ export async function createTimeLog(
   });
 
   await row.reload({ include: [userInclude] });
-  return toTimeLogDto(row.get({ plain: true }) as Parameters<typeof toTimeLogDto>[0]);
+  const dto = toTimeLogDto(row.get({ plain: true }) as Parameters<typeof toTimeLogDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "time_log.created",
+    entityType: "time_log",
+    entityId: dto.id,
+    metadata: { taskId, taskTitle, minutes: dto.minutes },
+  });
+  return dto;
 }
 
 export async function updateTimeLog(
@@ -119,7 +130,8 @@ export async function updateTimeLog(
   if (!isUuidV4(timeLogId)) {
     throw new AppError("Time log not found", 404);
   }
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   const row = await TimeLog.findOne({ where: { id: timeLogId, taskId } });
   if (!row) {
@@ -147,7 +159,16 @@ export async function updateTimeLog(
 
   await row.update(patch);
   await row.reload({ include: [userInclude] });
-  return toTimeLogDto(row.get({ plain: true }) as Parameters<typeof toTimeLogDto>[0]);
+  const dto = toTimeLogDto(row.get({ plain: true }) as Parameters<typeof toTimeLogDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "time_log.updated",
+    entityType: "time_log",
+    entityId: dto.id,
+    metadata: { taskId, taskTitle, minutes: dto.minutes },
+  });
+  return dto;
 }
 
 export async function deleteTimeLog(
@@ -159,7 +180,8 @@ export async function deleteTimeLog(
   if (!isUuidV4(timeLogId)) {
     throw new AppError("Time log not found", 404);
   }
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   const row = await TimeLog.findOne({ where: { id: timeLogId, taskId } });
   if (!row) {
@@ -169,6 +191,15 @@ export async function deleteTimeLog(
     throw new AppError("You can only delete your own time logs", 403);
   }
 
+  const minutes = Number(row.get("minutes"));
+  await recordActivity({
+    projectId,
+    userId,
+    action: "time_log.deleted",
+    entityType: "time_log",
+    entityId: timeLogId,
+    metadata: { taskId, taskTitle, minutes },
+  });
   await row.destroy();
   return { ok: true };
 }

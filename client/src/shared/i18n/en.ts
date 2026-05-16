@@ -312,6 +312,18 @@ export const en = {
     activitySprintCreated: 'created sprint "{{name}}"',
     activitySprintUpdated: 'updated sprint "{{name}}"',
     activitySprintDeleted: 'deleted sprint "{{name}}"',
+    activityCommentCreated: 'added a comment on "{{title}}"',
+    activityCommentUpdated: 'edited a comment on "{{title}}"',
+    activityCommentDeleted: 'deleted a comment on "{{title}}"',
+    activityAttachmentUploaded: 'uploaded "{{filename}}" to "{{title}}"',
+    activityAttachmentDeleted: 'removed "{{filename}}" from "{{title}}"',
+    activityTimeLogCreated: 'logged {{minutes}} min on "{{title}}"',
+    activityTimeLogUpdated: 'updated a time log on "{{title}}"',
+    activityTimeLogDeleted: 'removed a time log from "{{title}}"',
+    activityMemberInvited: 'invited {{name}} as {{role}}',
+    activityMemberRoleChanged: 'changed role for {{name}} from {{from}} to {{to}}',
+    activityMemberRemoved: 'removed {{name}} from the project',
+    activityMemberLeft: '{{name}} left the project',
   },
 } as const;
 

@@ -77,6 +77,46 @@ function activityMessage(
       return t("analytics.activitySprintUpdated", { name: String(meta.name ?? "") });
     case "sprint.deleted":
       return t("analytics.activitySprintDeleted", { name: String(meta.name ?? "") });
+    case "comment.created":
+      return t("analytics.activityCommentCreated", { title });
+    case "comment.updated":
+      return t("analytics.activityCommentUpdated", { title });
+    case "comment.deleted":
+      return t("analytics.activityCommentDeleted", { title });
+    case "attachment.uploaded":
+      return t("analytics.activityAttachmentUploaded", {
+        title,
+        filename: String(meta.filename ?? ""),
+      });
+    case "attachment.deleted":
+      return t("analytics.activityAttachmentDeleted", {
+        title,
+        filename: String(meta.filename ?? ""),
+      });
+    case "time_log.created":
+      return t("analytics.activityTimeLogCreated", {
+        title,
+        minutes: String(meta.minutes ?? ""),
+      });
+    case "time_log.updated":
+      return t("analytics.activityTimeLogUpdated", { title });
+    case "time_log.deleted":
+      return t("analytics.activityTimeLogDeleted", { title });
+    case "member.invited":
+      return t("analytics.activityMemberInvited", {
+        name: String(meta.name ?? ""),
+        role: String(meta.role ?? ""),
+      });
+    case "member.role_changed":
+      return t("analytics.activityMemberRoleChanged", {
+        name: String(meta.name ?? ""),
+        from: String(meta.from ?? ""),
+        to: String(meta.to ?? ""),
+      });
+    case "member.removed":
+      return t("analytics.activityMemberRemoved", { name: String(meta.name ?? "") });
+    case "member.left":
+      return t("analytics.activityMemberLeft", { name: String(meta.name ?? "") });
     default:
       return item.action;
   }

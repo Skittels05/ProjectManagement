@@ -11,6 +11,7 @@ import {
 } from "../../config/uploads";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
+import { recordActivity } from "./activity.service";
 import { assertTaskInProject } from "./task-access";
 
 function toUserMini(u: { id: string; email: string; fullName: string } | null | undefined) {
@@ -67,7 +68,8 @@ export async function createAttachment(
   userId: string,
   file: Express.Multer.File,
 ) {
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   if (!file) {
     throw new AppError("File is required", 400);
@@ -94,7 +96,16 @@ export async function createAttachment(
   });
 
   await row.reload({ include: [uploaderInclude] });
-  return toAttachmentDto(row.get({ plain: true }) as Parameters<typeof toAttachmentDto>[0]);
+  const dto = toAttachmentDto(row.get({ plain: true }) as Parameters<typeof toAttachmentDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "attachment.uploaded",
+    entityType: "attachment",
+    entityId: dto.id,
+    metadata: { taskId, taskTitle, filename: dto.originalFilename },
+  });
+  return dto;
 }
 
 export async function getAttachmentFile(
@@ -132,12 +143,23 @@ export async function deleteAttachment(
   if (!isUuidV4(attachmentId)) {
     throw new AppError("Attachment not found", 404);
   }
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   const row = await TaskAttachment.findOne({ where: { id: attachmentId, taskId } });
   if (!row) {
     throw new AppError("Attachment not found", 404);
   }
+
+  const filename = String(row.get("originalFilename"));
+  await recordActivity({
+    projectId,
+    userId,
+    action: "attachment.deleted",
+    entityType: "attachment",
+    entityId: attachmentId,
+    metadata: { taskId, taskTitle, filename },
+  });
 
   const storageKey = String(row.get("storageKey"));
   await row.destroy();

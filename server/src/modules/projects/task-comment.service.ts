@@ -1,6 +1,7 @@
 import { TaskComment, User } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
+import { recordActivity } from "./activity.service";
 import { assertTaskInProject } from "./task-access";
 
 function toUserMini(u: { id: string; email: string; fullName: string } | null | undefined) {
@@ -54,7 +55,8 @@ export async function createComment(
   userId: string,
   body: { body: unknown },
 ) {
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   const text = String(body.body ?? "").trim();
   if (!text) {
@@ -71,7 +73,16 @@ export async function createComment(
   });
 
   await row.reload({ include: [userInclude] });
-  return toCommentDto(row.get({ plain: true }) as Parameters<typeof toCommentDto>[0]);
+  const dto = toCommentDto(row.get({ plain: true }) as Parameters<typeof toCommentDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "comment.created",
+    entityType: "comment",
+    entityId: dto.id,
+    metadata: { taskId, taskTitle },
+  });
+  return dto;
 }
 
 export async function updateComment(
@@ -84,7 +95,8 @@ export async function updateComment(
   if (!isUuidV4(commentId)) {
     throw new AppError("Comment not found", 404);
   }
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   const comment = await TaskComment.findOne({ where: { id: commentId, taskId } });
   if (!comment) {
@@ -104,7 +116,16 @@ export async function updateComment(
 
   await comment.update({ body: text });
   await comment.reload({ include: [userInclude] });
-  return toCommentDto(comment.get({ plain: true }) as Parameters<typeof toCommentDto>[0]);
+  const dto = toCommentDto(comment.get({ plain: true }) as Parameters<typeof toCommentDto>[0]);
+  await recordActivity({
+    projectId,
+    userId,
+    action: "comment.updated",
+    entityType: "comment",
+    entityId: dto.id,
+    metadata: { taskId, taskTitle },
+  });
+  return dto;
 }
 
 export async function deleteComment(
@@ -116,7 +137,8 @@ export async function deleteComment(
   if (!isUuidV4(commentId)) {
     throw new AppError("Comment not found", 404);
   }
-  await assertTaskInProject(projectId, taskId, userId);
+  const task = await assertTaskInProject(projectId, taskId, userId);
+  const taskTitle = String(task.get("title"));
 
   const comment = await TaskComment.findOne({ where: { id: commentId, taskId } });
   if (!comment) {
@@ -126,6 +148,14 @@ export async function deleteComment(
     throw new AppError("You can only delete your own comments", 403);
   }
 
+  await recordActivity({
+    projectId,
+    userId,
+    action: "comment.deleted",
+    entityType: "comment",
+    entityId: commentId,
+    metadata: { taskId, taskTitle },
+  });
   await comment.destroy();
   return { ok: true };
 }

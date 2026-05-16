@@ -3,6 +3,7 @@ import type { Model } from "sequelize";
 import { sequelize, Project, ProjectMember, User } from "../../models";
 import { AppError } from "../../utils/app-error";
 import { isUuidV4 } from "../../utils/uuid";
+import { recordActivity } from "./activity.service";
 
 const ROLES = {
   OWNER: "owner",
@@ -46,6 +47,12 @@ function toDto(project: Model, role: string | null | undefined, members?: unknow
     base.members = members;
   }
   return base;
+}
+
+function memberDisplayName(user: Model): string {
+  const fullName = String(user.get("fullName") ?? "").trim();
+  const email = String(user.get("email") ?? "").trim();
+  return fullName || email || String(user.get("id"));
 }
 
 function toMemberDto(row: Model & { user?: Model }) {
@@ -341,10 +348,24 @@ export async function addProjectMember(
     throw new AppError("User is already a member of this project", 409);
   }
 
+  const invitedUserId = invitedUser.get("id") as string;
   await ProjectMember.create({
     projectId: id,
-    userId: invitedUser.get("id") as string,
+    userId: invitedUserId,
     role: roleToStore,
+  });
+
+  await recordActivity({
+    projectId: id,
+    userId: actorUserId,
+    action: "member.invited",
+    entityType: "member",
+    entityId: invitedUserId,
+    metadata: {
+      name: memberDisplayName(invitedUser),
+      email: invitedUser.get("email"),
+      role: roleToStore,
+    },
   });
 
   return getProjectForUser(id, actorUserId);
@@ -393,7 +414,24 @@ export async function updateProjectMemberRole(
     }
   }
 
+  const oldRole = String(target.get("role"));
+  const targetUser = await User.findByPk(tid, { attributes: ["id", "fullName", "email"] });
+
   await target.update({ role: newRole });
+
+  await recordActivity({
+    projectId: pid,
+    userId: actorUserId,
+    action: "member.role_changed",
+    entityType: "member",
+    entityId: tid,
+    metadata: {
+      name: targetUser ? memberDisplayName(targetUser) : tid,
+      from: oldRole,
+      to: newRole,
+    },
+  });
+
   return getProjectForUser(pid, actorUserId);
 }
 
@@ -416,6 +454,15 @@ export async function removeProjectMember(actorUserId: string, projectId: string
         throw new AppError("Transfer ownership before leaving the project", 400);
       }
     }
+    const selfUser = await User.findByPk(tid, { attributes: ["id", "fullName", "email"] });
+    await recordActivity({
+      projectId: pid,
+      userId: actorUserId,
+      action: "member.left",
+      entityType: "member",
+      entityId: tid,
+      metadata: { name: selfUser ? memberDisplayName(selfUser) : tid },
+    });
     await target.destroy();
     return { left: true as const };
   }
@@ -437,6 +484,19 @@ export async function removeProjectMember(actorUserId: string, projectId: string
       throw new AppError("The project must keep at least one owner", 400);
     }
   }
+
+  const targetUser = await User.findByPk(tid, { attributes: ["id", "fullName", "email"] });
+  await recordActivity({
+    projectId: pid,
+    userId: actorUserId,
+    action: "member.removed",
+    entityType: "member",
+    entityId: tid,
+    metadata: {
+      name: targetUser ? memberDisplayName(targetUser) : tid,
+      role: String(target.get("role")),
+    },
+  });
 
   await target.destroy();
   return getProjectForUser(pid, actorUserId);
