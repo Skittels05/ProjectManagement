@@ -5,6 +5,7 @@ import type { RootState } from "../../store";
 import { useLogoutMutation, useRefreshMutation } from "../../store/api/authApi";
 import { PreferencesMenu } from "../PreferencesMenu/PreferencesMenu";
 import { useI18n } from "../../shared/i18n";
+import { PageLoader } from "../Preloader/Preloader";
 import "./AppShell.css";
 
 function LogoutIcon() {
@@ -35,7 +36,7 @@ export function AppShell() {
   }, [initialized, refreshSession]);
 
   if (!initialized) {
-    return <div className="page page-center">{t("app.checkingSession")}</div>;
+    return <PageLoader label={t("app.checkingSession")} className="page-loader--fullscreen" />;
   }
 
   return (

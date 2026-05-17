@@ -7,6 +7,7 @@ import type { AdminUserDto, AdminUserFilterOption, AdminUserSortOption } from ".
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { sameUserId } from "../../shared/lib/uuid";
 import { useI18n } from "../../shared/i18n";
+import { Preloader } from "../../components/Preloader/Preloader";
 import { AdminUsersToolbar } from "./components/AdminUsersToolbar/AdminUsersToolbar";
 import "./AdminPage.css";
 
@@ -149,8 +150,8 @@ export function AdminPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={4} className="muted">
-                  {t("admin.loading")}
+                <td colSpan={4}>
+                  <Preloader size="sm" label={t("admin.loading")} />
                 </td>
               </tr>
             ) : users.length === 0 ? (

@@ -117,11 +117,13 @@
 }
 
 .project-sidebar-sprint-actions .danger-button {
-  border: 1px solid var(--border-danger);
-  background: rgba(220, 38, 38, 0.15);
-  color: #fecaca;
+  border: 1px solid var(--danger);
+  background: var(--btn-secondary-bg);
+  color: var(--danger);
 }
 
 .project-sidebar-sprint-actions .danger-button:hover:not(:disabled) {
-  background: rgba(220, 38, 38, 0.28);
+  background: var(--btn-secondary-hover);
+  border-color: var(--danger-hover);
+  color: var(--danger-hover);
 }

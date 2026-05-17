@@ -9,6 +9,7 @@ import type { GetTasksArg } from "../../../../store/api/tasksApi";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { subtaskCountLabel, taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
+import { Preloader } from "../../../../components/Preloader/Preloader";
 import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
 import "./ProjectTasksSection.css";
 
@@ -36,11 +37,12 @@ export function ProjectTasksSection({
   const { t } = useI18n();
 
   const {
-    data: tasks = [],
+    data: tasksPage,
     isLoading: tasksLoading,
     error: tasksError,
   } = useGetTasksQuery(tasksQueryArg);
 
+  const tasks = tasksPage?.tasks ?? [];
   const visibleRows = useMemo(() => flattenTaskHierarchy(tasks), [tasks]);
 
   const listQuery = useMemo(
@@ -84,7 +86,7 @@ export function ProjectTasksSection({
           {isBacklogScope ? ` ${t("project.backlogNote")}` : null}
         </p>
 
-        {tasksLoading ? <p className="muted">{t("project.loadingTasks")}</p> : null}
+        {tasksLoading ? <Preloader size="sm" label={t("project.loadingTasks")} /> : null}
         {tasksErrMsg ? <p className="form-error">{tasksErrMsg}</p> : null}
         {!tasksLoading && tasks.length === 0 ? (
           <p className="muted">
@@ -124,15 +126,19 @@ export function ProjectTasksSection({
                         <div className="muted small-meta">{task.description.slice(0, 120)}</div>
                       ) : null}
                     </td>
-                    <td>
+                    <td data-label={t("project.status")}>
                       <span className={statusClass(task.status)}>{taskStatusLabel(t, task.status)}</span>
                     </td>
-                    <td className="muted">{task.storyPoints ?? t("project.dash")}</td>
-                    <td className="muted">{task.priority}</td>
-                    <td className="muted">
+                    <td className="muted" data-label={t("project.sp")}>
+                      {task.storyPoints ?? t("project.dash")}
+                    </td>
+                    <td className="muted" data-label={t("project.priority")}>
+                      {task.priority}
+                    </td>
+                    <td className="muted" data-label={t("project.assignee")}>
                       {task.assignee?.fullName ?? task.assignee?.email ?? t("project.dash")}
                     </td>
-                    <td>
+                    <td data-label={t("project.actionsCol")}>
                       <div className="task-actions">
                         <button
                           type="button"

@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 import { store } from "./store";
 import { router } from "./app/router";
 import "./app/global.css";
+import "./components/Preloader/Preloader.css";
 
 ReactDOM.createRoot(document.getElementById("app") as HTMLElement).render(
   <React.StrictMode>

@@ -3,8 +3,8 @@ import * as taskService from "./task.service";
 import { segment } from "../../utils/route-params";
 
 export async function list(req: Request, res: Response): Promise<void> {
-  const tasks = await taskService.listTasks(segment(req.params.projectId), req.user!.id, req.query);
-  res.status(200).json({ tasks });
+  const page = await taskService.listTasks(segment(req.params.projectId), req.user!.id, req.query);
+  res.status(200).json(page);
 }
 
 export async function create(req: Request, res: Response): Promise<void> {

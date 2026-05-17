@@ -7,6 +7,32 @@
   gap: 1.25rem;
 }
 
+.analytics-page--with-nav {
+  max-width: none;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: 0;
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.analytics-page-shell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: calc(100vh - 11rem);
+}
+
+.analytics-page-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem 1rem 2rem 1.25rem;
+  max-width: min(1100px, 100%);
+}
+
 .analytics-page-header {
   display: flex;
   flex-wrap: wrap;
@@ -270,4 +296,116 @@
   justify-content: space-between;
   gap: 1rem;
   font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .analytics-page--with-nav {
+    padding-right: 0;
+  }
+
+  .analytics-page-shell {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .analytics-page-main {
+    padding: 0.75rem max(0.75rem, env(safe-area-inset-right)) 2rem max(0.75rem, env(safe-area-inset-left));
+    max-width: none;
+    gap: 1rem;
+  }
+
+  .analytics-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .analytics-page-header h1 {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+
+  .analytics-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    gap: 0.35rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .analytics-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .analytics-tab {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    white-space: nowrap;
+    font-size: 0.88rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .analytics-controls {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem;
+  }
+
+  .analytics-controls .toolbar-field {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .analytics-controls .toolbar-field input,
+  .analytics-controls .toolbar-field select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .analytics-export-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .analytics-export-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .analytics-export-actions .secondary-button {
+    width: 100%;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  .analytics-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analytics-activity-item {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.92rem;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-export-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-velocity-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
 }

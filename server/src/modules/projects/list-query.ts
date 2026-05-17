@@ -17,6 +17,10 @@ export type TaskListSort =
   | "story_points_desc"
   | "story_points_asc";
 
+export const TASK_LIST_DEFAULT_LIMIT = 25;
+export const TASK_LIST_MAX_LIMIT = 100;
+export const TASK_KANBAN_MAX_LIMIT = 500;
+
 export type TaskListFilterParams = {
   search: string;
   sort: TaskListSort;
@@ -24,6 +28,8 @@ export type TaskListFilterParams = {
   assignee: "all" | "unassigned" | string;
   role: string;
   rootsOnly: boolean;
+  limit: number;
+  offset: number;
 };
 
 export function parseProjectListQuery(query: ParsedQs): {
@@ -92,6 +98,24 @@ export function parseTaskListQuery(query: ParsedQs): TaskListFilterParams {
 
   const rootsOnly = query.rootsOnly === "true" || query.rootsOnly === "1";
 
+  let limit: number;
+  let offset: number;
+  if (rootsOnly) {
+    const limitRaw = Number(query.limit);
+    limit =
+      Number.isFinite(limitRaw) && limitRaw > 0
+        ? Math.min(Math.floor(limitRaw), TASK_KANBAN_MAX_LIMIT)
+        : TASK_KANBAN_MAX_LIMIT;
+    offset = Math.max(0, Math.floor(Number(query.offset) || 0));
+  } else {
+    const limitRaw = Number(query.limit);
+    limit =
+      Number.isFinite(limitRaw) && limitRaw > 0
+        ? Math.min(Math.floor(limitRaw), TASK_LIST_MAX_LIMIT)
+        : TASK_LIST_DEFAULT_LIMIT;
+    offset = Math.max(0, Math.floor(Number(query.offset) || 0));
+  }
+
   return {
     search: String(query.search ?? "").trim(),
     sort,
@@ -99,6 +123,8 @@ export function parseTaskListQuery(query: ParsedQs): TaskListFilterParams {
     assignee,
     role: String(query.role ?? "all").trim(),
     rootsOnly,
+    limit,
+    offset,
   };
 }
 
@@ -153,7 +179,6 @@ function taskOrderCol(column: string, direction: "ASC" | "DESC"): OrderItem {
 
 export function taskListOrder(sort: TaskListSort, rootsOnly: boolean): Order {
   const tieBreak: Order = [taskOrderCol("created_at", "DESC")];
-  // Kanban column layout uses status only for default board order.
   const statusOrder: Order =
     rootsOnly && sort === "board" ? [[Sequelize.literal(STATUS_ORDER_SQL), "ASC"]] : [];
 

@@ -5,6 +5,7 @@ import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import type { ProjectDto } from "../../../../store/types/projects.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { useI18n } from "../../../../shared/i18n";
+import { Preloader } from "../../../../components/Preloader/Preloader";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import "./ProjectListPanel.css";
 
@@ -21,7 +22,7 @@ export function ProjectListPanel({ projects, isLoading, error, emptyMessage }: P
 
   return (
     <ProjectPanel title={t("dashboard.myProjects")}>
-      {isLoading ? <p className="muted">{t("dashboard.loadingProjects")}</p> : null}
+      {isLoading ? <Preloader size="sm" label={t("dashboard.loadingProjects")} /> : null}
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {!isLoading && projects.length === 0 ? <p className="muted">{emptyMessage}</p> : null}
       <ul className="project-list">

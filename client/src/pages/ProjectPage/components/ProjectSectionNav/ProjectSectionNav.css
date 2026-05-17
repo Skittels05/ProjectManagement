@@ -1,0 +1,92 @@
+.project-section-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 0 0 auto;
+  padding: 1rem 0.65rem 2rem 0.5rem;
+  border-right: 1px solid var(--border);
+  background: var(--surface-sidebar);
+  min-width: 3.25rem;
+}
+
+.project-section-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  padding: 0.65rem 0.45rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+  min-height: 2.75rem;
+}
+
+.project-section-nav-link:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.project-section-nav-link-active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+@media (min-width: 901px) {
+  .project-section-nav {
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+  }
+
+  .project-section-nav-link {
+    writing-mode: horizontal-tb;
+    transform: none;
+    justify-content: flex-start;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.88rem;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .project-section-nav {
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem max(0.75rem, env(safe-area-inset-right)) 0.5rem max(0.75rem, env(safe-area-inset-left));
+    gap: 0.35rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    z-index: 27;
+    background: var(--surface-sidebar);
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  .project-section-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-section-nav-link {
+    writing-mode: horizontal-tb;
+    transform: none;
+    white-space: nowrap;
+    flex: 1 1 0;
+    min-width: max(5.5rem, 28%);
+    max-width: 12rem;
+    justify-content: center;
+    scroll-snap-align: start;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}

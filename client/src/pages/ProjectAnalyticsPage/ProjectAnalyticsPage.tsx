@@ -17,13 +17,14 @@ import { formatDurationMinutes } from "../../shared/lib/duration";
 import {
   activityReportHtml,
   downloadWordReport,
-  openPrintableReport,
-  scatterReportHtml,
   scatterReportHtmlForWord,
-  sprintReportHtml,
   sprintReportHtmlForWord,
   timeReportHtml,
 } from "../../shared/lib/exportReport";
+import { downloadAnalyticsPdf } from "../../shared/lib/downloadAnalyticsPdf";
+import { DEFAULT_TASK_LIST_QUERY } from "../../shared/lib/taskListQuery";
+import { ProjectSectionNav } from "../ProjectPage/components/ProjectSectionNav/ProjectSectionNav";
+import { PageLoader, Preloader } from "../../components/Preloader/Preloader";
 import {
   downloadActivityExcel,
   downloadScatterExcel,
@@ -270,30 +271,14 @@ export function ProjectAnalyticsPage() {
     axisY: t("analytics.scatterY"),
   };
 
-  const sprintReportBody = () => {
-    if (!stats || !burndown) return "";
-    return sprintReportHtml(stats, burndown, velocity, formatDur, burndownChartLabels, {
-      summary: t("analytics.exportSectionSummary"),
-      burndown: t("analytics.burndownTitle"),
-      burndownData: t("analytics.exportDataTable"),
-      velocity: t("analytics.velocityTitle"),
-    });
-  };
+  const iterationScope = selectedSprintId || "backlog";
 
-  const scatterReportBody = () => {
-    if (!scatter?.points.length) return "";
-    return scatterReportHtml(
-      scatter.points,
-      scatterChartLabels,
-      t("analytics.scatterTitle"),
-      t("analytics.exportDataTable"),
-    );
-  };
-
-  const printReport = (title: string, subtitle: string, bodyHtml: string) => {
-    const ok = openPrintableReport(title, subtitle, bodyHtml, t("analytics.exportPdfHint"));
-    if (!ok) {
-      window.alert(t("analytics.exportPdfFailed"));
+  const runPdfExport = async (options: Omit<Parameters<typeof downloadAnalyticsPdf>[0], "projectId">) => {
+    if (!validProjectId) return;
+    try {
+      await downloadAnalyticsPdf({ projectId: validProjectId, ...options });
+    } catch (err) {
+      window.alert(getRtkQueryErrorMessage(err) || t("analytics.exportPdfFailed"));
     }
   };
 
@@ -316,8 +301,8 @@ export function ProjectAnalyticsPage() {
   };
 
   const exportSprintPdf = () => {
-    if (!stats || !burndown) return;
-    printReport(t("analytics.tabSprint"), sprintReportSubtitle, sprintReportBody());
+    if (!stats || !burndown || !selectedSprintId) return;
+    void runPdfExport({ report: "sprint", sprintId: selectedSprintId });
   };
 
   const exportSprintDocx = async () => {
@@ -340,13 +325,8 @@ export function ProjectAnalyticsPage() {
   };
 
   const exportScatterPdf = () => {
-    if (!scatter?.points.length) return;
-    const sprintName = sprints.find((s) => s.id === selectedSprintId)?.name ?? "";
-    printReport(
-      t("analytics.scatterTitle"),
-      `${projectLabel}${sprintName ? ` · ${sprintName}` : ""}`,
-      scatterReportBody(),
-    );
+    if (!scatter?.points.length || !selectedSprintId) return;
+    void runPdfExport({ report: "planning", sprintId: selectedSprintId });
   };
 
   const exportScatterDocx = async () => {
@@ -377,7 +357,7 @@ export function ProjectAnalyticsPage() {
 
   const exportTimePdf = () => {
     if (!timeReport) return;
-    printReport(t("analytics.tabTime"), projectLabel, timeReportHtml(timeReport, formatDur));
+    void runPdfExport({ report: "time", timeFilters });
   };
 
   const exportTimeDocx = () => {
@@ -405,11 +385,7 @@ export function ProjectAnalyticsPage() {
 
   const exportActivityPdf = () => {
     if (!activity?.items.length) return;
-    printReport(
-      t("analytics.tabActivity"),
-      projectLabel,
-      activityReportHtml(activity.items, activityLine, activityWhen),
-    );
+    void runPdfExport({ report: "activity", activityLimit: 50 });
   };
 
   const exportActivityDocx = () => {
@@ -439,13 +415,22 @@ export function ProjectAnalyticsPage() {
   if (projectLoading) {
     return (
       <section className="page analytics-page">
-        <p className="muted">{t("project.loading")}</p>
+        <PageLoader label={t("project.loading")} />
       </section>
     );
   }
 
   return (
-    <section className="page analytics-page">
+    <section className="page analytics-page analytics-page--with-nav">
+      <div className="analytics-page-shell">
+        <ProjectSectionNav
+          projectId={validProjectId}
+          active="analytics"
+          iterationScope={iterationScope}
+          taskListQuery={DEFAULT_TASK_LIST_QUERY}
+          taskListPage={1}
+        />
+        <div className="analytics-page-main">
       <header className="analytics-page-header">
         <div>
           <p className="eyebrow">{t("analytics.eyebrow")}</p>
@@ -498,7 +483,7 @@ export function ProjectAnalyticsPage() {
           {!selectedSprintId ? (
             <p className="muted">{t("analytics.pickSprint")}</p>
           ) : statsLoading ? (
-            <p className="muted">{t("analytics.loading")}</p>
+            <Preloader size="sm" label={t("analytics.loading")} />
           ) : statsError ? (
             <p className="form-error">{getRtkQueryErrorMessage(statsErrorObj)}</p>
           ) : stats ? (
@@ -546,7 +531,7 @@ export function ProjectAnalyticsPage() {
                 <h2>{t("analytics.burndownTitle")}</h2>
                 <p className="muted small-meta">{t("analytics.burndownHint")}</p>
                 {burndownLoading ? (
-                  <p className="muted">{t("analytics.loading")}</p>
+                  <Preloader size="sm" label={t("analytics.loading")} />
                 ) : burndownError ? (
                   <p className="form-error">{getRtkQueryErrorMessage(burndownErrorObj)}</p>
                 ) : burndown ? (
@@ -589,7 +574,7 @@ export function ProjectAnalyticsPage() {
             {!selectedSprintId ? (
               <p className="muted">{t("analytics.pickSprint")}</p>
             ) : scatterLoading ? (
-              <p className="muted">{t("analytics.loading")}</p>
+              <Preloader size="sm" label={t("analytics.loading")} />
             ) : scatterError ? (
               <p className="form-error">{getRtkQueryErrorMessage(scatterErrorObj)}</p>
             ) : scatter ? (
@@ -678,7 +663,7 @@ export function ProjectAnalyticsPage() {
           </div>
 
           {timeLoading ? (
-            <p className="muted">{t("analytics.loading")}</p>
+            <Preloader size="sm" label={t("analytics.loading")} />
           ) : timeReport ? (
             <>
               <p className="muted">
@@ -726,7 +711,7 @@ export function ProjectAnalyticsPage() {
       {tab === "activity" && (
         <div className="analytics-panel">
           {activityLoading ? (
-            <p className="muted">{t("analytics.loading")}</p>
+            <Preloader size="sm" label={t("analytics.loading")} />
           ) : activity?.items.length === 0 ? (
             <p className="muted">{t("analytics.noActivity")}</p>
           ) : (
@@ -756,6 +741,8 @@ export function ProjectAnalyticsPage() {
           )}
         </div>
       )}
+        </div>
+      </div>
     </section>
   );
 }

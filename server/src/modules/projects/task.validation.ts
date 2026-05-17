@@ -80,6 +80,8 @@ export const listTasksValidation = [
     }),
   query("role").optional().isString().isLength({ max: 32 }).withMessage("Invalid role filter"),
   query("rootsOnly").optional().isIn(["true", "false", "1", "0"]).withMessage("Invalid rootsOnly"),
+  query("limit").optional().isInt({ min: 1, max: 500 }).withMessage("limit must be 1–500"),
+  query("offset").optional().isInt({ min: 0 }).withMessage("offset must be non-negative"),
 ];
 
 export const createTaskValidation = [

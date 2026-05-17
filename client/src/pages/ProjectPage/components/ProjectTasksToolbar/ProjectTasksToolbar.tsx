@@ -16,6 +16,9 @@ type ProjectTasksToolbarProps = {
   onReset: () => void;
   resultCount: number;
   totalCount: number;
+  page: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
 };
 
 export function ProjectTasksToolbar({
@@ -25,6 +28,9 @@ export function ProjectTasksToolbar({
   onReset,
   resultCount,
   totalCount,
+  page,
+  pageCount,
+  onPageChange,
 }: ProjectTasksToolbarProps) {
   const { t } = useI18n();
   const roleOptions = [...new Set(members.map((m) => m.role.trim()).filter(Boolean))].sort((a, b) =>
@@ -128,6 +134,30 @@ export function ProjectTasksToolbar({
       <p className="muted project-tasks-toolbar-meta">
         {t("project.showingTasks", { shown: resultCount, total: totalCount })}
       </p>
+
+      {pageCount > 1 ? (
+        <div className="project-tasks-pagination" role="navigation" aria-label={t("project.paginationLabel")}>
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+          >
+            {t("project.paginationPrev")}
+          </button>
+          <span className="muted project-tasks-pagination-status">
+            {t("project.paginationPage", { page, total: pageCount })}
+          </span>
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+          >
+            {t("project.paginationNext")}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

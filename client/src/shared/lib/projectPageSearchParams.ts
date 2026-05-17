@@ -65,6 +65,12 @@ export function parseIterationScopeFromParams(
   return sprintIds.includes(raw) ? raw : "backlog";
 }
 
+function parseTaskListPage(raw: string | null): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
 export function parseProjectPageState(
   params: URLSearchParams,
   sprintIds: string[],
@@ -73,6 +79,7 @@ export function parseProjectPageState(
   iterationScope: IterationScope;
   tasksView: TasksViewMode;
   taskListQuery: TaskListQuery;
+  taskListPage: number;
 } {
   return {
     iterationScope: parseIterationScopeFromParams(params, sprintIds, sprintsResolved),
@@ -84,6 +91,7 @@ export function parseProjectPageState(
       assigneeFilter: parseAssigneeFilter(params.get("assignee")),
       roleFilter: parseRoleFilter(params.get("role")),
     },
+    taskListPage: parseTaskListPage(params.get("page")),
   };
 }
 
@@ -91,6 +99,7 @@ export function buildProjectPageSearchParams(
   iterationScope: IterationScope,
   tasksView: TasksViewMode,
   taskListQuery: TaskListQuery,
+  taskListPage = 1,
 ): URLSearchParams {
   const next = new URLSearchParams();
 
@@ -114,6 +123,9 @@ export function buildProjectPageSearchParams(
   }
   if (taskListQuery.roleFilter !== "all") {
     next.set("role", taskListQuery.roleFilter);
+  }
+  if (taskListPage > 1 && tasksView === "list") {
+    next.set("page", String(taskListPage));
   }
 
   return next;

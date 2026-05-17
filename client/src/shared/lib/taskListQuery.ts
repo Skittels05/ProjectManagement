@@ -25,6 +25,8 @@ export type TaskListQuery = {
   roleFilter: TaskRoleFilter;
 };
 
+export const TASK_LIST_PAGE_SIZE = 25;
+
 export const DEFAULT_TASK_LIST_QUERY: TaskListQuery = {
   search: "",
   sortBy: "board",
@@ -74,7 +76,6 @@ export function flattenTaskHierarchy(tasks: TaskDto[]): TaskTreeRow[] {
   return rows;
 }
 
-/** Group server-filtered kanban roots (already sorted) into columns. */
 export function groupKanbanTasksFromServer(tasks: TaskDto[]): Record<TaskStatus, TaskDto[]> {
   const grouped: Record<TaskStatus, TaskDto[]> = {
     todo: [],

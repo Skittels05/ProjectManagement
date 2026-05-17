@@ -2,6 +2,13 @@ import { baseApi } from "./baseApi";
 import type { TasksApiQueryParams } from "../../shared/lib/tasksQueryParams";
 import type { CreateTaskBody, TaskDto, TaskStatus, UpdateTaskBody } from "../types/tasks.types";
 
+export type TasksPageDto = {
+  tasks: TaskDto[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
 function taskListTag(projectId: string) {
   return { type: "Task" as const, id: `LIST-${projectId}` };
 }
@@ -19,18 +26,19 @@ function tasksQueryParams(arg: GetTasksArg): Record<string, string | boolean> {
   if (arg.assignee && arg.assignee !== "all") params.assignee = arg.assignee;
   if (arg.role) params.role = arg.role;
   if (arg.rootsOnly) params.rootsOnly = "true";
+  if (arg.limit != null) params.limit = String(arg.limit);
+  if (arg.offset != null && arg.offset > 0) params.offset = String(arg.offset);
   return params;
 }
 
 export const tasksApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getTasks: build.query<TaskDto[], GetTasksArg>({
+    getTasks: build.query<TasksPageDto, GetTasksArg>({
       query: (arg) => ({
         url: `/projects/${arg.projectId}/tasks`,
         method: "get",
         params: tasksQueryParams(arg),
       }),
-      transformResponse: (response: { tasks: TaskDto[] }) => response.tasks,
       providesTags: (_result, _err, { projectId }) => [taskListTag(projectId)],
     }),
     createTask: build.mutation<TaskDto, { projectId: string; body: CreateTaskBody }>({
@@ -60,7 +68,7 @@ export const tasksApi = baseApi.injectEndpoints({
           if (args.projectId !== projectId) continue;
           const patch = dispatch(
             tasksApi.util.updateQueryData("getTasks", args, (draft) => {
-              const task = draft.find((t) => t.id === taskId);
+              const task = draft.tasks.find((t) => t.id === taskId);
               if (!task) return;
               if (body.status !== undefined) {
                 task.status = body.status as TaskStatus;
@@ -108,7 +116,7 @@ export const tasksApi = baseApi.injectEndpoints({
           const patch = dispatch(
             tasksApi.util.updateQueryData("getTasks", args, (draft) => {
               for (const id of orderedTaskIds) {
-                const task = draft.find((t) => t.id === id);
+                const task = draft.tasks.find((t) => t.id === id);
                 if (!task) continue;
                 const pos = positionById.get(id);
                 if (pos !== undefined) task.boardPosition = pos;

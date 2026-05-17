@@ -37,6 +37,7 @@ import {
   wipLimitForStatus,
 } from "../../../../shared/lib/wipLimits";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
+import { Preloader } from "../../../../components/Preloader/Preloader";
 import { AddTaskButton } from "../AddTaskButton/AddTaskButton";
 import "./ProjectKanbanBoard.css";
 
@@ -284,7 +285,8 @@ export function ProjectKanbanBoard({
   );
   const subtaskLabelFn = (count: number) => subtaskCountLabel(t, count);
 
-  const { data: serverTasks = [], isLoading, error } = useGetTasksQuery(tasksQueryArg);
+  const { data: tasksPage, isLoading, error } = useGetTasksQuery(tasksQueryArg);
+  const serverTasks = tasksPage?.tasks ?? [];
 
   const [reorderKanbanColumn] = useReorderKanbanColumnMutation();
   const [columnIds, setColumnIds] = useState<ColumnIds>(emptyColumns);
@@ -440,7 +442,7 @@ export function ProjectKanbanBoard({
           {t("project.kanbanNote")} <strong>{iterationLabel}</strong>.
         </p>
 
-        {isLoading ? <p className="muted">{t("project.loadingBoard")}</p> : null}
+        {isLoading ? <Preloader size="sm" label={t("project.loadingBoard")} /> : null}
         {errMsg ? <p className="form-error">{errMsg}</p> : null}
         {saving ? <p className="muted kanban-saving">{t("project.saving")}</p> : null}
 

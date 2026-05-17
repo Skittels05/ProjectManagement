@@ -9,6 +9,7 @@ export type AxiosBaseQueryArgs = {
   method?: AxiosRequestConfig["method"];
   data?: unknown;
   params?: unknown;
+  responseType?: AxiosRequestConfig["responseType"];
 };
 
 function toFetchBaseQueryError(error: unknown): FetchBaseQueryError {
@@ -23,9 +24,9 @@ function toFetchBaseQueryError(error: unknown): FetchBaseQueryError {
 
 export const axiosBaseQuery =
   (): BaseQueryFn<AxiosBaseQueryArgs, unknown, FetchBaseQueryError> =>
-  async ({ url, method = "get", data, params }) => {
+  async ({ url, method = "get", data, params, responseType }) => {
     try {
-      const result = await http({ url, method, data, params });
+      const result = await http({ url, method, data, params, responseType });
       return { data: result.data };
     } catch (e) {
       return { error: toFetchBaseQueryError(e) };

@@ -20,15 +20,22 @@ import { formatLocaleDateTime } from "../../shared/lib/formatDate";
 import { memberCountLabel, useI18n } from "../../shared/i18n";
 import { useAppSelector } from "../../store/hooks";
 import { ProjectMembersModal } from "./components/ProjectMembersModal/ProjectMembersModal";
+import { ProjectSectionNav } from "./components/ProjectSectionNav/ProjectSectionNav";
 import { ProjectSidebar, type IterationScope } from "./components/ProjectSidebar/ProjectSidebar";
 import { SprintModal } from "./components/SprintModal/SprintModal";
 import { TaskModal } from "./components/TaskModal/TaskModal";
+import { SettingsIcon } from "../../components/icons/SettingsIcon";
+import { PageLoader } from "../../components/Preloader/Preloader";
 import { AddTaskButton } from "./components/AddTaskButton/AddTaskButton";
 import { ProjectKanbanBoard } from "./components/ProjectKanbanBoard/ProjectKanbanBoard";
 import { ProjectTasksSection } from "./components/ProjectTasksSection/ProjectTasksSection";
 import { EditProjectModal } from "./components/EditProjectModal/EditProjectModal";
 import { ProjectTasksToolbar } from "./components/ProjectTasksToolbar/ProjectTasksToolbar";
-import { DEFAULT_TASK_LIST_QUERY, type TaskListQuery } from "../../shared/lib/taskListQuery";
+import {
+  DEFAULT_TASK_LIST_QUERY,
+  TASK_LIST_PAGE_SIZE,
+  type TaskListQuery,
+} from "../../shared/lib/taskListQuery";
 import { buildTasksQueryParams } from "../../shared/lib/tasksQueryParams";
 import {
   buildProjectPageSearchParams,
@@ -37,6 +44,7 @@ import {
 } from "../../shared/lib/projectPageSearchParams";
 import { loadDashboardNavPath } from "../../shared/lib/dashboardNavStorage";
 import { saveProjectNavPath } from "../../shared/lib/projectNavStorage";
+import "../../components/PreferencesMenu/PreferencesMenu.css";
 import "./ProjectPage.css";
 
 export type TasksViewMode = "list" | "kanban";
@@ -93,7 +101,7 @@ export function ProjectPage() {
 
   const sprintsResolved = sprintsLoaded || sprintsFailed;
   const sprintIds = useMemo(() => sprints.map((s) => s.id), [sprints]);
-  const { iterationScope, tasksView, taskListQuery } = useMemo(
+  const { iterationScope, tasksView, taskListQuery, taskListPage } = useMemo(
     () => parseProjectPageState(searchParams, sprintIds, sprintsResolved),
     [searchParams, sprintIds, sprintsResolved],
   );
@@ -104,43 +112,62 @@ export function ProjectPage() {
         iterationScope: IterationScope;
         tasksView: TasksViewMode;
         taskListQuery: TaskListQuery;
+        taskListPage: number;
       }>,
     ) => {
       const nextScope = patch.iterationScope ?? iterationScope;
       const nextView = patch.tasksView ?? tasksView;
       const nextQuery = patch.taskListQuery ?? taskListQuery;
-      const built = buildProjectPageSearchParams(nextScope, nextView, nextQuery);
+      const nextPage = patch.taskListPage ?? taskListPage;
+      const built = buildProjectPageSearchParams(nextScope, nextView, nextQuery, nextPage);
       if (projectPageSearchParamsEqual(built, searchParams)) return;
       setSearchParams(built, { replace: true });
     },
-    [iterationScope, tasksView, taskListQuery, searchParams, setSearchParams],
+    [iterationScope, tasksView, taskListQuery, taskListPage, searchParams, setSearchParams],
   );
 
   const sprintFilter = iterationScope === "backlog" ? "backlog" : iterationScope;
 
   const tasksQueryArg = useMemo(() => {
     if (!validProjectId) return null;
-    return buildTasksQueryParams(validProjectId, sprintFilter, taskListQuery, tasksView);
-  }, [validProjectId, sprintFilter, taskListQuery, tasksView]);
+    return buildTasksQueryParams(
+      validProjectId,
+      sprintFilter,
+      taskListQuery,
+      tasksView,
+      taskListPage,
+    );
+  }, [validProjectId, sprintFilter, taskListQuery, tasksView, taskListPage]);
 
-  const { data: scopeTasks = [] } = useGetTasksQuery(tasksQueryArg!, { skip: !tasksQueryArg });
+  const { data: tasksPage } = useGetTasksQuery(tasksQueryArg!, { skip: !tasksQueryArg });
+  const scopeTasks = tasksPage?.tasks ?? [];
+  const tasksTotal = tasksPage?.total ?? 0;
 
   const patchTaskListQuery = useCallback(
     (patch: Partial<TaskListQuery>) => {
-      syncProjectUrl({ taskListQuery: { ...taskListQuery, ...patch } });
+      syncProjectUrl({ taskListQuery: { ...taskListQuery, ...patch }, taskListPage: 1 });
     },
     [syncProjectUrl, taskListQuery],
   );
 
   const resetTaskListQuery = useCallback(() => {
-    syncProjectUrl({ taskListQuery: DEFAULT_TASK_LIST_QUERY });
+    syncProjectUrl({ taskListQuery: DEFAULT_TASK_LIST_QUERY, taskListPage: 1 });
   }, [syncProjectUrl]);
+
+  const setTaskListPage = useCallback(
+    (page: number) => {
+      syncProjectUrl({ taskListPage: Math.max(1, page) });
+    },
+    [syncProjectUrl],
+  );
 
   const currentError = currentQueryError ? getRtkQueryErrorMessage(currentQueryError) : null;
 
   const members = current?.members ?? [];
 
   const visibleTaskCount = scopeTasks.length;
+  const taskPageCount = Math.max(1, Math.ceil(tasksTotal / TASK_LIST_PAGE_SIZE));
+  const sectionActive = tasksView === "kanban" ? "board" : "tasks";
   const ownerCount = useMemo(() => members.filter((m) => isOwnerRoleName(m.role)).length, [members]);
   const roleSuggestions = useMemo(() => {
     const s = new Set<string>();
@@ -194,11 +221,11 @@ export function ProjectPage() {
     const rawScope = searchParams.get("scope");
     if (!rawScope || rawScope === "backlog") return;
     if (sprintIds.includes(rawScope)) return;
-    const built = buildProjectPageSearchParams("backlog", tasksView, taskListQuery);
+    const built = buildProjectPageSearchParams("backlog", tasksView, taskListQuery, taskListPage);
     if (!projectPageSearchParamsEqual(built, searchParams)) {
       setSearchParams(built, { replace: true });
     }
-  }, [sprintIds, sprintsResolved, searchParams, setSearchParams, taskListQuery, tasksView]);
+  }, [sprintIds, sprintsResolved, searchParams, setSearchParams, taskListQuery, taskListPage, tasksView]);
 
   useEffect(() => {
     if (!validProjectId) return;
@@ -209,7 +236,7 @@ export function ProjectPage() {
 
   const selectIterationScope = useCallback(
     (next: IterationScope) => {
-      syncProjectUrl({ iterationScope: next });
+      syncProjectUrl({ iterationScope: next, taskListPage: 1 });
       setWorkspaceDrawerOpen(false);
     },
     [syncProjectUrl],
@@ -381,7 +408,7 @@ export function ProjectPage() {
   if (currentLoading) {
     return (
       <section className="page project-page">
-        <p className="muted">{t("project.loading")}</p>
+        <PageLoader label={t("project.loading")} />
       </section>
     );
   }
@@ -427,6 +454,13 @@ export function ProjectPage() {
       ) : null}
 
       <div className="project-page-workspace-shell">
+        <ProjectSectionNav
+          projectId={validProjectId}
+          active={sectionActive}
+          iterationScope={iterationScope}
+          taskListQuery={taskListQuery}
+          taskListPage={taskListPage}
+        />
         <ProjectSidebar
           sprints={sprints}
           selectedScope={iterationScope}
@@ -442,6 +476,9 @@ export function ProjectPage() {
         <div className="project-page-work-area">
           <header className="project-page-toolbar">
             <div className="project-page-toolbar-inner">
+              <p className="project-toolbar-scope-chip" aria-live="polite">
+                {t("project.tasksScope")} <strong>{iterationLabel}</strong>
+              </p>
               <div className="project-page-toolbar-actions">
                 <button
                   type="button"
@@ -455,34 +492,7 @@ export function ProjectPage() {
                 <button type="button" className="secondary-button" onClick={() => setMembersModalOpen(true)}>
                   {t("project.team")}
                 </button>
-                {canManageTeam ? (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => setSettingsModalOpen(true)}
-                  >
-                    {t("project.settings")}
-                  </button>
-                ) : null}
                 <AddTaskButton onClick={openTaskCreate} />
-                <button
-                  type="button"
-                  className={`secondary-button project-toolbar-kanban${tasksView === "kanban" ? " project-toolbar-view-active" : ""}`}
-                  onClick={() =>
-                    syncProjectUrl({ tasksView: tasksView === "kanban" ? "list" : "kanban" })
-                  }
-                  aria-pressed={tasksView === "kanban"}
-                >
-                  {tasksView === "kanban" ? t("project.listView") : t("project.kanban")}
-                </button>
-                <Link
-                  to={`/projects/${validProjectId}/analytics${
-                    iterationScope !== "backlog" ? `?sprint=${iterationScope}&tab=sprint` : "?tab=sprint"
-                  }`}
-                  className="secondary-button"
-                >
-                  {t("analytics.openAnalytics")}
-                </Link>
               </div>
               <p className="muted project-page-toolbar-meta">
                 {memberCountLabel(t, members.length)} · {t("project.yourRole")}{" "}
@@ -499,10 +509,12 @@ export function ProjectPage() {
                 {canManageTeam ? (
                   <button
                     type="button"
-                    className="secondary-button project-settings-inline"
+                    className="topbar-icon-btn project-settings-inline"
                     onClick={() => setSettingsModalOpen(true)}
+                    aria-label={t("project.settings")}
+                    title={t("project.settings")}
                   >
-                    {t("project.edit")}
+                    <SettingsIcon />
                   </button>
                 ) : null}
               </div>
@@ -517,14 +529,19 @@ export function ProjectPage() {
               </Link>
             </header>
 
-            <ProjectTasksToolbar
-              query={taskListQuery}
-              members={members}
-              onChange={patchTaskListQuery}
-              onReset={resetTaskListQuery}
-              resultCount={visibleTaskCount}
-              totalCount={scopeTasks.length}
-            />
+            {tasksView === "list" ? (
+              <ProjectTasksToolbar
+                query={taskListQuery}
+                members={members}
+                onChange={patchTaskListQuery}
+                onReset={resetTaskListQuery}
+                resultCount={visibleTaskCount}
+                totalCount={tasksTotal}
+                page={taskListPage}
+                pageCount={taskPageCount}
+                onPageChange={setTaskListPage}
+              />
+            ) : null}
 
             {tasksView === "kanban" && tasksQueryArg ? (
               <ProjectKanbanBoard

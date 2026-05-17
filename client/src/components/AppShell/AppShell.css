@@ -60,15 +60,43 @@
 
 @media (max-width: 720px) {
   .topbar {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.85rem max(1rem, env(safe-area-inset-right)) 0.85rem max(1rem, env(safe-area-inset-left));
+    gap: 0.65rem;
+  }
+
+  .topbar-brand .eyebrow {
+    font-size: 0.82rem;
   }
 
   .topbar-actions {
     flex-wrap: wrap;
+    margin-left: auto;
+    justify-content: flex-end;
+    gap: 0.45rem;
+  }
+
+  .user-chip {
+    display: none;
   }
 
   .content {
     width: min(100% - 1.25rem, 1120px);
+    padding: 1.25rem 0 2rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
   }
 }

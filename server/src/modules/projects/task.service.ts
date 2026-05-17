@@ -210,7 +210,7 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
   if (params.role !== "all" && params.role !== "") {
     const assigneeIds = await assigneeIdsForProjectRole(projectId, params.role);
     if (assigneeIds.length === 0) {
-      return [];
+      return { tasks: [], total: 0, limit: params.limit, offset: params.offset };
     }
     whereParts.push({ assigneeId: { [Op.in]: assigneeIds } });
   }
@@ -222,24 +222,30 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
 
   const where = whereParts.length === 1 ? whereParts[0] : { [Op.and]: whereParts };
 
-  const rows = await Task.findAll({
+  const include = [
+    {
+      model: User,
+      as: "assignee",
+      attributes: ["id", "email", "fullName"],
+      required: false,
+    },
+    {
+      model: Task,
+      as: "parentTask",
+      attributes: ["id", "title"],
+      required: false,
+    },
+  ];
+  const order = taskListOrder(params.sort, params.rootsOnly);
+
+  const { rows, count } = await Task.findAndCountAll({
     where,
-    include: [
-      {
-        model: User,
-        as: "assignee",
-        attributes: ["id", "email", "fullName"],
-        required: false,
-      },
-      {
-        model: Task,
-        as: "parentTask",
-        attributes: ["id", "title"],
-        required: false,
-      },
-    ],
-    order: taskListOrder(params.sort, params.rootsOnly),
+    include,
+    order,
     subQuery: false,
+    limit: params.limit,
+    offset: params.offset,
+    distinct: true,
   });
 
   const parentIds = rows
@@ -247,11 +253,13 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
     .map((t) => t.get("id") as string);
   const counts = await subtaskCountByParent(projectId, parentIds);
 
-  return rows.map((t) => {
+  const tasks = rows.map((t) => {
     const plain = t.get({ plain: true }) as TaskRow;
     const id = String(plain.id);
     return toTaskDto({ ...plain, subtaskCount: counts.get(id) ?? 0 });
   });
+
+  return { tasks, total: count, limit: params.limit, offset: params.offset };
 }
 
 export async function createTask(userId: string, projectId: string, body: Record<string, unknown>) {

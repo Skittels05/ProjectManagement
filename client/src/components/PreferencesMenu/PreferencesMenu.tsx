@@ -37,7 +37,7 @@ export function PreferencesMenu() {
   const { t } = useI18n();
   const isDark = theme === "dark";
   const nextLocale: AppLocale = locale === "en" ? "ru" : "en";
-  const localeLabel = locale === "en" ? "eng" : "ru";
+  const localeLabel = locale === "en" ? "EN" : "RU";
 
   return (
     <div className="preferences-menu" role="group" aria-label={t("preferences.theme")}>

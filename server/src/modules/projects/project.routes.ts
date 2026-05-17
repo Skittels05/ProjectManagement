@@ -9,6 +9,7 @@ import * as taskCommentController from "./task-comment.controller";
 import * as taskAttachmentController from "./task-attachment.controller";
 import * as taskTimeLogController from "./task-time-log.controller";
 import * as analyticsController from "./analytics.controller";
+import * as analyticsExportController from "./analytics-export.controller";
 import { handleTaskAttachmentUpload } from "../../middlewares/upload.middleware";
 import {
   listProjectsValidation,
@@ -52,6 +53,7 @@ import {
   sprintAnalyticsValidation,
   timeLogReportValidation,
 } from "./analytics.validation";
+import { exportAnalyticsPdfValidation } from "./analytics-export.validation";
 
 export const projectsRouter = Router();
 
@@ -100,6 +102,12 @@ projectsRouter.delete(
   deleteSprintValidation,
   validationMiddleware,
   asyncHandler(sprintController.remove),
+);
+projectsRouter.post(
+  "/:projectId/analytics/export/pdf",
+  exportAnalyticsPdfValidation,
+  validationMiddleware,
+  asyncHandler(analyticsExportController.exportPdf),
 );
 projectsRouter.get(
   "/:projectId/analytics/velocity",
