@@ -3,6 +3,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   closestCorners,
   useDroppable,
   useSensor,
@@ -147,14 +148,36 @@ type KanbanCardProps = {
   onEdit: () => void;
   overlay?: boolean;
   editLabel: string;
+  dragLabel: string;
   subtaskLabel: (count: number) => string;
 };
 
-function KanbanCard({ task, onEdit, overlay = false, editLabel, subtaskLabel }: KanbanCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: task.id,
-    disabled: overlay,
-  });
+function KanbanDragHandleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="9" cy="7" r="1.35" fill="currentColor" />
+      <circle cx="15" cy="7" r="1.35" fill="currentColor" />
+      <circle cx="9" cy="12" r="1.35" fill="currentColor" />
+      <circle cx="15" cy="12" r="1.35" fill="currentColor" />
+      <circle cx="9" cy="17" r="1.35" fill="currentColor" />
+      <circle cx="15" cy="17" r="1.35" fill="currentColor" />
+    </svg>
+  );
+}
+
+function KanbanCard({
+  task,
+  onEdit,
+  overlay = false,
+  editLabel,
+  dragLabel,
+  subtaskLabel,
+}: KanbanCardProps) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: task.id,
+      disabled: overlay,
+    });
 
   const style = overlay
     ? undefined
@@ -168,22 +191,41 @@ function KanbanCard({ task, onEdit, overlay = false, editLabel, subtaskLabel }: 
     <article
       ref={overlay ? undefined : setNodeRef}
       style={style}
-      className={`kanban-card${overlay ? " kanban-card--overlay" : ""}`}
-      {...(overlay ? {} : { ...attributes, ...listeners })}
+      className={`kanban-card${overlay ? " kanban-card--overlay" : ""}${isDragging ? " kanban-card--dragging" : ""}`}
     >
-      <p className="kanban-card-title">{task.title}</p>
-      <KanbanCardMeta task={task} subtaskLabel={subtaskLabel} />
-      <button
-        type="button"
-        className="kanban-card-edit"
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit();
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        {editLabel}
-      </button>
+      {overlay ? (
+        <span className="kanban-card-drag-handle kanban-card-drag-handle--overlay" aria-hidden="true">
+          <KanbanDragHandleIcon />
+        </span>
+      ) : (
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          className="kanban-card-drag-handle"
+          aria-label={dragLabel}
+          title={dragLabel}
+          {...attributes}
+          {...listeners}
+        >
+          <KanbanDragHandleIcon />
+        </button>
+      )}
+      <div className="kanban-card-body">
+        <p className="kanban-card-title">{task.title}</p>
+        <KanbanCardMeta task={task} subtaskLabel={subtaskLabel} />
+        <button
+          type="button"
+          className="kanban-card-edit"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {editLabel}
+        </button>
+      </div>
     </article>
   );
 }
@@ -213,6 +255,7 @@ type KanbanColumnProps = {
   onEditTask: (task: TaskDto) => void;
   dropHere: string;
   editLabel: string;
+  dragLabel: string;
   subtaskLabel: (count: number) => string;
 };
 
@@ -225,6 +268,7 @@ function KanbanColumn({
   onEditTask,
   dropHere,
   editLabel,
+  dragLabel,
   subtaskLabel,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: columnDroppableId(status) });
@@ -256,6 +300,7 @@ function KanbanColumn({
                   task={task}
                   onEdit={() => onEditTask(task)}
                   editLabel={editLabel}
+                  dragLabel={dragLabel}
                   subtaskLabel={subtaskLabel}
                 />
               );
@@ -317,10 +362,13 @@ export function ProjectKanbanBoard({
   const activeTask = activeId ? (tasksById[activeId] ?? null) : null;
   const errMsg = error ? getRtkQueryErrorMessage(error) : null;
 
+  const dragLabel = t("project.dragTask");
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
+      activationConstraint: { distance: 8 },
     }),
+    useSensor(TouchSensor),
   );
 
   function handleDragStart(event: DragStartEvent) {
@@ -476,6 +524,7 @@ export function ProjectKanbanBoard({
                   onEditTask={onEditTask}
                   dropHere={t("project.dropHere")}
                   editLabel={t("project.edit")}
+                  dragLabel={dragLabel}
                   subtaskLabel={subtaskLabelFn}
                 />
               ))}
@@ -487,6 +536,7 @@ export function ProjectKanbanBoard({
                   onEdit={() => onEditTask(activeTask)}
                   overlay
                   editLabel={t("project.edit")}
+                  dragLabel={dragLabel}
                   subtaskLabel={subtaskLabelFn}
                 />
               ) : null}

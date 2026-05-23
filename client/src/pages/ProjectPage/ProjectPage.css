@@ -173,13 +173,15 @@
 
   .project-page-toolbar-actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 0.5rem;
   }
 
-  .project-page-toolbar-actions > :last-child {
-    grid-column: 1 / -1;
+  .project-page-toolbar-actions .project-workspace-toggle {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .project-page-toolbar-meta {
@@ -232,16 +234,6 @@
     z-index: 48;
     background: var(--drawer-backdrop);
     backdrop-filter: blur(3px);
-  }
-}
-
-@media (max-width: 480px) {
-  .project-page-toolbar-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .project-page-toolbar-actions > :last-child {
-    grid-column: auto;
   }
 }
 
