@@ -1,4 +1,5 @@
-.topbar-icon-btn {
+.topbar-icon-btn,
+a.topbar-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -9,6 +10,9 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+  text-decoration: none;
+  box-sizing: border-box;
   cursor: pointer;
   transition:
     background 0.15s ease,

@@ -17,6 +17,10 @@ export function projectTasksPath(
   return `/projects/${projectId}${qs ? `?${qs}` : ""}`;
 }
 
+export function projectSettingsPath(projectId: string): string {
+  return `/projects/${projectId}/settings`;
+}
+
 export function projectAnalyticsPath(projectId: string, iterationScope: IterationScope): string {
   if (iterationScope !== "backlog") {
     return `/projects/${projectId}/analytics?sprint=${iterationScope}&tab=sprint`;

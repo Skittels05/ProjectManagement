@@ -1,0 +1,119 @@
+.project-settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.project-settings-header,
+.project-settings-card {
+  min-width: 0;
+}
+
+.project-settings-header .eyebrow {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-settings-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.project-settings-header .muted {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.project-settings-card h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.project-settings-card-desc {
+  margin: 0 0 1.25rem;
+}
+
+.project-settings-page .project-settings-form {
+  max-width: 32rem;
+}
+
+.project-settings-page .project-settings-form button[type="submit"] {
+  align-self: flex-start;
+}
+
+@media (max-width: 900px) {
+  .project-settings-page {
+    gap: 1.25rem;
+  }
+
+  .project-settings-page .hero-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 16px;
+  }
+
+  .project-settings-header h1 {
+    font-size: clamp(1.25rem, 5vw, 1.65rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .project-settings-page {
+    gap: 1rem;
+  }
+
+  .project-settings-page .hero-card {
+    padding: 1.25rem 1rem;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px var(--surface-muted);
+  }
+
+  .project-settings-header h1 {
+    font-size: clamp(1.15rem, 6vw, 1.45rem);
+  }
+
+  .project-settings-card h2,
+  .project-settings-page .project-team-section-title {
+    font-size: 1.05rem;
+  }
+
+  .project-settings-card-desc,
+  .project-settings-page .project-team-section-desc {
+    margin-bottom: 1rem;
+    font-size: 0.92rem;
+  }
+
+  .project-settings-page .project-settings-form {
+    max-width: none;
+  }
+
+  .project-settings-page .project-settings-form button[type="submit"],
+  .project-settings-page .edit-project-danger .danger-button {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .project-settings-page .project-members-modal-invite .invite-form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .project-settings-page .project-members-modal-invite .invite-form button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-settings-page .hero-card {
+    padding: 1rem 0.85rem;
+  }
+
+  .project-settings-header .eyebrow {
+    font-size: 0.72rem;
+  }
+}

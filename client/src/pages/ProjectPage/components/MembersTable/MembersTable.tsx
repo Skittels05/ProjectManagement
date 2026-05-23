@@ -106,7 +106,7 @@ export function MembersTable({
                       {isSelf ? <span className="member-you muted">{t("project.you")}</span> : null}
                     </div>
                   </td>
-                  <td>
+                  <td data-label={t("project.roleCol")}>
                     {canEditMemberRole(member) ? (
                       <MemberRoleField
                         member={member}
@@ -118,7 +118,7 @@ export function MembersTable({
                       <span className="role-readonly">{member.role}</span>
                     )}
                   </td>
-                  <td className="members-actions-cell">
+                  <td data-label={t("project.actions")} className="members-actions-cell">
                     {canRemoveOther(member) ? (
                       <button
                         type="button"

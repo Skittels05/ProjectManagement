@@ -11,6 +11,7 @@ import { AdminPage } from "../pages/AdminPage/AdminPage";
 import { AdminRoute } from "../components/AdminRoute/AdminRoute";
 import { RegisterPage } from "../pages/RegisterPage/RegisterPage";
 import { ProfilePage } from "../pages/ProfilePage/ProfilePage";
+import { ProjectSettingsPage } from "../pages/ProjectSettingsPage/ProjectSettingsPage";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
           { path: "projects", element: <DashboardPage /> },
           { path: "projects/:projectId", element: <ProjectPage /> },
           { path: "projects/:projectId/analytics", element: <ProjectAnalyticsPage /> },
+          { path: "projects/:projectId/settings", element: <ProjectSettingsPage /> },
           { path: "profile", element: <ProfilePage /> },
         ],
       },

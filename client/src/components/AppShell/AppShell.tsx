@@ -195,13 +195,6 @@ function TopbarNavLinks({ location, isAuthenticated, user, onNavigate, onLogout,
           >
             {t("app.dashboard")}
           </Link>
-          <Link
-            to="/profile"
-            className={linkClass(location.pathname === "/profile")}
-            onClick={onNavigate}
-          >
-            {t("app.profile")}
-          </Link>
           {user?.isAdmin ? (
             <Link
               to="/admin"
@@ -213,7 +206,7 @@ function TopbarNavLinks({ location, isAuthenticated, user, onNavigate, onLogout,
           ) : null}
           <Link
             to="/profile"
-            className={`user-chip topbar-nav-user topbar-nav-user-link${mobile ? "" : " topbar-nav-user--desktop"}`}
+            className={`user-chip topbar-nav-user topbar-nav-user-link${location.pathname === "/profile" ? " active-link" : ""}${mobile ? "" : " topbar-nav-user--desktop"}`}
             onClick={onNavigate}
           >
             {user?.fullName ?? user?.email}

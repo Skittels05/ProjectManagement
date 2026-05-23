@@ -1,19 +1,12 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import type { RootState } from "../../store";
-import {
-  useAddProjectMemberMutation,
-  useGetProjectQuery,
-  useRemoveProjectMemberMutation,
-  useUpdateProjectMemberRoleMutation,
-} from "../../store/api/projectsApi";
+import { useGetProjectQuery } from "../../store/api/projectsApi";
 import { useDeleteSprintMutation, useGetSprintsQuery } from "../../store/api/sprintsApi";
 import { useGetTasksQuery } from "../../store/api/tasksApi";
-import type { ProjectMemberDto } from "../../store/types/projects.types";
 import type { SprintDto } from "../../store/types/sprints.types";
 import type { TaskDto } from "../../store/types/tasks.types";
-import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projectRole";
 import { isUuidV4, sameUserId } from "../../shared/lib/uuid";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { formatLocaleDateTime } from "../../shared/lib/formatDate";
@@ -21,18 +14,17 @@ import { useConfirm } from "../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../components/Toast/toastContext";
 import { memberCountLabel, useI18n } from "../../shared/i18n";
 import { useAppSelector } from "../../store/hooks";
-import { ProjectMembersModal } from "./components/ProjectMembersModal/ProjectMembersModal";
 import { ProjectSectionNav } from "./components/ProjectSectionNav/ProjectSectionNav";
 import { ProjectSidebar, type IterationScope } from "./components/ProjectSidebar/ProjectSidebar";
 import { SprintModal } from "./components/SprintModal/SprintModal";
 import { TaskModal } from "./components/TaskModal/TaskModal";
-import { SettingsIcon } from "../../components/icons/SettingsIcon";
 import { PageLoader } from "../../components/Preloader/Preloader";
+import { SettingsIcon } from "../../components/icons/SettingsIcon";
 import { AddTaskButton } from "./components/AddTaskButton/AddTaskButton";
 import { ProjectKanbanBoard } from "./components/ProjectKanbanBoard/ProjectKanbanBoard";
 import { ProjectTasksSection } from "./components/ProjectTasksSection/ProjectTasksSection";
-import { EditProjectModal } from "./components/EditProjectModal/EditProjectModal";
 import { ProjectTasksToolbar } from "./components/ProjectTasksToolbar/ProjectTasksToolbar";
+import { projectSettingsPath } from "../../shared/lib/projectSectionNav";
 import {
   DEFAULT_TASK_LIST_QUERY,
   TASK_LIST_PAGE_SIZE,
@@ -52,7 +44,6 @@ import "./ProjectPage.css";
 export type TasksViewMode = "list" | "kanban";
 
 export function ProjectPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -61,22 +52,9 @@ export function ProjectPage() {
   const { confirm } = useConfirm();
   const locale = useAppSelector((s) => s.settings.locale);
 
-  const [addMember] = useAddProjectMemberMutation();
-  const [updateMemberRole] = useUpdateProjectMemberRoleMutation();
-  const [removeMember] = useRemoveProjectMemberMutation();
   const [deleteSprint] = useDeleteSprintMutation();
 
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("member");
-  const [inviteBusy, setInviteBusy] = useState(false);
-  const [inviteError, setInviteError] = useState<string | null>(null);
-
-  const [roleSavingFor, setRoleSavingFor] = useState<string | null>(null);
-  const [removingFor, setRemovingFor] = useState<string | null>(null);
-  const [memberError, setMemberError] = useState<string | null>(null);
-
   const [workspaceDrawerOpen, setWorkspaceDrawerOpen] = useState(false);
-  const [membersModalOpen, setMembersModalOpen] = useState(false);
   const [sprintModalOpen, setSprintModalOpen] = useState(false);
   const [sprintModalMode, setSprintModalMode] = useState<"create" | "edit">("create");
   const [editingSprint, setEditingSprint] = useState<SprintDto | null>(null);
@@ -86,8 +64,6 @@ export function ProjectPage() {
   const [taskModalMode, setTaskModalMode] = useState<"create" | "edit">("create");
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
   const [defaultParentTaskId, setDefaultParentTaskId] = useState<string | null>(null);
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-
   const routeProjectId = projectId ?? "";
   const validProjectId = isUuidV4(routeProjectId) ? routeProjectId : null;
 
@@ -172,17 +148,6 @@ export function ProjectPage() {
   const visibleTaskCount = scopeTasks.length;
   const taskPageCount = Math.max(1, Math.ceil(tasksTotal / TASK_LIST_PAGE_SIZE));
   const sectionActive = tasksView === "kanban" ? "board" : "tasks";
-  const ownerCount = useMemo(() => members.filter((m) => isOwnerRoleName(m.role)).length, [members]);
-  const roleSuggestions = useMemo(() => {
-    const s = new Set<string>();
-    for (const m of members) {
-      const r = m.role.trim();
-      if (r && !isOwnerRoleName(m.role)) {
-        s.add(m.role.trim());
-      }
-    }
-    return [...s].sort((a, b) => a.localeCompare(b));
-  }, [members]);
   const myMember = useMemo(
     () => members.find((m) => sameUserId(m.userId, user?.id)),
     [members, user?.id],
@@ -274,87 +239,6 @@ export function ProjectPage() {
     setDefaultParentTaskId(null);
   }
 
-  async function handleInvite(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!validProjectId) return;
-    setInviteError(null);
-    const roleTrim = inviteRole.trim();
-    if (!isAssignableMemberRole(roleTrim)) {
-      setInviteError(t("project.inviteRoleError"));
-      return;
-    }
-    setInviteBusy(true);
-    try {
-      await addMember({
-        projectId: validProjectId,
-        email: inviteEmail.trim(),
-        role: roleTrim,
-      }).unwrap();
-      setInviteEmail("");
-      setInviteRole("member");
-      toast.success(t("toast.memberInvited"));
-    } catch (err) {
-      setInviteError(getRtkQueryErrorMessage(err));
-    } finally {
-      setInviteBusy(false);
-    }
-  }
-
-  async function handleRoleChange(member: ProjectMemberDto, next: string) {
-    const nextTrim = next.trim();
-    if (!validProjectId || nextTrim === member.role.trim()) return;
-    if (!isAssignableMemberRole(nextTrim)) {
-      setMemberError(t("project.ownerRoleError"));
-      return;
-    }
-    setMemberError(null);
-    setRoleSavingFor(member.userId);
-    try {
-      await updateMemberRole({
-        projectId: validProjectId,
-        userId: member.userId,
-        role: nextTrim,
-      }).unwrap();
-      toast.success(t("toast.memberRoleUpdated"));
-    } catch (err) {
-      setMemberError(getRtkQueryErrorMessage(err));
-    } finally {
-      setRoleSavingFor(null);
-    }
-  }
-
-  async function handleRemoveMember(member: ProjectMemberDto) {
-    if (!validProjectId) return;
-    const isSelf = sameUserId(member.userId, user?.id);
-    const message = isSelf
-      ? t("project.leaveConfirm")
-      : t("project.removeMemberConfirm", { name: member.fullName });
-    const confirmed = await confirm({
-      message,
-      variant: "danger",
-      confirmLabel: isSelf ? t("project.leave") : t("project.remove"),
-    });
-    if (!confirmed) return;
-    setMemberError(null);
-    setRemovingFor(member.userId);
-    try {
-      const payload = await removeMember({
-        projectId: validProjectId,
-        userId: member.userId,
-      }).unwrap();
-      if ("left" in payload && payload.left) {
-        toast.success(t("toast.memberRemoved"));
-        navigate("/projects", { replace: true });
-      } else {
-        toast.success(t("toast.memberRemoved"));
-      }
-    } catch (err) {
-      setMemberError(getRtkQueryErrorMessage(err));
-    } finally {
-      setRemovingFor(null);
-    }
-  }
-
   async function handleDeleteSprint(sprint: SprintDto) {
     if (!validProjectId) return;
     const confirmed = await confirm({
@@ -396,26 +280,6 @@ export function ProjectPage() {
     setEditingSprint(null);
   }
 
-  const isOwnerLike = myRoleLower === "owner" || isProjectCreator;
-
-  function canEditMemberRole(member: ProjectMemberDto) {
-    if (!canManageTeam) return false;
-    if (isOwnerLike) return true;
-    return !isOwnerRoleName(member.role);
-  }
-
-  function canRemoveOther(member: ProjectMemberDto) {
-    if (!canManageTeam || sameUserId(member.userId, user?.id)) return false;
-    if (!isOwnerLike && isOwnerRoleName(member.role)) return false;
-    return true;
-  }
-
-  function canLeaveProject(member: ProjectMemberDto) {
-    if (!sameUserId(member.userId, user?.id)) return false;
-    if (isOwnerRoleName(member.role) && ownerCount <= 1) return false;
-    return true;
-  }
-
   if (!validProjectId) {
     return (
       <section className="page project-page">
@@ -442,21 +306,8 @@ export function ProjectPage() {
     );
   }
 
-  const membersModalProps = {
-    members,
-    currentUserId: user?.id,
-    memberError,
-    roleSavingFor,
-    removingFor,
-    roleSuggestions,
-    canEditMemberRole,
-    canRemoveOther,
-    canLeaveProject,
-    onRoleChange: handleRoleChange,
-    onRemoveMember: handleRemoveMember,
-  };
-
   const defaultTaskSprintId = iterationScope === "backlog" ? null : iterationScope;
+  const settingsPath = projectSettingsPath(validProjectId);
 
   return (
     <section
@@ -509,9 +360,14 @@ export function ProjectPage() {
                 >
                   {t("project.workspace")}
                 </button>
-                <button type="button" className="secondary-button" onClick={() => setMembersModalOpen(true)}>
-                  {t("project.team")}
-                </button>
+                <Link
+                  to={settingsPath}
+                  className="topbar-icon-btn"
+                  aria-label={t("project.settingsAndTeam")}
+                  title={t("project.settingsAndTeam")}
+                >
+                  <SettingsIcon />
+                </Link>
                 <AddTaskButton onClick={openTaskCreate} />
               </div>
               <p className="muted project-page-toolbar-meta">
@@ -524,20 +380,7 @@ export function ProjectPage() {
           <div className="project-main">
             <header className="project-main-header">
               <p className="eyebrow">{t("project.eyebrow")}</p>
-              <div className="project-main-header-row">
-                <h2>{current.name}</h2>
-                {canManageTeam ? (
-                  <button
-                    type="button"
-                    className="topbar-icon-btn project-settings-inline"
-                    onClick={() => setSettingsModalOpen(true)}
-                    aria-label={t("project.settings")}
-                    title={t("project.settings")}
-                  >
-                    <SettingsIcon />
-                  </button>
-                ) : null}
-              </div>
+              <h2>{current.name}</h2>
               {current.description ? <p className="project-description">{current.description}</p> : null}
               <p className="muted small-meta">
                 {t("project.updated", {
@@ -585,20 +428,6 @@ export function ProjectPage() {
         </div>
       </div>
 
-      <ProjectMembersModal
-        isOpen={membersModalOpen}
-        onClose={() => setMembersModalOpen(false)}
-        canManageTeam={canManageTeam}
-        inviteEmail={inviteEmail}
-        inviteRole={inviteRole}
-        inviteBusy={inviteBusy}
-        inviteError={inviteError}
-        onInviteEmailChange={setInviteEmail}
-        onInviteRoleChange={setInviteRole}
-        onInviteSubmit={handleInvite}
-        {...membersModalProps}
-      />
-
       <TaskModal
         isOpen={taskModalOpen}
         mode={taskModalMode}
@@ -621,12 +450,6 @@ export function ProjectPage() {
         onClose={closeSprintModal}
       />
 
-      <EditProjectModal
-        isOpen={settingsModalOpen}
-        project={current}
-        onClose={() => setSettingsModalOpen(false)}
-        onDeleted={() => navigate("/projects")}
-      />
     </section>
   );
 }
