@@ -39,3 +39,13 @@ export async function me(req: Request, res: Response): Promise<void> {
   const user = await authService.getCurrentUser(req.user!.id);
   res.status(200).json({ user });
 }
+
+export async function updateProfile(req: Request, res: Response): Promise<void> {
+  const user = await authService.updateProfile(req.user!.id, req.body);
+  res.status(200).json({ user });
+}
+
+export async function changePassword(req: Request, res: Response): Promise<void> {
+  await authService.changePassword(req.user!.id, req.body);
+  res.status(200).json({ message: "Password updated successfully" });
+}

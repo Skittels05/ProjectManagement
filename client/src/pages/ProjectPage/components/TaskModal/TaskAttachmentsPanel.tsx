@@ -8,6 +8,7 @@ import {
 import type { TaskAttachmentDto } from "../../../../store/types/taskEngagement.types";
 import { isImageAttachment } from "../../../../shared/lib/attachments";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useConfirm } from "../../../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import { TaskAttachmentImagePreview } from "./TaskAttachmentImagePreview";
@@ -83,6 +84,7 @@ function AttachmentRow({
 export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanelProps) {
   const { t } = useI18n();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: attachments = [], isLoading, error } = useGetTaskAttachmentsQuery({ projectId, taskId });
   const [upload, { isLoading: uploading }] = useUploadTaskAttachmentMutation();
@@ -118,7 +120,12 @@ export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanel
   }
 
   async function handleDelete(attachmentId: string, filename: string) {
-    if (!window.confirm(t("project.removeAttachmentConfirm", { name: filename }))) return;
+    const confirmed = await confirm({
+      message: t("project.removeAttachmentConfirm", { name: filename }),
+      variant: "danger",
+      confirmLabel: t("project.delete"),
+    });
+    if (!confirmed) return;
     setActionError(null);
     try {
       await deleteAttachment({ projectId, taskId, attachmentId }).unwrap();

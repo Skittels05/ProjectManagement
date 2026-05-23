@@ -10,6 +10,7 @@ import { ProjectAnalyticsPage } from "../pages/ProjectAnalyticsPage/ProjectAnaly
 import { AdminPage } from "../pages/AdminPage/AdminPage";
 import { AdminRoute } from "../components/AdminRoute/AdminRoute";
 import { RegisterPage } from "../pages/RegisterPage/RegisterPage";
+import { ProfilePage } from "../pages/ProfilePage/ProfilePage";
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
           { path: "projects", element: <DashboardPage /> },
           { path: "projects/:projectId", element: <ProjectPage /> },
           { path: "projects/:projectId/analytics", element: <ProjectAnalyticsPage /> },
+          { path: "profile", element: <ProfilePage /> },
         ],
       },
       {

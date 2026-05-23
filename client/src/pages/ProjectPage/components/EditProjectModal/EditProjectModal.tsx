@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useDeleteProjectMutation, useUpdateProjectMutation } from "../../../../store/api/projectsApi";
 import type { ProjectDto } from "../../../../store/types/projects.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useConfirm } from "../../../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import "../../../DashboardPage/components/CreateProjectModal/CreateProjectModal.css";
@@ -17,6 +18,7 @@ type EditProjectModalProps = {
 export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditProjectModalProps) {
   const { t } = useI18n();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const [updateProject, { isLoading: updateLoading }] = useUpdateProjectMutation();
   const [deleteProject, { isLoading: deleteLoading }] = useDeleteProjectMutation();
 
@@ -90,7 +92,11 @@ export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditPr
 
   async function handleDelete() {
     setDeleteError(null);
-    const confirmed = window.confirm(t("project.deleteProjectConfirm", { name: project.name }));
+    const confirmed = await confirm({
+      message: t("project.deleteProjectConfirm", { name: project.name }),
+      variant: "danger",
+      confirmLabel: t("project.delete"),
+    });
     if (!confirmed) return;
 
     try {

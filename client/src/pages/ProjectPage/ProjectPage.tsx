@@ -17,6 +17,7 @@ import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projec
 import { isUuidV4, sameUserId } from "../../shared/lib/uuid";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { formatLocaleDateTime } from "../../shared/lib/formatDate";
+import { useConfirm } from "../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../components/Toast/toastContext";
 import { memberCountLabel, useI18n } from "../../shared/i18n";
 import { useAppSelector } from "../../store/hooks";
@@ -57,6 +58,7 @@ export function ProjectPage() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { t } = useI18n();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const locale = useAppSelector((s) => s.settings.locale);
 
   const [addMember] = useAddProjectMemberMutation();
@@ -327,7 +329,12 @@ export function ProjectPage() {
     const message = isSelf
       ? t("project.leaveConfirm")
       : t("project.removeMemberConfirm", { name: member.fullName });
-    if (!window.confirm(message)) return;
+    const confirmed = await confirm({
+      message,
+      variant: "danger",
+      confirmLabel: isSelf ? t("project.leave") : t("project.remove"),
+    });
+    if (!confirmed) return;
     setMemberError(null);
     setRemovingFor(member.userId);
     try {
@@ -350,7 +357,12 @@ export function ProjectPage() {
 
   async function handleDeleteSprint(sprint: SprintDto) {
     if (!validProjectId) return;
-    if (!window.confirm(t("project.deleteSprintConfirm", { name: sprint.name }))) {
+    const confirmed = await confirm({
+      message: t("project.deleteSprintConfirm", { name: sprint.name }),
+      variant: "danger",
+      confirmLabel: t("project.delete"),
+    });
+    if (!confirmed) {
       return;
     }
     setDeletingSprintId(sprint.id);

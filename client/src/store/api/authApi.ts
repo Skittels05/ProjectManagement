@@ -1,5 +1,12 @@
 import { baseApi } from "./baseApi";
-import type { AuthPayload, LoginCredentials, RegisterCredentials } from "../types/auth.types";
+import type {
+  AuthPayload,
+  AuthUser,
+  ChangePasswordBody,
+  LoginCredentials,
+  RegisterCredentials,
+  UpdateProfileBody,
+} from "../types/auth.types";
 import { setAccessToken } from "../../shared/lib/tokenStorage";
 
 export const authApi = baseApi.injectEndpoints({
@@ -30,6 +37,12 @@ export const authApi = baseApi.injectEndpoints({
         return { data };
       },
     }),
+    updateProfile: build.mutation<{ user: AuthUser }, UpdateProfileBody>({
+      query: (body) => ({ url: "/auth/me", method: "patch", data: body }),
+    }),
+    changePassword: build.mutation<{ message: string }, ChangePasswordBody>({
+      query: (body) => ({ url: "/auth/me/password", method: "patch", data: body }),
+    }),
     logout: build.mutation<void, void>({
       async queryFn(_arg, _api, _extraOptions, baseQuery) {
         try {
@@ -43,4 +56,11 @@ export const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation } = authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useRefreshMutation,
+  useLogoutMutation,
+  useUpdateProfileMutation,
+  useChangePasswordMutation,
+} = authApi;

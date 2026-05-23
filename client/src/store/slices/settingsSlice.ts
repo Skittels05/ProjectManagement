@@ -3,14 +3,16 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 export type ThemeMode = "dark" | "light";
 export type AppLocale = "en" | "ru";
 
-const STORAGE_KEY = "pm-app-settings";
+export const SETTINGS_STORAGE_KEY = "pm-app-settings";
+
+const STORAGE_KEY = SETTINGS_STORAGE_KEY;
 
 export type AppSettings = {
   theme: ThemeMode;
   locale: AppLocale;
 };
 
-const DEFAULT_SETTINGS: AppSettings = {
+export const DEFAULT_SETTINGS: AppSettings = {
   theme: "dark",
   locale: "en",
 };
@@ -61,8 +63,14 @@ const settingsSlice = createSlice({
       persistSettings(state);
       applySettingsToDocument(state);
     },
+    resetToDefaults(state) {
+      state.theme = DEFAULT_SETTINGS.theme;
+      state.locale = DEFAULT_SETTINGS.locale;
+      persistSettings(state);
+      applySettingsToDocument(state);
+    },
   },
 });
 
-export const { setTheme, setLocale, setSettings } = settingsSlice.actions;
+export const { setTheme, setLocale, setSettings, resetToDefaults } = settingsSlice.actions;
 export default settingsSlice.reducer;

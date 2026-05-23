@@ -50,6 +50,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.accessToken = null;
+      })
+      .addMatcher(authApi.endpoints.updateProfile.matchFulfilled, (state, action) => {
+        state.user = action.payload.user;
       });
   },
 });

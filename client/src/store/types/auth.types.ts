@@ -20,3 +20,13 @@ export type LoginCredentials = {
   email: string;
   password: string;
 };
+
+export type UpdateProfileBody = {
+  fullName: string;
+  email: string;
+};
+
+export type ChangePasswordBody = {
+  currentPassword: string;
+  newPassword: string;
+};

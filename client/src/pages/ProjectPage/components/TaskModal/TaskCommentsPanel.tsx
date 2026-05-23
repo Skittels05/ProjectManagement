@@ -11,6 +11,7 @@ import type { TaskCommentDto } from "../../../../store/types/taskEngagement.type
 import { sameUserId } from "../../../../shared/lib/uuid";
 import { formatLocaleDateTime } from "../../../../shared/lib/formatDate";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useConfirm } from "../../../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import { useAppSelector } from "../../../../store/hooks";
@@ -20,6 +21,7 @@ type TaskCommentsPanelProps = { projectId: string; taskId: string };
 export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps) {
   const { t } = useI18n();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const locale = useAppSelector((s) => s.settings.locale);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: comments = [], isLoading, error } = useGetTaskCommentsQuery({ projectId, taskId });
@@ -84,7 +86,12 @@ export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps)
             }}
             locale={locale}
             onDelete={async () => {
-              if (!window.confirm(t("project.deleteCommentConfirm"))) return;
+              const confirmed = await confirm({
+                message: t("project.deleteCommentConfirm"),
+                variant: "danger",
+                confirmLabel: t("project.delete"),
+              });
+              if (!confirmed) return;
               try {
                 await deleteComment({ projectId, taskId, commentId: c.id }).unwrap();
                 toast.success(t("toast.commentDeleted"));

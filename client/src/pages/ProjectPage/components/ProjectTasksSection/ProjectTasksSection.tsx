@@ -7,6 +7,7 @@ import type { TaskDto } from "../../../../store/types/tasks.types";
 import { flattenTaskHierarchy, hasActiveTaskFilters } from "../../../../shared/lib/taskListQuery";
 import type { GetTasksArg } from "../../../../store/api/tasksApi";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useConfirm } from "../../../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../../../components/Toast/toastContext";
 import { subtaskCountLabel, taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
@@ -37,6 +38,7 @@ export function ProjectTasksSection({
 }: ProjectTasksSectionProps) {
   const { t } = useI18n();
   const toast = useToast();
+  const { confirm } = useConfirm();
 
   const {
     data: tasksPage,
@@ -65,7 +67,12 @@ export function ProjectTasksSection({
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(task: TaskDto) {
-    if (!window.confirm(t("project.deleteTaskConfirm", { title: task.title }))) {
+    const confirmed = await confirm({
+      message: t("project.deleteTaskConfirm", { title: task.title }),
+      variant: "danger",
+      confirmLabel: t("project.delete"),
+    });
+    if (!confirmed) {
       return;
     }
     setDeletingId(task.id);

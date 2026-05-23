@@ -17,6 +17,7 @@ import {
 import { sameUserId } from "../../../../shared/lib/uuid";
 import { formatLocaleDateTime } from "../../../../shared/lib/formatDate";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useConfirm } from "../../../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import { useAppSelector } from "../../../../store/hooks";
@@ -26,6 +27,7 @@ type TaskTimeLogsPanelProps = { projectId: string; taskId: string };
 export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps) {
   const { t } = useI18n();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const locale = useAppSelector((s) => s.settings.locale);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data, isLoading, error } = useGetTaskTimeLogsQuery({ projectId, taskId });
@@ -137,7 +139,12 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
             }}
             locale={locale}
             onDelete={async () => {
-              if (!window.confirm(t("project.deleteTimeConfirm"))) return;
+              const confirmed = await confirm({
+                message: t("project.deleteTimeConfirm"),
+                variant: "danger",
+                confirmLabel: t("project.delete"),
+              });
+              if (!confirmed) return;
               try {
                 await deleteLog({ projectId, taskId, timeLogId: log.id }).unwrap();
                 toast.success(t("toast.timeLogDeleted"));

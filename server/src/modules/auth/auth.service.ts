@@ -199,3 +199,73 @@ export async function getCurrentUser(userId: string) {
 
   return toUserDto(user);
 }
+
+export async function updateProfile(
+  userId: string,
+  body: {
+    fullName: string;
+    email: string;
+  },
+) {
+  const row = await User.findByPk(userId);
+
+  if (!row) {
+    throw new AppError("User not found", 404);
+  }
+
+  const user = row.get({ plain: true }) as UserAttrs;
+
+  if (user.isBlocked) {
+    throw new AppError("Account is disabled", 403);
+  }
+
+  const email = body.email.trim().toLowerCase();
+  const fullName = body.fullName.trim();
+
+  if (email !== user.email) {
+    const existingUser = await User.findOne({
+      where: {
+        email,
+        id: { [Op.ne]: userId },
+      },
+    });
+
+    if (existingUser) {
+      throw new AppError("User with this email already exists", 409);
+    }
+  }
+
+  await row.update({ fullName, email });
+  const updated = row.get({ plain: true }) as UserAttrs;
+
+  return toUserDto(updated);
+}
+
+export async function changePassword(
+  userId: string,
+  body: {
+    currentPassword: string;
+    newPassword: string;
+  },
+) {
+  const row = await User.findByPk(userId);
+
+  if (!row) {
+    throw new AppError("User not found", 404);
+  }
+
+  const user = row.get({ plain: true }) as UserAttrs;
+
+  if (user.isBlocked) {
+    throw new AppError("Account is disabled", 403);
+  }
+
+  const isPasswordValid = await bcrypt.compare(body.currentPassword, user.passwordHash);
+
+  if (!isPasswordValid) {
+    throw new AppError("Current password is incorrect", 400);
+  }
+
+  const passwordHash = await bcrypt.hash(body.newPassword, 10);
+  await row.update({ passwordHash });
+}

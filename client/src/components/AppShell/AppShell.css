@@ -88,6 +88,18 @@
   border: 1px solid var(--border-accent);
 }
 
+.topbar-nav-user-link {
+  text-decoration: none;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-nav-user-link:hover {
+  border-color: var(--accent);
+}
+
 @media (max-width: 720px) {
   .topbar {
     padding: 0.85rem max(1rem, env(safe-area-inset-right)) 0.85rem max(1rem, env(safe-area-inset-left));

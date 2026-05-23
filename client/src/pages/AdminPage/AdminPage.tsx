@@ -6,6 +6,7 @@ import { useGetAdminUsersQuery, useUpdateAdminUserMutation } from "../../store/a
 import type { AdminUserDto, AdminUserFilterOption, AdminUserSortOption } from "../../store/types/admin.types";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { sameUserId } from "../../shared/lib/uuid";
+import { useConfirm } from "../../components/ConfirmDialog/confirmContext";
 import { useToast } from "../../components/Toast/toastContext";
 import { useI18n } from "../../shared/i18n";
 import { Preloader } from "../../components/Preloader/Preloader";
@@ -17,6 +18,7 @@ const PAGE_SIZE = 50;
 export function AdminPage() {
   const { t } = useI18n();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const [search, setSearch] = useState("");
@@ -79,7 +81,11 @@ export function AdminPage() {
     patch: { isBlocked?: boolean; isAdmin?: boolean },
     confirmKey: string,
   ) {
-    if (!window.confirm(t(confirmKey, { name: target.fullName }))) {
+    const confirmed = await confirm({
+      message: t(confirmKey, { name: target.fullName }),
+      variant: "danger",
+    });
+    if (!confirmed) {
       return;
     }
 
