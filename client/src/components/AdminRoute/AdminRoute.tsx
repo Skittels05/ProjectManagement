@@ -17,7 +17,7 @@ export function AdminRoute() {
   }
 
   if (!user?.isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/projects" replace />;
   }
 
   return <Outlet />;

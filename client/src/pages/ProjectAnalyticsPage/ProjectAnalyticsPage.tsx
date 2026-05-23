@@ -407,7 +407,7 @@ export function ProjectAnalyticsPage() {
     return (
       <section className="page analytics-page">
         <p className="form-error">{t("project.invalidLink")}</p>
-        <Link to="/">{t("project.backToDashboard")}</Link>
+        <Link to="/projects">{t("project.backToDashboard")}</Link>
       </section>
     );
   }

@@ -332,7 +332,7 @@ export function ProjectPage() {
         userId: member.userId,
       }).unwrap();
       if ("left" in payload && payload.left) {
-        navigate("/", { replace: true });
+        navigate("/projects", { replace: true });
       }
     } catch (err) {
       setMemberError(getRtkQueryErrorMessage(err));
@@ -605,7 +605,7 @@ export function ProjectPage() {
         isOpen={settingsModalOpen}
         project={current}
         onClose={() => setSettingsModalOpen(false)}
-        onDeleted={() => navigate("/")}
+        onDeleted={() => navigate("/projects")}
       />
     </section>
   );

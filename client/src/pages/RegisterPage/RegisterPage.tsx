@@ -19,7 +19,7 @@ export function RegisterPage() {
     setError(null);
     try {
       await register({ fullName, email, password }).unwrap();
-      navigate("/");
+      navigate("/projects");
     } catch (e) {
       setError(getRtkQueryErrorMessage(e));
     }

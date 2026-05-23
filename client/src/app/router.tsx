@@ -3,6 +3,7 @@ import { AppShell } from "../components/AppShell/AppShell";
 import { ProtectedRoute } from "../components/ProtectedRoute/ProtectedRoute";
 import { PublicOnlyRoute } from "../components/PublicOnlyRoute/PublicOnlyRoute";
 import { DashboardPage } from "../pages/DashboardPage/DashboardPage";
+import { HomePage } from "../pages/HomePage/HomePage";
 import { LoginPage } from "../pages/LoginPage/LoginPage";
 import { ProjectPage } from "../pages/ProjectPage/ProjectPage";
 import { ProjectAnalyticsPage } from "../pages/ProjectAnalyticsPage/ProjectAnalyticsPage";
@@ -15,10 +16,11 @@ export const router = createBrowserRouter([
     path: "/",
     element: <AppShell />,
     children: [
+      { index: true, element: <HomePage /> },
       {
         element: <ProtectedRoute />,
         children: [
-          { index: true, element: <DashboardPage /> },
+          { path: "projects", element: <DashboardPage /> },
           { path: "projects/:projectId", element: <ProjectPage /> },
           { path: "projects/:projectId/analytics", element: <ProjectAnalyticsPage /> },
         ],

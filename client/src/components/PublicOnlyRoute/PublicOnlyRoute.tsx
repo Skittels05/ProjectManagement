@@ -12,5 +12,5 @@ export function PublicOnlyRoute() {
     return <PageLoader label={t("app.checkingSession")} className="page-loader--fullscreen" />;
   }
 
-  return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
+  return isAuthenticated ? <Navigate to="/projects" replace /> : <Outlet />;
 }

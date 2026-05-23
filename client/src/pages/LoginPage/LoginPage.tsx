@@ -18,7 +18,7 @@ export function LoginPage() {
     setError(null);
     try {
       await login({ email, password }).unwrap();
-      navigate("/");
+      navigate("/projects");
     } catch (e) {
       setError(getRtkQueryErrorMessage(e));
     }

@@ -11,11 +11,45 @@ export const en = {
     eyebrow: "Scrum Tracker",
     title: "Project Management",
     checkingSession: "Checking session…",
-    dashboard: "Dashboard",
+    home: "Home",
+    dashboard: "Projects",
     signOut: "Sign out",
     login: "Login",
     register: "Register",
     admin: "Admin",
+    mainNav: "Main navigation",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+  },
+  home: {
+    eyebrow: "Project management",
+    title: "Plan sprints, track tasks, and ship with your team",
+    lead: "A lightweight workspace for Scrum teams: projects, backlog, kanban boards, and analytics in one place.",
+    signIn: "Sign in",
+    createAccount: "Create account",
+    goToProjects: "Go to projects",
+    featuresTitle: "What you can do",
+    aboutTitle: "About the app",
+    aboutDesc:
+      "This app helps teams organize work in projects, run sprints, manage tasks on a board or in a list, and review progress with burndown charts and activity reports.",
+    feature: {
+      projects: {
+        title: "Projects",
+        desc: "Create workspaces, invite members, and assign roles.",
+      },
+      sprints: {
+        title: "Sprints",
+        desc: "Plan iterations, move tasks from backlog, and track scope.",
+      },
+      kanban: {
+        title: "Kanban & tasks",
+        desc: "List and board views, subtasks, comments, and time logs.",
+      },
+      analytics: {
+        title: "Analytics",
+        desc: "Burndown, velocity, scatter charts, and exportable reports.",
+      },
+    },
   },
   admin: {
     eyebrow: "System",

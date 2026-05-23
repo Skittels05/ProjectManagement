@@ -113,7 +113,7 @@ export function AdminPage() {
           <h2>{t("admin.title")}</h2>
           <p className="muted admin-page-desc">{t("admin.description")}</p>
         </div>
-        <Link to="/" className="secondary-button">
+        <Link to="/projects" className="secondary-button">
           {t("admin.backToDashboard")}
         </Link>
       </header>
