@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { useCreateTaskMutation } from "../../../../store/api/tasksApi";
 import type { TaskDto, TaskStatus } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { taskStatusLabel, useI18n } from "../../../../shared/i18n";
 
 type TaskSubtasksPanelProps = {
@@ -18,6 +19,7 @@ export function TaskSubtasksPanel({
   onEditSubtask,
 }: TaskSubtasksPanelProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const [createTask] = useCreateTaskMutation();
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<TaskStatus>("todo");
@@ -43,6 +45,7 @@ export function TaskSubtasksPanel({
       }).unwrap();
       setTitle("");
       setStatus("todo");
+      toast.success(t("toast.subtaskCreated"));
     } catch (err) {
       setError(getRtkQueryErrorMessage(err));
     } finally {

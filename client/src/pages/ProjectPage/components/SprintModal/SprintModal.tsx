@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useCreateSprintMutation, useUpdateSprintMutation } from "../../../../store/api/sprintsApi";
 import type { SprintDto, SprintStatus } from "../../../../store/types/sprints.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import "./SprintModal.css";
 
@@ -33,6 +34,7 @@ type SprintModalProps = {
 
 export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: SprintModalProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const [createSprint] = useCreateSprintMutation();
   const [updateSprint] = useUpdateSprintMutation();
 
@@ -98,6 +100,7 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
             status,
           },
         }).unwrap();
+        toast.success(t("toast.sprintCreated"));
         onClose();
         return;
       }
@@ -117,6 +120,7 @@ export function SprintModal({ isOpen, mode, projectId, sprint, onClose }: Sprint
           status,
         },
       }).unwrap();
+      toast.success(t("toast.sprintUpdated"));
       onClose();
     } catch (err) {
       setError(getRtkQueryErrorMessage(err));

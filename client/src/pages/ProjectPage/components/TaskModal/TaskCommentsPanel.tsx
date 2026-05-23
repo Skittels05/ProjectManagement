@@ -11,6 +11,7 @@ import type { TaskCommentDto } from "../../../../store/types/taskEngagement.type
 import { sameUserId } from "../../../../shared/lib/uuid";
 import { formatLocaleDateTime } from "../../../../shared/lib/formatDate";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import { useAppSelector } from "../../../../store/hooks";
 
@@ -18,6 +19,7 @@ type TaskCommentsPanelProps = { projectId: string; taskId: string };
 
 export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const locale = useAppSelector((s) => s.settings.locale);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: comments = [], isLoading, error } = useGetTaskCommentsQuery({ projectId, taskId });
@@ -37,6 +39,7 @@ export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps)
     try {
       await createComment({ projectId, taskId, body: text }).unwrap();
       setDraft("");
+      toast.success(t("toast.commentAdded"));
     } catch (err) {
       setFormError(getRtkQueryErrorMessage(err));
     }
@@ -49,6 +52,7 @@ export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps)
       await updateComment({ projectId, taskId, commentId, body: text }).unwrap();
       setEditingId(null);
       setEditDraft("");
+      toast.success(t("toast.commentUpdated"));
     } catch (err) {
       setFormError(getRtkQueryErrorMessage(err));
     }
@@ -83,8 +87,9 @@ export function TaskCommentsPanel({ projectId, taskId }: TaskCommentsPanelProps)
               if (!window.confirm(t("project.deleteCommentConfirm"))) return;
               try {
                 await deleteComment({ projectId, taskId, commentId: c.id }).unwrap();
+                toast.success(t("toast.commentDeleted"));
               } catch (err) {
-                window.alert(getRtkQueryErrorMessage(err));
+                toast.error(getRtkQueryErrorMessage(err));
               }
             }}
           />

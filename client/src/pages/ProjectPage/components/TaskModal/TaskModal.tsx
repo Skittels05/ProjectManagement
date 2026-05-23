@@ -3,6 +3,7 @@ import { useCreateTaskMutation, useUpdateTaskMutation } from "../../../../store/
 import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { SprintDto } from "../../../../store/types/sprints.types";
 import type { CreateTaskBody, TaskDto, TaskStatus, UpdateTaskBody } from "../../../../store/types/tasks.types";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import { TaskAttachmentsPanel } from "./TaskAttachmentsPanel";
@@ -42,6 +43,7 @@ export function TaskModal({
   onClose,
 }: TaskModalProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
 
@@ -122,6 +124,7 @@ export function TaskModal({
           body.description = descTrim;
         }
         await createTask({ projectId, body }).unwrap();
+        toast.success(t("toast.taskCreated"));
         onClose();
         return;
       }
@@ -140,6 +143,7 @@ export function TaskModal({
         storyPoints: sp,
       };
       await updateTask({ projectId, taskId: task.id, body }).unwrap();
+      toast.success(t("toast.taskUpdated"));
       onClose();
     } catch (err) {
       setError(getRtkQueryErrorMessage(err));

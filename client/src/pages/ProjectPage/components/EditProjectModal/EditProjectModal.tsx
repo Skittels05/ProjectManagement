@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useDeleteProjectMutation, useUpdateProjectMutation } from "../../../../store/api/projectsApi";
 import type { ProjectDto } from "../../../../store/types/projects.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import "../../../DashboardPage/components/CreateProjectModal/CreateProjectModal.css";
 import "./EditProjectModal.css";
@@ -15,6 +16,7 @@ type EditProjectModalProps = {
 
 export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditProjectModalProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const [updateProject, { isLoading: updateLoading }] = useUpdateProjectMutation();
   const [deleteProject, { isLoading: deleteLoading }] = useDeleteProjectMutation();
 
@@ -79,6 +81,7 @@ export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditPr
         wipLimitInProgress: parseWipInput(wipInProgress),
         wipLimitDone: parseWipInput(wipDone),
       }).unwrap();
+      toast.success(t("toast.projectSaved"));
       onClose();
     } catch (e) {
       setSaveError(getRtkQueryErrorMessage(e));
@@ -92,6 +95,7 @@ export function EditProjectModal({ isOpen, project, onClose, onDeleted }: EditPr
 
     try {
       await deleteProject(project.id).unwrap();
+      toast.success(t("toast.projectDeleted"));
       onClose();
       onDeleted();
     } catch (e) {

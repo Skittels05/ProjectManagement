@@ -17,6 +17,7 @@ import {
 import { sameUserId } from "../../../../shared/lib/uuid";
 import { formatLocaleDateTime } from "../../../../shared/lib/formatDate";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import { useAppSelector } from "../../../../store/hooks";
 
@@ -24,6 +25,7 @@ type TaskTimeLogsPanelProps = { projectId: string; taskId: string };
 
 export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const locale = useAppSelector((s) => s.settings.locale);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data, isLoading, error } = useGetTaskTimeLogsQuery({ projectId, taskId });
@@ -65,6 +67,7 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
       setMinutes("30");
       setNote("");
       setLoggedAt(toDatetimeLocalValue(new Date()));
+      toast.success(t("toast.timeLogAdded"));
     } catch (err) {
       setFormError(getRtkQueryErrorMessage(err));
     }
@@ -87,6 +90,7 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
       }).unwrap();
       setEditingId(null);
       setFormError(null);
+      toast.success(t("toast.timeLogUpdated"));
     } catch (err) {
       setFormError(getRtkQueryErrorMessage(err));
     }
@@ -136,8 +140,9 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
               if (!window.confirm(t("project.deleteTimeConfirm"))) return;
               try {
                 await deleteLog({ projectId, taskId, timeLogId: log.id }).unwrap();
+                toast.success(t("toast.timeLogDeleted"));
               } catch (err) {
-                window.alert(getRtkQueryErrorMessage(err));
+                toast.error(getRtkQueryErrorMessage(err));
               }
             }}
           />

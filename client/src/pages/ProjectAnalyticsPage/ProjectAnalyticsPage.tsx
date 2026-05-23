@@ -35,6 +35,7 @@ import { formatLocaleDateTime } from "../../shared/lib/formatDate";
 import { loadProjectNavPath } from "../../shared/lib/projectNavStorage";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { isUuidV4 } from "../../shared/lib/uuid";
+import { useToast } from "../../components/Toast/toastContext";
 import { useI18n } from "../../shared/i18n";
 import { useAppSelector } from "../../store/hooks";
 import { BurndownChart, ScatterChart } from "./components/AnalyticsCharts";
@@ -159,6 +160,7 @@ export function ProjectAnalyticsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
+  const toast = useToast();
   const locale = useAppSelector((s) => s.settings.locale);
 
   const validProjectId = projectId && isUuidV4(projectId) ? projectId : null;
@@ -273,30 +275,37 @@ export function ProjectAnalyticsPage() {
 
   const iterationScope = selectedSprintId || "backlog";
 
+  const runExport = async (action: () => void | Promise<void>) => {
+    try {
+      await action();
+      toast.success(t("toast.exportSuccess"));
+    } catch (err) {
+      toast.error(getRtkQueryErrorMessage(err) || t("analytics.exportPdfFailed"));
+    }
+  };
+
   const runPdfExport = async (options: Omit<Parameters<typeof downloadAnalyticsPdf>[0], "projectId">) => {
     if (!validProjectId) return;
-    try {
-      await downloadAnalyticsPdf({ projectId: validProjectId, ...options });
-    } catch (err) {
-      window.alert(getRtkQueryErrorMessage(err) || t("analytics.exportPdfFailed"));
-    }
+    await runExport(() => downloadAnalyticsPdf({ projectId: validProjectId, ...options }));
   };
 
   const exportSprintExcel = async () => {
     if (!stats || !burndown) return;
     const base = safeFilePart(`${projectLabel}-${stats.sprint.name}-sprint`);
-    await downloadSprintExcel(
-      `${base}.xlsx`,
-      stats,
-      burndown,
-      velocity,
-      formatDur,
-      burndownChartLabels,
-      {
-        summary: t("analytics.exportSectionSummary"),
-        burndown: t("analytics.burndownTitle"),
-        velocity: t("analytics.velocityTitle"),
-      },
+    await runExport(() =>
+      downloadSprintExcel(
+        `${base}.xlsx`,
+        stats,
+        burndown,
+        velocity,
+        formatDur,
+        burndownChartLabels,
+        {
+          summary: t("analytics.exportSectionSummary"),
+          burndown: t("analytics.burndownTitle"),
+          velocity: t("analytics.velocityTitle"),
+        },
+      ),
     );
   };
 
@@ -308,20 +317,24 @@ export function ProjectAnalyticsPage() {
   const exportSprintDocx = async () => {
     if (!stats || !burndown) return;
     const base = safeFilePart(`${projectLabel}-${stats.sprint.name}-sprint`);
-    const body = await sprintReportHtmlForWord(stats, burndown, velocity, formatDur, burndownChartLabels, {
-      summary: t("analytics.exportSectionSummary"),
-      burndown: t("analytics.burndownTitle"),
-      burndownData: t("analytics.exportDataTable"),
-      velocity: t("analytics.velocityTitle"),
+    await runExport(async () => {
+      const body = await sprintReportHtmlForWord(stats, burndown, velocity, formatDur, burndownChartLabels, {
+        summary: t("analytics.exportSectionSummary"),
+        burndown: t("analytics.burndownTitle"),
+        burndownData: t("analytics.exportDataTable"),
+        velocity: t("analytics.velocityTitle"),
+      });
+      downloadWordReport(`${base}.doc`, t("analytics.tabSprint"), sprintReportSubtitle, body);
     });
-    downloadWordReport(`${base}.doc`, t("analytics.tabSprint"), sprintReportSubtitle, body);
   };
 
   const exportScatterExcel = async () => {
     if (!scatter?.points.length) return;
     const sprintName = sprints.find((s) => s.id === selectedSprintId)?.name ?? "sprint";
     const base = safeFilePart(`${projectLabel}-${sprintName}-planning`);
-    await downloadScatterExcel(`${base}.xlsx`, scatter.points, scatterChartLabels, t("analytics.scatterTitle"));
+    await runExport(() =>
+      downloadScatterExcel(`${base}.xlsx`, scatter.points, scatterChartLabels, t("analytics.scatterTitle")),
+    );
   };
 
   const exportScatterPdf = () => {
@@ -333,26 +346,30 @@ export function ProjectAnalyticsPage() {
     if (!scatter?.points.length) return;
     const sprintName = sprints.find((s) => s.id === selectedSprintId)?.name ?? "sprint";
     const base = safeFilePart(`${projectLabel}-${sprintName}-planning`);
-    const body = await scatterReportHtmlForWord(
-      scatter.points,
-      scatterChartLabels,
-      t("analytics.scatterTitle"),
-      t("analytics.exportDataTable"),
-    );
-    downloadWordReport(
-      `${base}.doc`,
-      t("analytics.scatterTitle"),
-      `${projectLabel} · ${sprintName}`,
-      body,
-    );
+    await runExport(async () => {
+      const body = await scatterReportHtmlForWord(
+        scatter.points,
+        scatterChartLabels,
+        t("analytics.scatterTitle"),
+        t("analytics.exportDataTable"),
+      );
+      downloadWordReport(
+        `${base}.doc`,
+        t("analytics.scatterTitle"),
+        `${projectLabel} · ${sprintName}`,
+        body,
+      );
+    });
   };
 
   const exportTimeExcel = async () => {
     if (!timeReport) return;
-    await downloadTimeLogExcel("time-log-report.xlsx", timeReport, formatDur, {
-      logs: t("analytics.tabTime"),
-      summary: t("analytics.exportSectionSummary"),
-    });
+    await runExport(() =>
+      downloadTimeLogExcel("time-log-report.xlsx", timeReport, formatDur, {
+        logs: t("analytics.tabTime"),
+        summary: t("analytics.exportSectionSummary"),
+      }),
+    );
   };
 
   const exportTimePdf = () => {
@@ -362,24 +379,28 @@ export function ProjectAnalyticsPage() {
 
   const exportTimeDocx = () => {
     if (!timeReport) return;
-    downloadWordReport(
-      "time-log-report.doc",
-      t("analytics.tabTime"),
-      projectLabel,
-      timeReportHtml(timeReport, formatDur),
+    void runExport(() =>
+      downloadWordReport(
+        "time-log-report.doc",
+        t("analytics.tabTime"),
+        projectLabel,
+        timeReportHtml(timeReport, formatDur),
+      ),
     );
   };
 
   const exportActivityExcel = async () => {
     if (!activity?.items.length) return;
-    await downloadActivityExcel(
-      "activity-log.xlsx",
-      activity.items.map((item) => ({
-        createdAt: activityWhen(item.createdAt),
-        userName: item.user?.fullName ?? t("analytics.systemUser"),
-        details: activityLine(item),
-      })),
-      t("analytics.tabActivity"),
+    await runExport(() =>
+      downloadActivityExcel(
+        "activity-log.xlsx",
+        activity.items.map((item) => ({
+          createdAt: activityWhen(item.createdAt),
+          userName: item.user?.fullName ?? t("analytics.systemUser"),
+          details: activityLine(item),
+        })),
+        t("analytics.tabActivity"),
+      ),
     );
   };
 
@@ -390,11 +411,13 @@ export function ProjectAnalyticsPage() {
 
   const exportActivityDocx = () => {
     if (!activity?.items.length) return;
-    downloadWordReport(
-      "activity-log.doc",
-      t("analytics.tabActivity"),
-      projectLabel,
-      activityReportHtml(activity.items, activityLine, activityWhen),
+    void runExport(() =>
+      downloadWordReport(
+        "activity-log.doc",
+        t("analytics.tabActivity"),
+        projectLabel,
+        activityReportHtml(activity.items, activityLine, activityWhen),
+      ),
     );
   };
 

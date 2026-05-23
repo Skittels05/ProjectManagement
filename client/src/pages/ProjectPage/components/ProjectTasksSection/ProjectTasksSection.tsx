@@ -7,6 +7,7 @@ import type { TaskDto } from "../../../../store/types/tasks.types";
 import { flattenTaskHierarchy, hasActiveTaskFilters } from "../../../../shared/lib/taskListQuery";
 import type { GetTasksArg } from "../../../../store/api/tasksApi";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { subtaskCountLabel, taskStatusLabel, useI18n } from "../../../../shared/i18n";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 import { Preloader } from "../../../../components/Preloader/Preloader";
@@ -35,6 +36,7 @@ export function ProjectTasksSection({
   onAddTask,
 }: ProjectTasksSectionProps) {
   const { t } = useI18n();
+  const toast = useToast();
 
   const {
     data: tasksPage,
@@ -69,8 +71,9 @@ export function ProjectTasksSection({
     setDeletingId(task.id);
     try {
       await deleteTask({ projectId, taskId: task.id }).unwrap();
+      toast.success(t("toast.taskDeleted"));
     } catch (err) {
-      window.alert(getRtkQueryErrorMessage(err));
+      toast.error(getRtkQueryErrorMessage(err));
     } finally {
       setDeletingId(null);
     }

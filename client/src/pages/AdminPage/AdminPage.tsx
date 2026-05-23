@@ -6,6 +6,7 @@ import { useGetAdminUsersQuery, useUpdateAdminUserMutation } from "../../store/a
 import type { AdminUserDto, AdminUserFilterOption, AdminUserSortOption } from "../../store/types/admin.types";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { sameUserId } from "../../shared/lib/uuid";
+import { useToast } from "../../components/Toast/toastContext";
 import { useI18n } from "../../shared/i18n";
 import { Preloader } from "../../components/Preloader/Preloader";
 import { AdminUsersToolbar } from "./components/AdminUsersToolbar/AdminUsersToolbar";
@@ -15,13 +16,13 @@ const PAGE_SIZE = 50;
 
 export function AdminPage() {
   const { t } = useI18n();
+  const toast = useToast();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<AdminUserSortOption>("name_asc");
   const [filterBy, setFilterBy] = useState<AdminUserFilterOption>("all");
   const [offset, setOffset] = useState(0);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [busyFor, setBusyFor] = useState<string | null>(null);
 
   const queryArgs = useMemo(
@@ -82,12 +83,12 @@ export function AdminPage() {
       return;
     }
 
-    setActionError(null);
     setBusyFor(target.id);
     try {
       await updateAdminUser({ userId: target.id, ...patch }).unwrap();
+      toast.success(t("toast.adminUserUpdated"));
     } catch (err) {
-      setActionError(getRtkQueryErrorMessage(err));
+      toast.error(getRtkQueryErrorMessage(err));
     } finally {
       setBusyFor(null);
     }
@@ -127,7 +128,6 @@ export function AdminPage() {
         onFilterChange={handleFilterChange}
       />
 
-      {actionError ? <p className="form-error">{actionError}</p> : null}
       {listError ? <p className="form-error">{listError}</p> : null}
 
       <p className="muted small-meta admin-page-meta">

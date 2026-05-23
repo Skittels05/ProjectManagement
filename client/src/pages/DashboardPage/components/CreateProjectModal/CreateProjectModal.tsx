@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { useCreateProjectMutation } from "../../../../store/api/projectsApi";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import "./CreateProjectModal.css";
 
@@ -11,6 +12,7 @@ type CreateProjectModalProps = {
 
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const [createProject, { isLoading: createLoading }] = useCreateProjectMutation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -42,6 +44,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     setCreateError(null);
     try {
       await createProject({ name, description: description || undefined }).unwrap();
+      toast.success(t("toast.projectCreated"));
       onClose();
     } catch (e) {
       setCreateError(getRtkQueryErrorMessage(e));

@@ -17,6 +17,7 @@ import { isAssignableMemberRole, isOwnerRoleName } from "../../shared/lib/projec
 import { isUuidV4, sameUserId } from "../../shared/lib/uuid";
 import { getRtkQueryErrorMessage } from "../../shared/lib/rtkQueryError";
 import { formatLocaleDateTime } from "../../shared/lib/formatDate";
+import { useToast } from "../../components/Toast/toastContext";
 import { memberCountLabel, useI18n } from "../../shared/i18n";
 import { useAppSelector } from "../../store/hooks";
 import { ProjectMembersModal } from "./components/ProjectMembersModal/ProjectMembersModal";
@@ -55,6 +56,7 @@ export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { t } = useI18n();
+  const toast = useToast();
   const locale = useAppSelector((s) => s.settings.locale);
 
   const [addMember] = useAddProjectMemberMutation();
@@ -288,6 +290,7 @@ export function ProjectPage() {
       }).unwrap();
       setInviteEmail("");
       setInviteRole("member");
+      toast.success(t("toast.memberInvited"));
     } catch (err) {
       setInviteError(getRtkQueryErrorMessage(err));
     } finally {
@@ -310,6 +313,7 @@ export function ProjectPage() {
         userId: member.userId,
         role: nextTrim,
       }).unwrap();
+      toast.success(t("toast.memberRoleUpdated"));
     } catch (err) {
       setMemberError(getRtkQueryErrorMessage(err));
     } finally {
@@ -332,7 +336,10 @@ export function ProjectPage() {
         userId: member.userId,
       }).unwrap();
       if ("left" in payload && payload.left) {
+        toast.success(t("toast.memberRemoved"));
         navigate("/projects", { replace: true });
+      } else {
+        toast.success(t("toast.memberRemoved"));
       }
     } catch (err) {
       setMemberError(getRtkQueryErrorMessage(err));
@@ -352,8 +359,9 @@ export function ProjectPage() {
       if (iterationScope === sprint.id) {
         syncProjectUrl({ iterationScope: "backlog" });
       }
+      toast.success(t("toast.sprintDeleted"));
     } catch (err) {
-      window.alert(getRtkQueryErrorMessage(err));
+      toast.error(getRtkQueryErrorMessage(err));
     } finally {
       setDeletingSprintId(null);
     }

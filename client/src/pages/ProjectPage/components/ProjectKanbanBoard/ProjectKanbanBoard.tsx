@@ -25,6 +25,7 @@ import {
   columnDroppableId,
   parseColumnDroppableId,
 } from "../../../../shared/lib/kanban";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { kanbanColumnTitle, subtaskCountLabel, useI18n } from "../../../../shared/i18n";
 import {
   columnIdsFromGrouped,
@@ -275,6 +276,7 @@ export function ProjectKanbanBoard({
   onAddTask,
 }: ProjectKanbanBoardProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const kanbanColumns = useMemo(
     () =>
       KANBAN_COLUMN_IDS.map((id) => ({
@@ -404,7 +406,7 @@ export function ProjectKanbanBoard({
       columnIdsRef.current = layoutColumnIds;
       setColumnIds(layoutColumnIds);
       const colTitle = kanbanColumnTitle(t, status);
-      window.alert(t("project.wipLimit", { column: colTitle, limit: wipLimit ?? 0 }));
+      toast.warning(t("project.wipLimit", { column: colTitle, limit: wipLimit ?? 0 }));
       setActiveId(null);
       return;
     }
@@ -420,7 +422,7 @@ export function ProjectKanbanBoard({
     } catch (err) {
       columnIdsRef.current = layoutColumnIds;
       setColumnIds(layoutColumnIds);
-      window.alert(getRtkQueryErrorMessage(err));
+      toast.error(getRtkQueryErrorMessage(err));
     } finally {
       setSaving(false);
       setActiveId(null);

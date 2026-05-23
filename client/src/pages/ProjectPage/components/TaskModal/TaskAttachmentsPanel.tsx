@@ -8,6 +8,7 @@ import {
 import type { TaskAttachmentDto } from "../../../../store/types/taskEngagement.types";
 import { isImageAttachment } from "../../../../shared/lib/attachments";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
+import { useToast } from "../../../../components/Toast/toastContext";
 import { useI18n } from "../../../../shared/i18n";
 import { TaskAttachmentImagePreview } from "./TaskAttachmentImagePreview";
 
@@ -81,6 +82,7 @@ function AttachmentRow({
 
 export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanelProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: attachments = [], isLoading, error } = useGetTaskAttachmentsQuery({ projectId, taskId });
   const [upload, { isLoading: uploading }] = useUploadTaskAttachmentMutation();
@@ -93,6 +95,7 @@ export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanel
     setActionError(null);
     try {
       await upload({ projectId, taskId, file }).unwrap();
+      toast.success(t("toast.attachmentUploaded"));
     } catch (err) {
       setActionError(getRtkQueryErrorMessage(err));
     } finally {
@@ -119,6 +122,7 @@ export function TaskAttachmentsPanel({ projectId, taskId }: TaskAttachmentsPanel
     setActionError(null);
     try {
       await deleteAttachment({ projectId, taskId, attachmentId }).unwrap();
+      toast.success(t("toast.attachmentDeleted"));
     } catch (err) {
       setActionError(getRtkQueryErrorMessage(err));
     }

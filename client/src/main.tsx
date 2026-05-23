@@ -4,13 +4,16 @@ import { Provider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import { store } from "./store";
 import { router } from "./app/router";
+import { ToastProvider } from "./components/Toast/toastContext";
 import "./app/global.css";
 import "./components/Preloader/Preloader.css";
 
 ReactDOM.createRoot(document.getElementById("app") as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </Provider>
   </React.StrictMode>,
 );
