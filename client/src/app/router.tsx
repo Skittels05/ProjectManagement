@@ -12,6 +12,7 @@ import { AdminRoute } from "../components/AdminRoute/AdminRoute";
 import { RegisterPage } from "../pages/RegisterPage/RegisterPage";
 import { ProfilePage } from "../pages/ProfilePage/ProfilePage";
 import { ProjectSettingsPage } from "../pages/ProjectSettingsPage/ProjectSettingsPage";
+import { NotFoundPage } from "../pages/NotFoundPage/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
           { path: "register", element: <RegisterPage /> },
         ],
       },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

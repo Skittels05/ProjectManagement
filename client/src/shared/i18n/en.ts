@@ -80,6 +80,14 @@ export const en = {
       "Reset theme, language, and saved dashboard/project navigation on this device? Your account data will not be affected.",
     passwordMismatch: "New passwords do not match",
   },
+  notFound: {
+    eyebrow: "Error",
+    title: "Page not found",
+    description: "The address may be incorrect or the page was removed. Check the URL or return to a known section.",
+    home: "Home",
+    projects: "Projects",
+    signIn: "Sign in",
+  },
   home: {
     eyebrow: "Project management",
     title: "Plan sprints, track tasks, and ship with your team",
