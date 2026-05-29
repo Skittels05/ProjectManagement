@@ -203,7 +203,7 @@ export function TaskTimeLogsPanel({ projectId, taskId }: TaskTimeLogsPanelProps)
           />
         </label>
         {formError ? <p className="form-error">{formError}</p> : null}
-        <button type="submit" disabled={creating}>
+        <button type="submit" className="primary-button" disabled={creating}>
           {creating ? t("project.saving") : t("project.logTime")}
         </button>
       </form>
@@ -306,10 +306,10 @@ function TimeLogActions(props: {
   if (props.editMode) {
     return (
       <div className="task-comment-actions">
-        <button type="button" onClick={props.onSave}>
+        <button type="button" className="secondary-button" onClick={props.onSave}>
           {t("project.edit")}
         </button>
-        <button type="button" className="danger" onClick={props.onCancel}>
+        <button type="button" className="danger-button" onClick={props.onCancel}>
           {t("project.delete")}
         </button>
         </div>
@@ -317,7 +317,7 @@ function TimeLogActions(props: {
   }
   return (
     <div className="task-comment-actions">
-      <button type="button" disabled={props.saving} onClick={props.onSave}>
+      <button type="button" className="primary-button" disabled={props.saving} onClick={props.onSave}>
         {t("project.saveChanges")}
       </button>
       <button type="button" className="secondary-button" disabled={props.saving} onClick={props.onCancel}>

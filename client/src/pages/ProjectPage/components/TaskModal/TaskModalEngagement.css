@@ -114,8 +114,26 @@
   margin-bottom: 0.5rem;
 }
 
+.task-time-log-form,
+.task-comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.task-time-log-form .primary-button,
+.task-comment-form .primary-button {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+}
+
 .task-comment-form button {
-  margin-top: 0.35rem;
+  margin-top: 0;
+}
+
+.task-subtask-add .primary-button {
+  flex-shrink: 0;
+  align-self: stretch;
 }
 
 .task-comment-actions,
@@ -181,8 +199,68 @@
   display: none;
 }
 
+.modal-backdrop--task {
+  align-items: flex-start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  -webkit-overflow-scrolling: touch;
+}
+
 .modal-card--task {
-  max-width: min(720px, 96vw);
+  width: min(720px, 100%);
+  max-width: min(720px, 100%);
+  max-height: min(
+    calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)),
+    900px
+  );
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1.5rem 1.75rem;
+}
+
+.task-modal-head {
+  flex-shrink: 0;
+}
+
+.modal-card--task .modal-subtitle {
+  margin-bottom: 0;
+}
+
+.task-modal-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-top: 1rem;
+  padding-right: 0.15rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.task-modal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.task-modal-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.45);
+}
+
+.modal-card--task .auth-form.task-modal-form {
+  margin-top: 0;
+  gap: 0;
+}
+
+.task-modal-field-hint {
+  display: block;
+  margin-top: 0.15rem;
+  font-weight: 400;
+  line-height: 1.35;
 }
 
 .task-subtasks-panel {

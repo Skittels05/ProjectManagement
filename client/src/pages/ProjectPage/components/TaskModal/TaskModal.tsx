@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useCreateTaskMutation, useUpdateTaskMutation } from "../../../../store/api/tasksApi";
 import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import type { SprintDto } from "../../../../store/types/sprints.types";
@@ -86,11 +87,20 @@ export function TaskModal({
 
   useEffect(() => {
     if (!isOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
+
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
+
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) {
@@ -168,134 +178,142 @@ export function TaskModal({
     (mode === "edit" && task?.parentTaskId) || (mode === "create" && defaultParentTaskId),
   );
 
-  return (
+  return createPortal(
     <div
-      className="modal-backdrop"
+      className="modal-backdrop modal-backdrop--task"
       role="presentation"
       onMouseDown={(ev) => {
         if (ev.target === ev.currentTarget) onClose();
       }}
     >
       <div className="modal-card modal-card--task" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
-        <div className="modal-header">
-          <h2 id="task-modal-title" className="modal-title">
-            {heading}
-          </h2>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={t("dashboard.close")}>
-            ×
-          </button>
+        <div className="task-modal-head">
+          <div className="modal-header">
+            <h2 id="task-modal-title" className="modal-title">
+              {heading}
+            </h2>
+            <button type="button" className="modal-close" onClick={onClose} aria-label={t("dashboard.close")}>
+              ×
+            </button>
+          </div>
+          <p className="modal-subtitle muted">
+            {isSubtask && parentTask
+              ? t("project.subtaskOf", { title: parentTask.title })
+              : t("project.taskSubtitle")}
+          </p>
         </div>
-        <p className="modal-subtitle muted">
-          {isSubtask && parentTask
-            ? t("project.subtaskOf", { title: parentTask.title })
-            : t("project.taskSubtitle")}
-        </p>
-        <form className="project-form auth-form" onSubmit={(ev) => void handleSubmit(ev)}>
-          <div className="task-modal-grid">
-            <label className="full-row">
-              {t("project.taskTitle")}
-              <input
-                type="text"
-                value={title}
-                onChange={(ev) => setTitle(ev.target.value)}
-                maxLength={500}
-                required
-                autoFocus
-              />
-            </label>
-            <label className="full-row">
-              {t("dashboard.descriptionOptional")}
-              <textarea value={description} onChange={(ev) => setDescription(ev.target.value)} rows={3} />
-            </label>
-            <label>
-              {t("project.status")}
-              <select value={status} onChange={(ev) => setStatus(ev.target.value as TaskStatus)}>
-                <option value="todo">{taskStatusLabel(t, "todo")}</option>
-                <option value="in_progress">{taskStatusLabel(t, "in_progress")}</option>
-                <option value="done">{taskStatusLabel(t, "done")}</option>
-              </select>
-            </label>
-            <label>
-              {t("project.priority")}
-              <span className="muted small-meta"> ({t("project.priorityHint")})</span>
-              <input
-                type="number"
-                min={0}
-                max={1000}
-                value={priority}
-                onChange={(ev) => setPriority(ev.target.value)}
-              />
-            </label>
-            <label>
-              {t("project.storyPointsOptional")}
-              <select value={storyPoints} onChange={(ev) => setStoryPoints(ev.target.value)}>
-                <option value="">{t("project.dash")}</option>
-                {SP_OPTIONS.filter((x) => x !== "").map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {!isSubtask ? (
+
+        <div className="task-modal-scroll">
+          <form className="project-form auth-form task-modal-form" onSubmit={(ev) => void handleSubmit(ev)}>
+            <div className="task-modal-grid">
+              <label className="full-row">
+                {t("project.taskTitle")}
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(ev) => setTitle(ev.target.value)}
+                  maxLength={500}
+                  required
+                  autoFocus
+                />
+              </label>
+              <label className="full-row">
+                {t("dashboard.descriptionOptional")}
+                <textarea value={description} onChange={(ev) => setDescription(ev.target.value)} rows={3} />
+              </label>
               <label>
-                {t("project.sprintLabel")}
-                <select value={sprintChoice} onChange={(ev) => setSprintChoice(ev.target.value)}>
-                  <option value="">{t("project.backlogNoSprint")}</option>
-                  {sprints.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
+                {t("project.status")}
+                <select value={status} onChange={(ev) => setStatus(ev.target.value as TaskStatus)}>
+                  <option value="todo">{taskStatusLabel(t, "todo")}</option>
+                  <option value="in_progress">{taskStatusLabel(t, "in_progress")}</option>
+                  <option value="done">{taskStatusLabel(t, "done")}</option>
+                </select>
+              </label>
+              <label>
+                {t("project.priority")}
+                <span className="task-modal-field-hint muted small-meta">{t("project.priorityHint")}</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={1000}
+                  value={priority}
+                  onChange={(ev) => setPriority(ev.target.value)}
+                />
+              </label>
+              <div className="task-modal-pair-row">
+                <label>
+                  {t("project.storyPointsOptional")}
+                  <select value={storyPoints} onChange={(ev) => setStoryPoints(ev.target.value)}>
+                    <option value="">{t("project.dash")}</option>
+                    {SP_OPTIONS.filter((x) => x !== "").map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {!isSubtask ? (
+                  <label>
+                    {t("project.sprintLabel")}
+                    <select value={sprintChoice} onChange={(ev) => setSprintChoice(ev.target.value)}>
+                      <option value="">{t("project.backlogNoSprint")}</option>
+                      {sprints.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+              </div>
+              <label className="full-row">
+                {t("project.assignee")}
+                <select value={assigneeChoice} onChange={(ev) => setAssigneeChoice(ev.target.value)}>
+                  <option value="">{t("project.unassigned")}</option>
+                  {members.map((m) => (
+                    <option key={m.userId} value={m.userId}>
+                      {m.fullName} ({m.email})
                     </option>
                   ))}
                 </select>
               </label>
-            ) : null}
-            <label className="full-row">
-              {t("project.assignee")}
-              <select value={assigneeChoice} onChange={(ev) => setAssigneeChoice(ev.target.value)}>
-                <option value="">{t("project.unassigned")}</option>
-                {members.map((m) => (
-                  <option key={m.userId} value={m.userId}>
-                    {m.fullName} ({m.email})
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          {error ? <p className="form-error">{error}</p> : null}
-          <div className="modal-actions">
-            <button type="button" className="secondary-button" onClick={onClose} disabled={saving}>
-              {t("dashboard.cancel")}
-            </button>
-            <button type="submit" disabled={saving}>
-              {saving
-                ? t("project.saving")
-                : mode === "create"
-                  ? t("project.createTask")
-                  : t("project.saveChanges")}
-            </button>
-          </div>
-        </form>
+            </div>
+            {error ? <p className="form-error">{error}</p> : null}
+            <div className="modal-actions">
+              <button type="button" className="secondary-button" onClick={onClose} disabled={saving}>
+                {t("dashboard.cancel")}
+              </button>
+              <button type="submit" disabled={saving}>
+                {saving
+                  ? t("project.saving")
+                  : mode === "create"
+                    ? t("project.createTask")
+                    : t("project.saveChanges")}
+              </button>
+            </div>
+          </form>
 
-        {mode === "edit" && task && !task.parentTaskId && onEditSubtask ? (
-          <TaskSubtasksPanel
-            projectId={projectId}
-            parentTask={task}
-            subtasks={subtasks}
-            onEditSubtask={onEditSubtask}
-          />
-        ) : null}
+          {mode === "edit" && task && !task.parentTaskId && onEditSubtask ? (
+            <TaskSubtasksPanel
+              projectId={projectId}
+              parentTask={task}
+              subtasks={subtasks}
+              onEditSubtask={onEditSubtask}
+            />
+          ) : null}
 
-        {mode === "edit" && task ? (
-          <div className="task-modal-engagement">
-            <TaskTimeLogsPanel projectId={projectId} taskId={task.id} />
-            <TaskCommentsPanel projectId={projectId} taskId={task.id} />
-            <TaskAttachmentsPanel projectId={projectId} taskId={task.id} />
-          </div>
-        ) : (
-          <p className="muted small-meta task-modal-engagement-hint">{t("project.saveTaskFirst")}</p>
-        )}
+          {mode === "edit" && task ? (
+            <div className="task-modal-engagement">
+              <TaskTimeLogsPanel projectId={projectId} taskId={task.id} />
+              <TaskCommentsPanel projectId={projectId} taskId={task.id} />
+              <TaskAttachmentsPanel projectId={projectId} taskId={task.id} />
+            </div>
+          ) : (
+            <p className="muted small-meta task-modal-engagement-hint">{t("project.saveTaskFirst")}</p>
+          )}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -6,9 +6,12 @@ import { store } from "./store";
 import { router } from "./app/router";
 import { ConfirmProvider } from "./components/ConfirmDialog/confirmContext";
 import { ToastProvider } from "./components/Toast/toastContext";
+import { setupHttpAuthInterceptor } from "./shared/api/httpAuthInterceptor";
 import "./pages/DashboardPage/components/CreateProjectModal/CreateProjectModal.css";
 import "./app/global.css";
 import "./components/Preloader/Preloader.css";
+
+setupHttpAuthInterceptor(store);
 
 ReactDOM.createRoot(document.getElementById("app") as HTMLElement).render(
   <React.StrictMode>

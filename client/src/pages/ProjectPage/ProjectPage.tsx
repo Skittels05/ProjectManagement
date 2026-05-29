@@ -220,9 +220,10 @@ export function ProjectPage() {
   }, [iterationScope, sprints, t]);
 
   function openTaskCreate(parentId: string | null = null) {
+    const safeParentId = typeof parentId === "string" ? parentId : null;
     setTaskModalMode("create");
     setEditingTask(null);
-    setDefaultParentTaskId(parentId);
+    setDefaultParentTaskId(safeParentId);
     setTaskModalOpen(true);
   }
 
@@ -368,7 +369,7 @@ export function ProjectPage() {
                 >
                   <SettingsIcon />
                 </Link>
-                <AddTaskButton onClick={openTaskCreate} />
+                <AddTaskButton onClick={() => openTaskCreate()} />
               </div>
               <p className="muted project-page-toolbar-meta">
                 {memberCountLabel(t, members.length)} · {t("project.yourRole")}{" "}

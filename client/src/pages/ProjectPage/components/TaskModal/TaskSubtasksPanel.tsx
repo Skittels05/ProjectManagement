@@ -86,7 +86,7 @@ export function TaskSubtasksPanel({
           <option value="in_progress">{taskStatusLabel(t, "in_progress")}</option>
           <option value="done">{taskStatusLabel(t, "done")}</option>
         </select>
-        <button type="submit" disabled={saving || title.trim() === ""}>
+        <button type="submit" className="primary-button" disabled={saving || title.trim() === ""}>
           {saving ? t("project.adding") : t("project.add")}
         </button>
       </form>

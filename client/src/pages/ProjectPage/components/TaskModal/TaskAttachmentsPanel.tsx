@@ -69,10 +69,10 @@ function AttachmentRow({
           </span>
         </div>
         <div className="task-attachment-actions">
-          <button type="button" disabled={downloading} onClick={onDownload}>
+          <button type="button" className="secondary-button" disabled={downloading} onClick={onDownload}>
             {downloading ? dash : downloadLabel}
           </button>
-          <button type="button" className="danger" onClick={onDelete}>
+          <button type="button" className="danger-button" onClick={onDelete}>
             {removeLabel}
           </button>
         </div>

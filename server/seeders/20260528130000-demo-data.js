@@ -199,10 +199,10 @@ module.exports = {
       action: "seed.demo_data_created",
       entity_type: "project",
       entity_id: project.id,
-      metadata: {
+      metadata: JSON.stringify({
         source: "sequelize-seed",
         projectName: project.name,
-      },
+      }),
       created_at: now,
     }));
 

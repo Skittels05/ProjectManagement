@@ -118,12 +118,38 @@
   gap: 0.75rem 1rem;
 }
 
+.task-modal-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-self: start;
+  min-width: 0;
+}
+
 .task-modal-grid .full-row {
   grid-column: 1 / -1;
 }
 
+.task-modal-pair-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.task-modal-pair-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
 @media (max-width: 640px) {
   .task-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-modal-pair-row {
     grid-template-columns: 1fr;
   }
 }
