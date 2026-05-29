@@ -1,4 +1,5 @@
 import { type FormEvent } from "react";
+import { RoleCombobox } from "../../../../components/RoleCombobox/RoleCombobox";
 import { useI18n } from "../../../../shared/i18n";
 import { ProjectPanel } from "../../../../components/ProjectPanel/ProjectPanel";
 
@@ -33,11 +34,6 @@ export function ProjectInviteForm({
         {t("project.inviteHint")}
       </p>
       <form className="project-form auth-form invite-form" onSubmit={(e) => void onSubmit(e)}>
-        <datalist id="invite-role-suggestions">
-          {roleSuggestions.map((r) => (
-            <option key={r} value={r} />
-          ))}
-        </datalist>
         <label>
           {t("project.inviteEmail")}
           <input
@@ -51,13 +47,12 @@ export function ProjectInviteForm({
         </label>
         <label>
           {t("project.inviteRole")}
-          <input
-            type="text"
-            list="invite-role-suggestions"
+          <RoleCombobox
             value={inviteRole}
-            onChange={(e) => onInviteRoleChange(e.target.value)}
+            suggestions={roleSuggestions}
+            onChange={onInviteRoleChange}
             placeholder={t("project.inviteRolePlaceholder")}
-            maxLength={32}
+            ariaLabel={t("project.inviteRole")}
             required
           />
         </label>

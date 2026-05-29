@@ -26,6 +26,7 @@ function tasksQueryParams(arg: GetTasksArg): Record<string, string | boolean> {
   if (arg.assignee && arg.assignee !== "all") params.assignee = arg.assignee;
   if (arg.role) params.role = arg.role;
   if (arg.rootsOnly) params.rootsOnly = "true";
+  if (arg.parentTaskId) params.parentTaskId = arg.parentTaskId;
   if (arg.limit != null) params.limit = String(arg.limit);
   if (arg.offset != null && arg.offset > 0) params.offset = String(arg.offset);
   return params;

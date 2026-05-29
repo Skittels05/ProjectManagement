@@ -1,0 +1,143 @@
+.role-combobox {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 5.5rem;
+  max-width: 12rem;
+}
+
+.role-combobox-input {
+  display: block;
+  width: 100%;
+  min-height: 2.5rem;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 0.45rem 2rem 0.45rem 0.6rem;
+  background: var(--surface-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.role-combobox-input:focus {
+  outline: none;
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.role-combobox-input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.role-combobox-toggle {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0 9px 9px 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.role-combobox-toggle::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  margin: 0 auto;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--text-muted);
+}
+
+.role-combobox-toggle:hover:not(:disabled)::before {
+  border-top-color: var(--text-primary);
+}
+
+.role-combobox-toggle:focus-visible {
+  outline: none;
+}
+
+.role-combobox-toggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.role-combobox-list {
+  max-height: 12rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-md);
+}
+
+.role-combobox-option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.role-combobox-option:hover,
+.role-combobox-option:focus-visible {
+  background: var(--accent-bg);
+  outline: none;
+}
+
+:is(.auth-form, .project-form) .role-combobox {
+  max-width: none;
+}
+
+:is(.auth-form, .project-form) .role-combobox-input {
+  min-height: 2.75rem;
+  padding: 0.85rem 2.35rem 0.85rem 1rem;
+  border-radius: 12px;
+}
+
+:is(.auth-form, .project-form) .role-combobox-toggle {
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 2.35rem;
+  border-radius: 0 11px 11px 0;
+}
+
+@media (max-width: 768px) {
+  .role-combobox {
+    max-width: none;
+  }
+}

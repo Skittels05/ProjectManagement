@@ -170,10 +170,6 @@ export function TaskModal({
       : t("project.editTask");
   const parentTask =
     defaultParentTaskId != null ? allTasks.find((t) => t.id === defaultParentTaskId) : null;
-  const subtasks =
-    mode === "edit" && task && !task.parentTaskId
-      ? allTasks.filter((t) => t.parentTaskId === task.id)
-      : [];
   const isSubtask = Boolean(
     (mode === "edit" && task?.parentTaskId) || (mode === "create" && defaultParentTaskId),
   );
@@ -297,7 +293,6 @@ export function TaskModal({
             <TaskSubtasksPanel
               projectId={projectId}
               parentTask={task}
-              subtasks={subtasks}
               onEditSubtask={onEditSubtask}
             />
           ) : null}

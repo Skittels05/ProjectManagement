@@ -13,6 +13,7 @@
 
 .project-team-section .members-table-wrap {
   overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
 }
 

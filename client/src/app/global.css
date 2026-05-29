@@ -92,10 +92,10 @@ button {
     .toolbar-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
     .toolbar-field select,
     .toolbar-field textarea,
-    .auth-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    .auth-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.role-combobox-input),
     .auth-form select,
     .auth-form textarea,
-    .project-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    .project-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.role-combobox-input),
     .project-form select,
     .project-form textarea,
     .modal-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
@@ -104,7 +104,7 @@ button {
     .task-modal-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
     .task-modal-form select,
     .task-modal-form textarea,
-    .members-table input:not([type="checkbox"]):not([type="radio"]),
+    .members-table input:not([type="checkbox"]):not([type="radio"]):not(.role-combobox-input),
     .members-table select,
     .task-time-log-form input,
     .task-comment-form textarea,
@@ -140,7 +140,7 @@ button {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
 }
 
-:is(.toolbar-field input, .auth-form input, .modal-form input, .task-modal-form input, .members-table input, .task-time-log-form input, .task-subtask-add input):focus,
+:is(.toolbar-field input, .auth-form input, .modal-form input, .task-modal-form input, .members-table input, .task-time-log-form input, .task-subtask-add input):not(.role-combobox-input):focus,
 :is(.toolbar-field select, .auth-form select, .project-form select, .modal-form select, .task-modal-form select, .members-table select, .task-subtask-add select):focus,
 :is(.toolbar-field textarea, .auth-form textarea, .project-form textarea, .modal-form textarea, .task-modal-form textarea, .task-comment-form textarea):focus {
   outline: none;
@@ -288,7 +288,7 @@ strong {
   font-size: 0.95rem;
 }
 
-.auth-form input,
+.auth-form input:not(.role-combobox-input),
 .auth-form select,
 .auth-form textarea {
   border: 1px solid var(--border-strong);
@@ -300,7 +300,7 @@ strong {
 }
 
 .auth-form button[type="submit"],
-.auth-form button:not(.secondary-button):not(.danger) {
+.auth-form button:not(.secondary-button):not(.danger):not(.role-combobox-toggle):not(.role-combobox-option) {
   border: none;
   border-radius: 12px;
   padding: 0.9rem 1rem;

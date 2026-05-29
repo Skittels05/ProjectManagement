@@ -28,6 +28,7 @@ export type TaskListFilterParams = {
   assignee: "all" | "unassigned" | string;
   role: string;
   rootsOnly: boolean;
+  parentTaskId: string | null;
   limit: number;
   offset: number;
 };
@@ -98,6 +99,9 @@ export function parseTaskListQuery(query: ParsedQs): TaskListFilterParams {
 
   const rootsOnly = query.rootsOnly === "true" || query.rootsOnly === "1";
 
+  const parentRaw = String(query.parentTaskId ?? "").trim();
+  const parentTaskId = isUuidV4(parentRaw) ? parentRaw : null;
+
   let limit: number;
   let offset: number;
   if (rootsOnly) {
@@ -123,6 +127,7 @@ export function parseTaskListQuery(query: ParsedQs): TaskListFilterParams {
     assignee,
     role: String(query.role ?? "all").trim(),
     rootsOnly,
+    parentTaskId,
     limit,
     offset,
   };

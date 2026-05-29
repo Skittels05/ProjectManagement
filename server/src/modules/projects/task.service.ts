@@ -186,15 +186,19 @@ export async function listTasks(projectId: string, userId: string, query: Parsed
   const params = parseTaskListQuery(query);
   const whereParts: WhereOptions[] = [{ projectId }];
 
-  const sprintFilter = query?.sprintId;
-  if (sprintFilter === "backlog") {
-    whereParts.push({ sprintId: null });
-  } else if (typeof sprintFilter === "string" && isUuidV4(sprintFilter)) {
-    whereParts.push({ sprintId: sprintFilter });
-  }
+  if (params.parentTaskId) {
+    whereParts.push({ parentTaskId: params.parentTaskId });
+  } else {
+    const sprintFilter = query?.sprintId;
+    if (sprintFilter === "backlog") {
+      whereParts.push({ sprintId: null });
+    } else if (typeof sprintFilter === "string" && isUuidV4(sprintFilter)) {
+      whereParts.push({ sprintId: sprintFilter });
+    }
 
-  if (params.rootsOnly) {
-    whereParts.push({ parentTaskId: null });
+    if (params.rootsOnly) {
+      whereParts.push({ parentTaskId: null });
+    }
   }
 
   if (params.status !== "all") {

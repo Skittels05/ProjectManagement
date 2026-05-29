@@ -4,13 +4,14 @@ export type TasksViewMode = "list" | "kanban";
 
 export type TasksApiQueryParams = {
   projectId: string;
-  sprintFilter: "backlog" | string;
+  sprintFilter?: "backlog" | string;
   search?: string;
   sort?: TaskListQuery["sortBy"];
   status?: TaskListQuery["statusFilter"];
   assignee?: TaskListQuery["assigneeFilter"];
   role?: TaskListQuery["roleFilter"];
   rootsOnly?: boolean;
+  parentTaskId?: string;
   limit?: number;
   offset?: number;
 };

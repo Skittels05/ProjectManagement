@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { useCreateTaskMutation } from "../../../../store/api/tasksApi";
+import { useCreateTaskMutation, useGetTasksQuery } from "../../../../store/api/tasksApi";
 import type { TaskDto, TaskStatus } from "../../../../store/types/tasks.types";
 import { getRtkQueryErrorMessage } from "../../../../shared/lib/rtkQueryError";
 import { useToast } from "../../../../components/Toast/toastContext";
@@ -8,19 +8,24 @@ import { taskStatusLabel, useI18n } from "../../../../shared/i18n";
 type TaskSubtasksPanelProps = {
   projectId: string;
   parentTask: TaskDto;
-  subtasks: TaskDto[];
   onEditSubtask: (task: TaskDto) => void;
 };
 
 export function TaskSubtasksPanel({
   projectId,
   parentTask,
-  subtasks,
   onEditSubtask,
 }: TaskSubtasksPanelProps) {
   const { t } = useI18n();
   const toast = useToast();
   const [createTask] = useCreateTaskMutation();
+  const { data: subtasksPage, isLoading } = useGetTasksQuery({
+    projectId,
+    parentTaskId: parentTask.id,
+    limit: 100,
+    offset: 0,
+  });
+  const subtasks = subtasksPage?.tasks ?? [];
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<TaskStatus>("todo");
   const [saving, setSaving] = useState(false);
@@ -58,7 +63,9 @@ export function TaskSubtasksPanel({
       <h3 id="task-subtasks-heading" className="task-subtasks-heading">
         {t("project.subtasks")}
       </h3>
-      {subtasks.length === 0 ? (
+      {isLoading ? (
+        <p className="muted small-meta">{t("project.loading")}</p>
+      ) : subtasks.length === 0 ? (
         <p className="muted small-meta">{t("project.noSubtasks")}</p>
       ) : (
         <ul className="task-subtasks-list">

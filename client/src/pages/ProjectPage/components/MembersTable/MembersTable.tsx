@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { RoleCombobox } from "../../../../components/RoleCombobox/RoleCombobox";
 import type { ProjectMemberDto } from "../../../../store/types/projects.types";
 import { isAssignableMemberRole } from "../../../../shared/lib/projectRole";
 import { sameUserId } from "../../../../shared/lib/uuid";
@@ -8,10 +9,17 @@ import "../ProjectTeamSection/ProjectTeamSection.css";
 type MemberRoleFieldProps = {
   member: ProjectMemberDto;
   busy: boolean;
+  roleSuggestions: string[];
   onCommit: (next: string) => void;
 };
 
-function MemberRoleField({ member, busy, onCommit, roleAriaLabel }: MemberRoleFieldProps & { roleAriaLabel: string }) {
+function MemberRoleField({
+  member,
+  busy,
+  roleSuggestions,
+  onCommit,
+  roleAriaLabel,
+}: MemberRoleFieldProps & { roleAriaLabel: string }) {
   const [draft, setDraft] = useState(member.role);
 
   useEffect(() => {
@@ -19,14 +27,20 @@ function MemberRoleField({ member, busy, onCommit, roleAriaLabel }: MemberRoleFi
   }, [member.role]);
 
   return (
-    <input
-      className="role-select"
-      list="team-role-suggestions"
+    <RoleCombobox
       value={draft}
+      suggestions={roleSuggestions}
       disabled={busy}
-      maxLength={32}
-      aria-label={roleAriaLabel}
-      onChange={(e) => setDraft(e.target.value)}
+      ariaLabel={roleAriaLabel}
+      onChange={setDraft}
+      onSelect={(next) => {
+        if (!isAssignableMemberRole(next) || next === member.role.trim()) {
+          setDraft(member.role);
+          return;
+        }
+        setDraft(next);
+        onCommit(next);
+      }}
       onBlur={() => {
         const next = draft.trim();
         if (!next || next === member.role.trim()) {
@@ -74,11 +88,6 @@ export function MembersTable({
 
   return (
     <>
-      <datalist id="team-role-suggestions">
-        {roleSuggestions.map((r) => (
-          <option key={r} value={r} />
-        ))}
-      </datalist>
       <p className="muted small-meta">{memberCountLabel(t, members.length, "members")}</p>
       {memberError ? <p className="form-error">{memberError}</p> : null}
 
@@ -111,6 +120,7 @@ export function MembersTable({
                       <MemberRoleField
                         member={member}
                         busy={busy}
+                        roleSuggestions={roleSuggestions}
                         roleAriaLabel={t("project.roleFor", { name: member.fullName })}
                         onCommit={(next) => onRoleChange(member, next)}
                       />
