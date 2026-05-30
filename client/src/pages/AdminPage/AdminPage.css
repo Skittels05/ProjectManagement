@@ -17,7 +17,60 @@
 }
 
 .admin-users-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: 1rem;
+}
+
+.admin-users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+.admin-users-table th {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.admin-users-table .member-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.admin-users-table .member-name {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.admin-users-table .member-email {
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.admin-users-table .member-you {
+  font-size: 0.82rem;
+}
+
+.admin-users-table .members-actions-col {
+  width: 11rem;
+}
+
+.admin-users-table .members-actions-cell {
+  white-space: nowrap;
 }
 
 .admin-user-row--blocked {

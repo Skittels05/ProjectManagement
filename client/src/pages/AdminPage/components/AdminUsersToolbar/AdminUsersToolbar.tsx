@@ -22,7 +22,7 @@ export function AdminUsersToolbar({
   const { t } = useI18n();
 
   return (
-    <div className="admin-users-toolbar projects-toolbar">
+    <div className="admin-users-toolbar">
       <div className="toolbar-field toolbar-field-grow">
         <label htmlFor="admin-user-search">{t("admin.search")}</label>
         <input
