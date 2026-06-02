@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { segment } from "../../utils/route-params";
-import * as analyticsPdfService from "./analytics-pdf.service";
+import { segment } from "../utils/route-params";
+import * as analyticsPdfService from "../services/analytics-pdf.service";
 
 export async function exportPdf(req: Request, res: Response): Promise<void> {
   const body = req.body as Record<string, unknown>;

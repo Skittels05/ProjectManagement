@@ -3,10 +3,10 @@ import crypto from "crypto";
 import type { CookieOptions } from "express";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { Op, type Model } from "sequelize";
-import { env } from "../../config/env";
-import { RefreshToken, User } from "../../models";
-import { AppError } from "../../utils/app-error";
-import type { AuthTokenPayload } from "../../types/auth";
+import { env } from "../config/env";
+import { RefreshToken, User } from "../models";
+import { AppError } from "../utils/app-error";
+import type { AuthTokenPayload } from "../types/auth";
 
 type UserAttrs = {
   id: string;

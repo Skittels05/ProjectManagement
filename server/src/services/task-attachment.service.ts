@@ -1,18 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Express } from "express";
-import { TaskAttachment, User } from "../../models";
+import { TaskAttachment, User } from "../models";
 import {
   absolutePathForStorageKey,
   deleteStoredFile,
   isAllowedMimeType,
   sanitizeOriginalFilename,
   uploadsRoot,
-} from "../../config/uploads";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+} from "../config/uploads";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 import { recordActivity } from "./activity.service";
-import { assertTaskInProject } from "./task-access";
+import { assertTaskInProject } from "../lib/task-access";
 
 function toUserMini(u: { id: string; email: string; fullName: string } | null | undefined) {
   if (!u) return null;

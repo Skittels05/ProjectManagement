@@ -1,42 +1,42 @@
 import type { Request, Response } from "express";
-import * as service from "./task-time-log.service";
-import { segment } from "../../utils/route-params";
+import * as service from "../services/task-comment.service";
+import { segment } from "../utils/route-params";
 
 export async function list(req: Request, res: Response): Promise<void> {
-  const result = await service.listTimeLogs(
+  const comments = await service.listComments(
     segment(req.params.projectId),
     segment(req.params.taskId),
     req.user!.id,
   );
-  res.status(200).json(result);
+  res.status(200).json({ comments });
 }
 
 export async function create(req: Request, res: Response): Promise<void> {
-  const timeLog = await service.createTimeLog(
+  const comment = await service.createComment(
     segment(req.params.projectId),
     segment(req.params.taskId),
     req.user!.id,
     req.body,
   );
-  res.status(201).json({ timeLog });
+  res.status(201).json({ comment });
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
-  const timeLog = await service.updateTimeLog(
+  const comment = await service.updateComment(
     segment(req.params.projectId),
     segment(req.params.taskId),
-    segment(req.params.timeLogId),
+    segment(req.params.commentId),
     req.user!.id,
     req.body,
   );
-  res.status(200).json({ timeLog });
+  res.status(200).json({ comment });
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
-  await service.deleteTimeLog(
+  await service.deleteComment(
     segment(req.params.projectId),
     segment(req.params.taskId),
-    segment(req.params.timeLogId),
+    segment(req.params.commentId),
     req.user!.id,
   );
   res.status(204).send();

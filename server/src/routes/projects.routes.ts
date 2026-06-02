@@ -1,16 +1,16 @@
 import { Router } from "express";
-import { asyncHandler } from "../../utils/async-handler";
-import { validationMiddleware } from "../../middlewares/validation.middleware";
-import { authMiddleware } from "../../middlewares/auth.middleware";
-import * as controller from "./project.controller";
-import * as sprintController from "./sprint.controller";
-import * as taskController from "./task.controller";
-import * as taskCommentController from "./task-comment.controller";
-import * as taskAttachmentController from "./task-attachment.controller";
-import * as taskTimeLogController from "./task-time-log.controller";
-import * as analyticsController from "./analytics.controller";
-import * as analyticsExportController from "./analytics-export.controller";
-import { handleTaskAttachmentUpload } from "../../middlewares/upload.middleware";
+import { asyncHandler } from "../utils/async-handler";
+import { validationMiddleware } from "../middlewares/validation.middleware";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import * as controller from "../controllers/project.controller";
+import * as sprintController from "../controllers/sprint.controller";
+import * as taskController from "../controllers/task.controller";
+import * as taskCommentController from "../controllers/task-comment.controller";
+import * as taskAttachmentController from "../controllers/task-attachment.controller";
+import * as taskTimeLogController from "../controllers/task-time-log.controller";
+import * as analyticsController from "../controllers/analytics.controller";
+import * as analyticsExportController from "../controllers/analytics-export.controller";
+import { handleTaskAttachmentUpload } from "../middlewares/upload.middleware";
 import {
   listProjectsValidation,
   createProjectValidation,
@@ -20,20 +20,20 @@ import {
   getProjectByIdValidation,
   updateProjectValidation,
   deleteProjectValidation,
-} from "./project.validation";
+} from "../validation/project.validation";
 import {
   listSprintsValidation,
   createSprintValidation,
   updateSprintValidation,
   deleteSprintValidation,
-} from "./sprint.validation";
+} from "../validation/sprint.validation";
 import {
   listTasksValidation,
   createTaskValidation,
   updateTaskValidation,
   deleteTaskValidation,
   reorderKanbanValidation,
-} from "./task.validation";
+} from "../validation/task.validation";
 import {
   listCommentsValidation,
   createCommentValidation,
@@ -46,14 +46,14 @@ import {
   createTimeLogValidation,
   updateTimeLogValidation,
   deleteTimeLogValidation,
-} from "./task-engagement.validation";
+} from "../validation/task-engagement.validation";
 import {
   listActivityValidation,
   projectAnalyticsValidation,
   sprintAnalyticsValidation,
   timeLogReportValidation,
-} from "./analytics.validation";
-import { exportAnalyticsPdfValidation } from "./analytics-export.validation";
+} from "../validation/analytics.validation";
+import { exportAnalyticsPdfValidation } from "../validation/analytics-export.validation";
 
 export const projectsRouter = Router();
 

@@ -1,6 +1,6 @@
-import { ActivityLog, ProjectMember, User } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+import { ActivityLog, ProjectMember, User } from "../models";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 
 async function assertMember(projectId: string, userId: string) {
   const row = await ProjectMember.findOne({ where: { projectId, userId } });

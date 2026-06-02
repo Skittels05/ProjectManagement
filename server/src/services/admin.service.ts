@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
-import { RefreshToken, User } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+import { RefreshToken, User } from "../models";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 
 export type AdminUserSort = "name_asc" | "name_desc" | "email_asc" | "email_desc";
 export type AdminUserFilter = "all" | "active" | "blocked" | "admins";

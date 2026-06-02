@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { asyncHandler } from "../../utils/async-handler";
-import { validationMiddleware } from "../../middlewares/validation.middleware";
-import { authMiddleware } from "../../middlewares/auth.middleware";
-import * as controller from "./auth.controller";
+import { asyncHandler } from "../utils/async-handler";
+import { validationMiddleware } from "../middlewares/validation.middleware";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import * as controller from "../controllers/auth.controller";
 import {
   registerValidation,
   loginValidation,
   updateProfileValidation,
   changePasswordValidation,
-} from "./auth.validation";
+} from "../validation/auth.validation";
 
 export const authRouter = Router();
 

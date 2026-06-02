@@ -1,8 +1,8 @@
-import { TaskComment, User } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+import { TaskComment, User } from "../models";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 import { recordActivity } from "./activity.service";
-import { assertTaskInProject } from "./task-access";
+import { assertTaskInProject } from "../lib/task-access";
 
 function toUserMini(u: { id: string; email: string; fullName: string } | null | undefined) {
   if (!u) return null;

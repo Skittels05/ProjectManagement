@@ -1,15 +1,15 @@
 import type { ParsedQs } from "qs";
 import { Op, type WhereOptions } from "sequelize";
-import { ProjectMember, sequelize, Sprint, Task, User } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+import { ProjectMember, sequelize, Sprint, Task, User } from "../models";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 import { recordActivity } from "./activity.service";
 import {
   assigneeIdsForProjectRole,
   parseTaskListQuery,
   taskListOrder,
   taskSearchWhere,
-} from "./list-query";
+} from "../lib/list-query";
 
 const TASK_STATUSES = new Set(["todo", "in_progress", "done"]);
 

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { AppError } from "../../utils/app-error";
-import * as service from "./task-attachment.service";
-import { segment } from "../../utils/route-params";
+import { AppError } from "../utils/app-error";
+import * as service from "../services/task-attachment.service";
+import { segment } from "../utils/route-params";
 
 export async function list(req: Request, res: Response): Promise<void> {
   const attachments = await service.listAttachments(

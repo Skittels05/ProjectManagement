@@ -1,7 +1,7 @@
 import type { ParsedQs } from "qs";
 import { Op, Sequelize, type Order, type OrderItem, type WhereOptions } from "sequelize";
-import { Project, ProjectMember } from "../../models";
-import { isUuidV4 } from "../../utils/uuid";
+import { Project, ProjectMember } from "../models";
+import { isUuidV4 } from "../utils/uuid";
 
 export type ProjectListSort = "updated_desc" | "updated_asc" | "name_asc" | "name_desc";
 export type ProjectListFilter = "all" | "owner";

@@ -1,6 +1,6 @@
 import type { Response } from "express";
 import type { Request } from "express";
-import * as authService from "./auth.service";
+import * as authService from "../services/auth.service";
 
 export async function register(req: Request, res: Response): Promise<void> {
   const { refreshToken, ...payload } = await authService.register(req.body);

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as adminService from "./admin.service";
-import { segment } from "../../utils/route-params";
+import * as adminService from "../services/admin.service";
+import { segment } from "../utils/route-params";
 
 export async function listUsers(req: Request, res: Response): Promise<void> {
   const data = await adminService.listUsers(req.query);

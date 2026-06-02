@@ -3,9 +3,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { env } from "./config/env";
 import { errorMiddleware } from "./middlewares/error.middleware";
-import { authRouter } from "./modules/auth/auth.routes";
-import { adminRouter } from "./modules/admin/admin.routes";
-import { projectsRouter } from "./modules/projects/project.routes";
+import { authRouter } from "./routes/auth.routes";
+import { adminRouter } from "./routes/admin.routes";
+import { projectsRouter } from "./routes/projects.routes";
 
 export const app = express();
 

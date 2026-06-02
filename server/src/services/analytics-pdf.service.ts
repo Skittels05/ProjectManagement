@@ -1,11 +1,11 @@
 import PDFDocument from "pdfkit";
 import * as analyticsService from "./analytics.service";
 import * as activityService from "./activity.service";
-import { Project } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { drawBurndownChart, drawScatterChart } from "../../utils/pdf-charts";
-import { PDF_FONT, PDF_FONT_BOLD, registerPdfFonts } from "../../utils/pdf-fonts";
-import { isUuidV4 } from "../../utils/uuid";
+import { Project } from "../models";
+import { AppError } from "../utils/app-error";
+import { drawBurndownChart, drawScatterChart } from "../utils/pdf-charts";
+import { PDF_FONT, PDF_FONT_BOLD, registerPdfFonts } from "../utils/pdf-fonts";
+import { isUuidV4 } from "../utils/uuid";
 
 export type AnalyticsPdfReport = "sprint" | "planning" | "time" | "activity";
 

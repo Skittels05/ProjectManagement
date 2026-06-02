@@ -26,10 +26,11 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
     refresh: build.mutation<AuthPayload, void>({
-      async queryFn(_arg, _api, _extraOptions, baseQuery) {
+      async queryFn(_arg, api, _extraOptions, baseQuery) {
         const res = await baseQuery({ url: "/auth/refresh", method: "post" });
         if (res.error) {
           setAccessToken(null);
+          api.dispatch(baseApi.util.resetApiState());
           return { error: res.error };
         }
         const data = res.data as AuthPayload;
@@ -44,11 +45,12 @@ export const authApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/auth/me/password", method: "patch", data: body }),
     }),
     logout: build.mutation<void, void>({
-      async queryFn(_arg, _api, _extraOptions, baseQuery) {
+      async queryFn(_arg, api, _extraOptions, baseQuery) {
         try {
           await baseQuery({ url: "/auth/logout", method: "post" });
         } finally {
           setAccessToken(null);
+          api.dispatch(baseApi.util.resetApiState());
         }
         return { data: undefined };
       },

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as projectService from "./project.service";
-import { segment } from "../../utils/route-params";
+import * as projectService from "../services/project.service";
+import { segment } from "../utils/route-params";
 
 export async function create(req: Request, res: Response): Promise<void> {
   const project = await projectService.createProject(req.user!.id, req.body);

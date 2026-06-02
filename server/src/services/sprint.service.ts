@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
-import { ProjectMember, Sprint, Project } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+import { ProjectMember, Sprint, Project } from "../models";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 import { recordActivity } from "./activity.service";
 
 const SPRINT_STATUSES = new Set(["planned", "active", "completed"]);

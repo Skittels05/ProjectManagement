@@ -1,6 +1,6 @@
-import { ProjectMember, Task } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+import { ProjectMember, Task } from "../models";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 
 export async function assertProjectMember(projectId: string, userId: string) {
   if (!isUuidV4(projectId)) {

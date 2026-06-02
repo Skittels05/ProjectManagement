@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as sprintService from "./sprint.service";
-import { segment } from "../../utils/route-params";
+import * as sprintService from "../services/sprint.service";
+import { segment } from "../utils/route-params";
 
 export async function list(req: Request, res: Response): Promise<void> {
   const sprints = await sprintService.listSprints(segment(req.params.projectId), req.user!.id);

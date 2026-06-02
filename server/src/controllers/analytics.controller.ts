@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { segment } from "../../utils/route-params";
-import * as activityService from "./activity.service";
-import * as analyticsService from "./analytics.service";
+import { segment } from "../utils/route-params";
+import * as activityService from "../services/activity.service";
+import * as analyticsService from "../services/analytics.service";
 
 export async function sprintStats(req: Request, res: Response): Promise<void> {
   const data = await analyticsService.getSprintStats(

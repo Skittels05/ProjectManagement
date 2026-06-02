@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as taskService from "./task.service";
-import { segment } from "../../utils/route-params";
+import * as taskService from "../services/task.service";
+import { segment } from "../utils/route-params";
 
 export async function list(req: Request, res: Response): Promise<void> {
   const page = await taskService.listTasks(segment(req.params.projectId), req.user!.id, req.query);

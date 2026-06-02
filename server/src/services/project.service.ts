@@ -1,11 +1,11 @@
 import type { ParsedQs } from "qs";
 import { Op, Sequelize } from "sequelize";
 import type { Model } from "sequelize";
-import { sequelize, Project, ProjectMember, User } from "../../models";
-import { AppError } from "../../utils/app-error";
-import { isUuidV4 } from "../../utils/uuid";
+import { sequelize, Project, ProjectMember, User } from "../models";
+import { AppError } from "../utils/app-error";
+import { isUuidV4 } from "../utils/uuid";
 import { recordActivity } from "./activity.service";
-import { parseProjectListQuery, projectListOrder } from "./list-query";
+import { parseProjectListQuery, projectListOrder } from "../lib/list-query";
 
 const ROLES = {
   OWNER: "owner",
