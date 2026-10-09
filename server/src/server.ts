@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Uladzislau Petushkou
+
 import { app } from "./app";
 import { env } from "./config/env";
 import { initializeDatabase } from "./config/database";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Uladzislau Petushkou
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";

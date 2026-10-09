@@ -13,15 +13,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "author": "Uladzislau Petushkou",
+  "license": "MIT",
+  "description": "REST API for the Project Management (Scrum/Kanban) application",
   "dependencies": {
     "@vintproykt/dejavu-fonts-ttf": "^2.37.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "@vintproykt/dejavu-fonts-ttf": "^2.37.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
@@ -45,5 +44,10 @@
     "sequelize-cli": "^6.6.5",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Skittels05/ProjectManagement.git",
+    "directory": "server"
   }
 }

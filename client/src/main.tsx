@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Uladzislau Petushkou
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
